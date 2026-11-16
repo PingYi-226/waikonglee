@@ -381,7 +381,13 @@
     var headings = Array.prototype.slice.call(list.querySelectorAll("h2.bibliography"));
 
     var state = { type: "all", area: "all", q: "" };
+    // filters can arrive as ?area=pqc or as #area=pqc
     var params = new URLSearchParams(window.location.search);
+    if (window.location.hash.indexOf("=") !== -1) {
+      new URLSearchParams(window.location.hash.slice(1)).forEach(function (value, key) {
+        if (!params.get(key)) params.set(key, value);
+      });
+    }
     if (params.get("type")) state.type = params.get("type");
     if (params.get("area")) state.area = params.get("area");
     if (params.get("q")) state.q = params.get("q").toLowerCase();
@@ -483,7 +489,7 @@
         if (state.area !== "all") p.set("area", state.area);
         if (state.q) p.set("q", state.q);
         var qs = p.toString();
-        history.replaceState(null, "", window.location.pathname + (qs ? "?" + qs : "") + window.location.hash);
+        history.replaceState(null, "", window.location.pathname + (qs ? "#" + qs : ""));
       }
     }
 

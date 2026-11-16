@@ -17,7 +17,7 @@ nav_order: 1
           <div>
             <h3 class="areas__title">{{ a.title }}</h3>
             <p class="areas__desc">{{ a.description }}</p>
-            <a class="btn-line btn-line--small" href="{{ '/publications/' | relative_url }}?area={{ a.key }}">Papers in this area {% include site/arrow.liquid %}</a>
+            <a class="btn-line btn-line--small" href="{{ '/publications/' | relative_url }}#area={{ a.key }}">Papers in this area {% include site/arrow.liquid %}</a>
           </div>
         </div>
       </li>
