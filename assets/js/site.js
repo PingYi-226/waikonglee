@@ -178,7 +178,7 @@
         b1: [s * Math.cos(a), s * Math.sin(a)],
         b2: [s * k, -s * (0.92 + 0.035 * Math.cos(time * 0.00009))],
         ox: narrow ? w * 0.5 : w * 0.74,
-        oy: narrow ? h * 0.8 : h * 0.5,
+        oy: narrow ? h - 88 : h * 0.5,
       };
     }
 
@@ -210,7 +210,7 @@
         ty = pointer.y;
       } else {
         tx = g.ox + Math.cos(time * 0.00021) * g.s * 3.4;
-        ty = g.oy + Math.sin(time * 0.00033) * g.s * 2.6;
+        ty = g.oy + Math.sin(time * 0.00033) * g.s * (w < 760 ? 1.1 : 2.6);
       }
       if (cur.x === null) {
         cur.x = tx;

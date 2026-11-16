@@ -23,5 +23,15 @@ module.exports = {
     // and page chrome (scroll-progress bar, ToC) bleeds through a zoomed image.
     "medium-zoom-overlay",
     "medium-zoom-image--opened",
+    // classes added at runtime by assets/js/site.js
+    "js",
+    "is-in",
+    "is-open",
+    "is-active",
+    "is-hidden",
+    "is-ready",
+    "is-scrolled",
+    "is-static",
+    /^pubchart/,
   ],
 };

@@ -1,7 +1,19 @@
 {%- comment -%} Site design layer: loaded after the al-folio core styles so it can refine them. {%- endcomment -%}
+{% if site.noindex %}<meta name="robots" content="noindex">{% endif %}
 <script>
   document.documentElement.classList.add('js');
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url | bust_file_cache }}">
+<style>
+  /* soft cross-fade between pages in browsers that support cross-document view transitions */
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root) { animation: page-out 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  ::view-transition-new(root) { animation: page-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  @keyframes page-out { to { opacity: 0; } }
+  @keyframes page-in { from { opacity: 0; transform: translateY(10px); } }
+  @media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+  }
+</style>

@@ -239,31 +239,6 @@ img {
   transform: none;
 }
 
-@view-transition {
-  navigation: auto;
-}
-
-::view-transition-old(root) {
-  animation: page-out 0.28s var(--ease) both;
-}
-
-::view-transition-new(root) {
-  animation: page-in 0.5s var(--ease) both;
-}
-
-@keyframes page-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes page-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-}
-
 /* ---------- 4. Navigation bar ---------- */
 #navbar {
   background-color: color-mix(in srgb, var(--paper) 84%, transparent);
@@ -1498,9 +1473,11 @@ a.pub__abbr {
   border: 0;
 }
 
-.cv .badge {
+.cv .list-group-item .badge.badge {
   min-width: 0 !important;
   padding: 0;
+  background-color: transparent !important;
+  box-shadow: none;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 400 !important;
@@ -1642,9 +1619,13 @@ a.pub__abbr {
     grid-template-columns: 1fr;
   }
 
+  .hero {
+    padding-bottom: 12.5rem;
+  }
+
   .hero__lattice {
-    -webkit-mask-image: linear-gradient(180deg, transparent 0%, transparent 38%, #000 82%);
-    mask-image: linear-gradient(180deg, transparent 0%, transparent 38%, #000 82%);
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, transparent calc(100% - 12rem), #000 calc(100% - 7rem));
+    mask-image: linear-gradient(180deg, transparent 0%, transparent calc(100% - 12rem), #000 calc(100% - 7rem));
   }
 
   .hero__figures {
