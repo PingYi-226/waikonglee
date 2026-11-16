@@ -1,0 +1,51 @@
+# Research areas. `key` is what the `theme` field of each paper in _bibliography/papers.bib refers to.
+- key: pqc
+  short: "Post-quantum"
+  title: Post-quantum cryptography
+  tagline: Lattice, code-based and multivariate schemes, made fast and constant-time.
+  description: >-
+    High-throughput and area-efficient implementations of the schemes that will replace RSA and elliptic curves:
+    Kyber, Saber and FrodoKEM key encapsulation, the Falcon, Mitaka, Rainbow and MQ-based signatures, and code-based
+    key encapsulation, on GPUs, FPGAs and embedded processors.
+- key: accel
+  short: "Symmetric & lightweight"
+  title: High-speed symmetric and lightweight cryptography
+  tagline: AES, lightweight ciphers and big-integer arithmetic at record throughput.
+  description: >-
+    Bit-sliced and table-based AES, lightweight authenticated encryption and hash functions, block ciphers and
+    big-integer arithmetic, pushed to record throughput on GPUs and tuned for ARM, RISC-V, AVR and FPGA targets.
+- key: privacy
+  short: "Privacy-preserving"
+  title: Privacy-preserving computation
+  tagline: Computing on encrypted data, at practical speed.
+  description: >-
+    GPU-accelerated functional encryption for privacy-preserving support vector machines and neural-network
+    inference, and fast number-theoretic transforms for fully homomorphic encryption.
+- key: ml
+  short: "Deep-learning hardware"
+  title: Deep-learning hardware and efficient models
+  tagline: Accelerators and quantisation for constrained devices.
+  description: >-
+    FPGA accelerators and co-processors for convolutional networks, sub-byte and power-of-two quantisation, and
+    compact models for sensing, vision and text on resource-constrained devices.
+- key: iot
+  short: "Embedded & IoT"
+  title: Embedded processors and IoT systems
+  tagline: Low-power processors and dependable sensing systems.
+  description: >-
+    The RISC32 family of low-power FPGA-based sensor-node processors, energy harvesting for wireless sensor nodes,
+    and reliable IoT architectures for manufacturing, indoor positioning and remote monitoring.
+- key: hpc
+  short: "GPU numerical"
+  title: GPU numerical computing
+  tagline: Sparse solvers and macromodelling for circuit simulation.
+  description: >-
+    Parallel sparse LU factorisation and vector fitting on GPUs for fast circuit simulation and macromodelling,
+    in collaboration with Carleton University.
+- key: security
+  short: "Applied security"
+  title: Applied security and quantum cryptanalysis
+  tagline: Blockchain, searchable encryption and quantum attack circuits.
+  description: >-
+    Blockchain-based and searchable encryption systems for health and IoT data, chaos-based image encryption,
+    new signature and public-key constructions, and quantum circuits for evaluating Grover attacks on block ciphers.

@@ -1,0 +1,7 @@
+# Optional: link co-author names in the publication list to their home pages.
+# Key = surname in lower case; firstname lists the spellings used in papers.bib.
+# Example:
+# "seo":
+#   - firstname: ["Hwajeong"]
+#     url: https://example.org
+{}

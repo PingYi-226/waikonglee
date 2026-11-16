@@ -1,0 +1,28 @@
+# Facts shown on the home page. Edit here; no template changes needed.
+role: Associate Professor
+affiliation: Universiti Tunku Abdul Rahman (UTAR), Malaysia
+affiliation_short: UTAR, Malaysia
+faculty: Faculty of Information and Communication Technology
+statement: >-
+  I build fast and secure implementations of post-quantum and privacy-preserving cryptography
+  on GPUs, FPGAs and embedded processors.
+fields: [Cryptographic engineering, GPU computing, Deep-learning hardware]
+
+# Numbers read from Google Scholar. Update the values and the date together.
+metrics:
+  as_of: November 2026
+  source: Google Scholar
+  source_url: https://scholar.google.com/citations?user=4AV9DOcAAAAJ
+  citations: 2801
+  h_index: 26
+  i10_index: 65
+
+address:
+  - Faculty of Information and Communication Technology
+  - Universiti Tunku Abdul Rahman, Kampar Campus
+  - Jalan Universiti, Bandar Barat
+  - 31900 Kampar, Perak, Malaysia
+emails: [wklee@utar.edu.my, waikong.lee@gmail.com]
+joining: >-
+  Prospective MSc and PhD students interested in cryptographic engineering, GPU computing or
+  hardware design are welcome to get in touch by email.

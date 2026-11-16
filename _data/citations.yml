@@ -1,0 +1,355 @@
+metadata:
+  last_updated: '2026-11-16'
+papers:
+  4AV9DOcAAAAJ:ZuybSZzF8UAC:
+    citations: 1
+    title: A compact and flexible FPGA accelerator for regular and octave convolutional neural networks
+    year: '2025'
+  4AV9DOcAAAAJ:eq2jaN3J8jMC:
+    citations: 4
+    title: 'RISC32-A: A low-power asynchronous IoT processor on FPGA with adaptive pipeline structure'
+    year: '2025'
+  4AV9DOcAAAAJ:_B80troHkn4C:
+    citations: 3
+    title: 'QuripfeNet: Quantum-Resistant IPFE-Based Neural Network'
+    year: '2025'
+  4AV9DOcAAAAJ:VL0QpB8kHFEC:
+    citations: 0
+    title: A signature scheme constructed from zero knowledge argument of knowledge for the subgraph isomorphism problem
+    year: '2025'
+  4AV9DOcAAAAJ:N5tVd3kTz84C:
+    citations: 1
+    title: 'AuGQ: Augmented quantization granularity to overcome accuracy degradation for sub-byte quantized deep neural networks: A. Mujtaba et al.'
+    year: '2025'
+  4AV9DOcAAAAJ:WqliGbK-hY8C:
+    citations: 5
+    title: Speed record of aes-ctr and aes-ecb bit-sliced implementation on gpus
+    year: '2024'
+  4AV9DOcAAAAJ:tkaPQYYpVKoC:
+    citations: 7
+    title: 'TC-GVF: Tensor core GPU-based vector fitting via accelerated tall-skinny QR solvers'
+    year: '2025'
+  4AV9DOcAAAAJ:Y5dfb0dijaUC:
+    citations: 5
+    title: High throughput acceleration of NIST lightweight authenticated encryption schemes on GPU platform
+    year: '2024'
+  4AV9DOcAAAAJ:eMMeJKvmdy0C:
+    citations: 15
+    title: Efficient TMVP-based polynomial convolution on GPU for post-quantum cryptography targeting IoT applications
+    year: '2024'
+  4AV9DOcAAAAJ:V3AGJWp-ZtQC:
+    citations: 34
+    title: 'High throughput lattice-based signatures on gpus: Comparing falcon and mitaka'
+    year: '2024'
+  4AV9DOcAAAAJ:olpn-zPbct0C:
+    citations: 128
+    title: A human activity recognition method based on lightweight feature extraction combined with pruned and quantized CNN for wearable device
+    year: '2023'
+  4AV9DOcAAAAJ:D_sINldO8mEC:
+    citations: 20
+    title: 'Cryptensor: A resource-shared co-processor to accelerate convolutional neural network and polynomial convolution'
+    year: '2023'
+  4AV9DOcAAAAJ:5ugPr518TE4C:
+    citations: 5
+    title: 'Look-up the rainbow: Table-based implementation of rainbow signature on 64-bit ARMv8 processors'
+    year: '2023'
+  4AV9DOcAAAAJ:J-pR_7NvFogC:
+    citations: 10
+    title: High throughput acceleration of scabbard key exchange and key encapsulation mechanism using tensor core on GPU for IoT applications
+    year: '2023'
+  4AV9DOcAAAAJ:XiSMed-E-HIC:
+    citations: 10
+    title: 'cuFE: High performance privacy preserving support vector machine with inner-product functional encryption'
+    year: '2024'
+  4AV9DOcAAAAJ:XiVPGOgt02cC:
+    citations: 3
+    title: Non-zero grid for accurate 2-bit additive power-of-two CNN quantization
+    year: '2023'
+  4AV9DOcAAAAJ:mvPsJ3kp5DgC:
+    citations: 13
+    title: A flexible and reliable internet-of-things solution for real-time production tracking with high performance and secure communication
+    year: '2023'
+  4AV9DOcAAAAJ:eflP2zaiRacC:
+    citations: 27
+    title: 'KaratSaber: New speed records for saber polynomial multiplication using efficient Karatsuba FPGA architecture'
+    year: '2023'
+  4AV9DOcAAAAJ:fQNAKQ3IYiAC:
+    citations: 35
+    title: Area–time efficient implementation of nist lightweight hash functions targeting IoT applications
+    year: '2023'
+  4AV9DOcAAAAJ:8AbLer7MMksC:
+    citations: 4
+    title: Optimized implementation of Simpira on microcontrollers for secure massive learning
+    year: '2022'
+  4AV9DOcAAAAJ:LPZeul_q3PIC:
+    citations: 8
+    title: Blockchain meets lightweight cryptography
+    year: '2022'
+  4AV9DOcAAAAJ:vRqMK49ujn8C:
+    citations: 9
+    title: Discrete logarithmic factorial problem and Einstein crystal model based public-key cryptosystem for digital content confidentiality
+    year: '2022'
+  4AV9DOcAAAAJ:tS2w5q8j5-wC:
+    citations: 13
+    title: Low latency implementations of CNN for resource-constrained IoT devices
+    year: '2022'
+  4AV9DOcAAAAJ:4fKUyHm3Qg0C:
+    citations: 0
+    title: High Performance Integer Multiplier on FPGA with Radix-4 Number Theoretic Transform.
+    year: '2022'
+  4AV9DOcAAAAJ:fPk4N6BV_jEC:
+    citations: 25
+    title: Optimized implementation of SM4 on AVR microcontrollers, RISC-V processors, and ARM processors
+    year: '2022'
+  4AV9DOcAAAAJ:08ZZubdj9fEC:
+    citations: 2
+    title: Algorithmic advancements and a comparative investigation of left and right looking sparse LU factorization on GPU platform for circuit simulation
+    year: '2022'
+  4AV9DOcAAAAJ:tOudhMTPpwUC:
+    citations: 24
+    title: SPEEDY quantum circuit for Grover’s algorithm
+    year: '2022'
+  4AV9DOcAAAAJ:sSrBHYA8nusC:
+    citations: 16
+    title: Area-optimized constant-time hardware implementation for polynomial multiplication
+    year: '2023'
+  4AV9DOcAAAAJ:738O_yMBCRsC:
+    citations: 64
+    title: Efficient implementation of AES-CTR and AES-ECB on GPUs with applications for high-speed FrodoKEM and exhaustive key search
+    year: '2022'
+  4AV9DOcAAAAJ:CHSYGLWDkRkC:
+    citations: 25
+    title: 'DPCrypto: Acceleration of post-quantum cryptography using dot-product instructions on GPUs'
+    year: '2022'
+  4AV9DOcAAAAJ:eJXPG6dFmWUC:
+    citations: 46
+    title: Efficient implementation of lightweight hash functions on GPU and quantum computers for IoT applications
+    year: '2022'
+  4AV9DOcAAAAJ:WbkHhVStYXYC:
+    citations: 46
+    title: 'TensorCrypto: High throughput acceleration of lattice-based cryptography using tensor core on GPU'
+    year: '2022'
+  4AV9DOcAAAAJ:KxtntwgDAa4C:
+    citations: 11
+    title: 'DoubleQExt: Hardware and memory efficient CNN through two levels of quantization'
+    year: '2021'
+  4AV9DOcAAAAJ:NhqRSupF_l8C:
+    citations: 11
+    title: 'cuGimli: Optimized implementation of the Gimli authenticated encryption and hash function on GPU for IoT applications'
+    year: '2021'
+  4AV9DOcAAAAJ:bFI3QPDXJZMC:
+    citations: 48
+    title: High throughput implementation of post-quantum key encapsulation and decapsulation on GPU for Internet of Things applications
+    year: '2022'
+  4AV9DOcAAAAJ:pyW8ca7W8N0C:
+    citations: 20
+    title: 'RISC32-LP: Low-power FPGA-based IoT sensor nodes with energy reduction program analyzer'
+    year: '2022'
+  4AV9DOcAAAAJ:cFHS6HbyZ2cC:
+    citations: 66
+    title: 'AEchain: A lightweight blockchain for IoT applications'
+    year: '2022'
+  4AV9DOcAAAAJ:D03iK_w7-QYC:
+    citations: 82
+    title: Scalable and efficient hardware architectures for authenticated encryption in IoT applications
+    year: '2021'
+  4AV9DOcAAAAJ:ldfaerwXgEUC:
+    citations: 34
+    title: 'Parallel implementation of Nussbaumer algorithm and number theoretic transform on a GPU platform: application to qTESLA: W.-K. Lee et al.'
+    year: '2020'
+  4AV9DOcAAAAJ:4OULZ7Gr8RgC:
+    citations: 25
+    title: High-speed RLWE-oriented polynomial multiplier utilizing Karatsuba algorithm
+    year: '2021'
+  4AV9DOcAAAAJ:zA6iFVUQeVQC:
+    citations: 34
+    title: Grover on PIPO
+    year: '2021'
+  4AV9DOcAAAAJ:JoZmwDi-zQgC:
+    citations: 51
+    title: Blockchain‐based reversible data hiding for securing medical images
+    year: '2021'
+  4AV9DOcAAAAJ:RYcK_YlVTxYC:
+    citations: 43
+    title: 'Accelerating number theoretic transform in GPU platform for fully homomorphic encryption: J.-Z. Goey et al.'
+    year: '2020'
+  4AV9DOcAAAAJ:SeFeTyx0c_EC:
+    citations: 7
+    title: Gpu-accelerated adaptive PCBSO mode-based hybrid RLA for sparse LU factorization in circuit simulation
+    year: '2021'
+  4AV9DOcAAAAJ:pqnbT2bcN3wC:
+    citations: 15
+    title: Novel Postquantum MQ-based signature scheme for Internet of things with parallel implementation
+    year: '2021'
+  4AV9DOcAAAAJ:g5m5HwL7SMYC:
+    citations: 6
+    title: Area–time-efficient code-based postquantum key encapsulation mechanism on FPGA
+    year: '2020'
+  4AV9DOcAAAAJ:lSLTfruPkqcC:
+    citations: 33
+    title: A parameter-free vibration analysis solution for legacy manufacturing machines’ operation tracking
+    year: '2020'
+  4AV9DOcAAAAJ:2P1L_qKh6hAC:
+    citations: 15
+    title: 'GVF: GPU-based vector fitting for modeling of multiport tabulated data networks'
+    year: '2020'
+  4AV9DOcAAAAJ:NaGl4SEjCO4C:
+    citations: 12
+    title: Optimized IoT cryptoprocessor based on QC-MPDC key encapsulation mechanism
+    year: '2020'
+  4AV9DOcAAAAJ:J_g5lzvAfSwC:
+    citations: 14
+    title: 'RISC32‐E: Field programmable gate array based sensor node with queue system to support fast encryption in Industrial Internet of Things applications'
+    year: '2020'
+  4AV9DOcAAAAJ:HoB7MX3m0LUC:
+    citations: 10
+    title: Fast and energy-efficient block ciphers implementations in ARM processors and mali GPU
+    year: '2020'
+  4AV9DOcAAAAJ:YFjsv_pBGBYC:
+    citations: 40
+    title: An energy efficient FPGA partial reconfiguration based micro-architectural technique for IoT applications
+    year: '2020'
+  4AV9DOcAAAAJ:35N4QoGY0k4C:
+    citations: 5
+    title: LED and SIMECK FPGA implementation
+    year: '2019'
+  4AV9DOcAAAAJ:NMxIlDl6LWMC:
+    citations: 28
+    title: A collaborative IoT-gateway architecture for reliable and cost effective measurements
+    year: '2019'
+  4AV9DOcAAAAJ:k_IJM867U9cC:
+    citations: 25
+    title: Hierarchical gated recurrent neural network with adversarial and virtual adversarial training on text classification
+    year: '2019'
+  4AV9DOcAAAAJ:e5wmG9Sq2KIC:
+    citations: 20
+    title: 'Terabit encryption in a second: Performance evaluation of block ciphers in GPU with Kepler, Maxwell, and Pascal architectures'
+    year: '2018'
+  4AV9DOcAAAAJ:r0BpntZqJG4C:
+    citations: 623
+    title: Blockchain based searchable encryption for electronic health record sharing
+    year: '2019'
+  4AV9DOcAAAAJ:j3f4tGmQtD8C:
+    citations: 16
+    title: Using the cloud to improve sensor availability and reliability in remote monitoring
+    year: '2019'
+  4AV9DOcAAAAJ:HDshCWvjkbEC:
+    citations: 4
+    title: Pedestrian Dead Reckoning with correction points for indoor positioning and Wi-Fi fingerprint mapping
+    year: '2018'
+  4AV9DOcAAAAJ:_Qo2XoVZTnwC:
+    citations: 43
+    title: 'Signature gateway: Offloading signature generation to IoT gateway accelerated by GPU'
+    year: '2019'
+  4AV9DOcAAAAJ:qUcmZB5y_30C:
+    citations: 46
+    title: 'ArchCam: Real time expert system for suspicious behaviour detection in ATM site'
+    year: '2018'
+  4AV9DOcAAAAJ:TQgYirikUcIC:
+    citations: 49
+    title: Dynamic GPU parallel sparse LU factorization for fast circuit simulation
+    year: '2018'
+  4AV9DOcAAAAJ:hC7cP41nSMkC:
+    citations: 17
+    title: Parallel and high speed hashing in GPU for telemedicine applications
+    year: '2018'
+  4AV9DOcAAAAJ:L8Ckcad2t8MC:
+    citations: 132
+    title: Multi-source energy harvesting and storage for floating wireless sensor network nodes with long range communication capability
+    year: '2018'
+  4AV9DOcAAAAJ:mVmsd5A6BfQC:
+    citations: 11
+    title: 'SearchaStore: Fast and secure searchable cloud services'
+    year: '2017'
+  4AV9DOcAAAAJ:_kc_bZDykSQC:
+    citations: 43
+    title: Fast implementation of block ciphers and PRNGs in Maxwell GPU architecture
+    year: '2016'
+  4AV9DOcAAAAJ:u5HHmVD_uO8C:
+    citations: 23
+    title: Hybrid model for dynamic power management
+    year: '2009'
+  4AV9DOcAAAAJ:dshw04ExmUIC:
+    citations: 1
+    title: Quantization and Sampling Effects in Fast Digitally Controlled Switch-Mode DC/DC Buck Converters
+    year: '2021'
+  4AV9DOcAAAAJ:nb7KW1ujOQ8C:
+    citations: 2
+    title: 'No Silver Bullet: Optimized Montgomery Multiplication on Various 64-Bit ARM Platforms'
+    year: '2021'
+  4AV9DOcAAAAJ:a0OBvERweLwC:
+    citations: 0
+    title: Design and Implementation of Deep Learning Core for FPGA Platform
+    year: '2021'
+  4AV9DOcAAAAJ:P5F9QuxV20EC:
+    citations: 10
+    title: Masked implementation of PIPO block cipher on 8-bit AVR microcontrollers
+    year: '2021'
+  4AV9DOcAAAAJ:70eg2SAEIzsC:
+    citations: 9
+    title: Non-intrusive operation status tracking for legacy machines via sound recognition
+    year: '2020'
+  4AV9DOcAAAAJ:hMod-77fHWUC:
+    citations: 20
+    title: Accelerating number theoretic transform in GPU platform for qTESLA scheme
+    year: '2019'
+  4AV9DOcAAAAJ:isC4tDSrTZIC:
+    citations: 11
+    title: Clock gating implementation on commercial field programmable gate array (FPGA)
+    year: '2018'
+  4AV9DOcAAAAJ:RHpTSmoSYBkC:
+    citations: 6
+    title: Localization of mobile sensor nodes using qr codes and dead reckoning with error correction
+    year: '2018'
+  4AV9DOcAAAAJ:4JMBOYKVnBMC:
+    citations: 8
+    title: Fast NTRU encryption in GPU for secure IoP communication in post-quantum era
+    year: '2018'
+  4AV9DOcAAAAJ:hFOr9nPyWt4C:
+    citations: 3
+    title: A cloud system to improve sensor availability and data reliability in remote monitoring
+    year: '2018'
+  4AV9DOcAAAAJ:-f6ydRqryjwC:
+    citations: 4
+    title: Multiplying very large integer in GPU with pascal architecture
+    year: '2018'
+  4AV9DOcAAAAJ:IWHjjKOFINEC:
+    citations: 8
+    title: Document level polarity classification with attention gated recurrent unit
+    year: '2018'
+  4AV9DOcAAAAJ:ZeXyd9-uunAC:
+    citations: 3
+    title: Development of LLVM compilation toolchain for IoT processor targeting wireless measurement applications
+    year: '2017'
+  4AV9DOcAAAAJ:7PzlFSSx8tAC:
+    citations: 13
+    title: 'Cuda-ssl: Ssl/tls accelerated by gpu'
+    year: '2017'
+  4AV9DOcAAAAJ:Wp0gIr-vW9MC:
+    citations: 0
+    title: Speeding up the Montgomery Exponentiation with CMM-SDR Over GPU with Maxwell and Pascal Architecture
+    year: '2017'
+  4AV9DOcAAAAJ:4DMP91E08xMC:
+    citations: 6
+    title: An IPS evaluation framework for measuring the effectiveness and efficiency of indoor positioning solutions
+    year: '2017'
+  4AV9DOcAAAAJ:qxL8FJ1GzNcC:
+    citations: 16
+    title: A comprehensive analysis on data hazard for RISC32 5-stage pipeline processor
+    year: '2017'
+  4AV9DOcAAAAJ:9ZlFYXVOiuMC:
+    citations: 5
+    title: Multi-source energy harvesting and storage for floating wireless sensor network nodes
+    year: '2016'
+  4AV9DOcAAAAJ:aqlVkmm33-oC:
+    citations: 10
+    title: Accelerating multiple precision multiplication in GPU with Kepler architecture
+    year: '2016'
+  4AV9DOcAAAAJ:ULOm3_A8WrAC:
+    citations: 7
+    title: Fast implementation of block ciphers and PRNGs for Kepler GPU architecture
+    year: '2015'
+  4AV9DOcAAAAJ:Zph67rFs4hoC:
+    citations: 8
+    title: High speed implementation of symmetric block cipher on GPU
+    year: '2014'

@@ -1,0 +1,25 @@
+{%- comment -%} News items, newest first. Parameters: limit (optional), compact (optional, true on the home page). {%- endcomment -%}
+{% assign news = site.news | sort: 'date' | reverse %}
+<ul class="newslist{% if include.compact %} newslist--compact{% endif %}">
+  {% for item in news limit: include.limit %}
+    <li class="newsitem reveal">
+      <div class="newsitem__date">
+        {% if item.label %}<span class="newsitem__tag">{{ item.label }}</span>{% endif %}
+        <time datetime="{{ item.date | date_to_xmlschema }}">
+          {%- if item.date_label -%}{{ item.date_label }}{%- else -%}{{ item.date | date: '%-d %b %Y' }}{%- endif -%}
+        </time>
+      </div>
+      <div class="newsitem__body">{{ item.content | remove: '<p>' | remove: '</p>' }}</div>
+      {% if item.image %}
+        <figure class="newsitem__img">
+          <img
+            src="{{ item.image | prepend: '/assets/img/' | relative_url }}"
+            alt="{{ item.image_alt | default: 'News photo' }}"
+            loading="lazy"
+            data-zoomable
+          >
+        </figure>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>

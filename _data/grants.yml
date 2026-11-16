@@ -1,0 +1,23 @@
+# Funded research projects, newest first.
+- title: Development of Privacy Preservation Technologies and Blockchain for Industry 4.0
+  period: Dec 2019 – Nov 2023
+  role: Principal Investigator
+  funder: Korean Research Fellowship (now the Brain Pool Program)
+  amount: KRW 216,000,000 (about RM 759,000)
+  output: >-
+    Experimental results, new hardware architecture for lightweight cryptographic algorithms, optimization techniques for
+    implementing post-quantum cryptography, and fully homomorphic encryption techniques for machine learning.
+- title: New Post-quantum Identity Based Encryption Scheme With Practical Implementation for Internet of Things Communication
+  period: Dec 2018 – Nov 2021
+  role: Principal Investigator (2018–2019), Project Member (2020–2021)
+  funder: Fundamental Research Grant Scheme (FRGS), Malaysia
+  amount: RM 63,200
+  output: >-
+    Experimental results, a new post-quantum cryptography scheme, GPU and FPGA implementations of post-quantum cryptography
+    schemes, and publications.
+- title: Accelerating direct sparse matrix solver in GPU platform with application to circuit simulation
+  period: Sept 2017 – Nov 2021
+  role: Principal Investigator
+  funder: Carleton University, Canada
+  amount: RM 10,200
+  output: Experimental results, GPU implementation of LU decomposition, and publications.

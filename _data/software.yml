@@ -1,0 +1,38 @@
+# Open-source code. `repo` is the GitHub "owner/name"; `paper` is the title of the paper the code accompanies.
+- group: Post-quantum signatures on GPUs
+  items:
+    - repo: benlwk/mayo-gpu
+      text: Constant-time CUDA signing and verification for the MAYO signature scheme, in coarse- and fine-grained variants plus a Tensor-Core path.
+    - repo: benlwk/MLDSA-GPU-keygen-sign
+      text: ML-DSA (FIPS 204) signing, verification and key generation on GPUs.
+    - repo: benlwk/qruov-gpu
+      text: GPU implementation of the QR-UOV post-quantum signature scheme.
+    - repo: benlwk/Falcon-Mitaka
+      text: Falcon-512 and Mitaka-512 lattice signatures on GPUs.
+      paper: High Throughput Lattice-Based Signatures on GPUs (IEEE TPDS 2024)
+- group: Tensor-Core and dot-product cryptography
+  items:
+    - repo: benlwk/TensorKyber
+      text: The ML-KEM (Kyber) number-theoretic transform reformulated as integer matrix multiplications on Tensor Cores.
+    - repo: benlwk/tensorMcEliece
+      text: Batched Tensor-Core engines for the Classic McEliece key encapsulation mechanism.
+    - repo: benlwk/Tensorcrypto
+      text: Tensor-Core polynomial convolution for NTRU, LAC and FrodoKEM.
+      paper: TensorCrypto (IEEE Access 2022)
+    - repo: benlwk/DPCrypto
+      text: FrodoKEM and Saber accelerated with GPU dot-product instructions.
+      paper: DPCrypto (IEEE TCAS-I 2022)
+- group: Homomorphic encryption
+  items:
+    - repo: benlwk/cuTraNTT
+      text: Number-theoretic transform kernels for CKKS homomorphic encryption on GPUs.
+- group: Symmetric and lightweight cryptography on GPUs
+  items:
+    - repo: benlwk/AES-BS-GPU
+      text: Bit-sliced AES-128-CTR on GPUs.
+    - repo: benlwk/lwcnist-finalists
+      text: GPU implementations of finalist hash functions from the NIST lightweight cryptography standardisation.
+      paper: Efficient Implementation of Lightweight Hash Functions on GPU and Quantum Computers (IEEE Access 2022)
+    - repo: benlwk/ntt-gpu-qTESLA
+      text: Nussbaumer algorithm and number-theoretic transform on GPUs, applied to qTESLA.
+      paper: Parallel implementation of Nussbaumer algorithm and number theoretic transform on a GPU platform (J. Supercomput. 2021)

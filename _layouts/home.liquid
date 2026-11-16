@@ -1,0 +1,125 @@
+---
+layout: default
+---
+{% assign profile = site.data.profile %}
+<div class="home">
+  <section class="hero" aria-labelledby="hero-title">
+    <canvas class="hero__lattice" data-lattice aria-hidden="true"></canvas>
+    <div class="wrap hero__inner">
+      <p class="kicker hero__kicker">{{ profile.role }} <span aria-hidden="true">/</span> {{ profile.affiliation }}</p>
+      <h1 id="hero-title" class="hero__name">
+        <span class="line"><span>{{ site.first_name }}</span></span>
+        <span class="line"><span>{{ site.last_name }}</span></span>
+      </h1>
+      <p class="hero__statement">{{ profile.statement }}</p>
+      <div class="hero__actions">
+        <a class="btn-line" href="{{ '/publications/' | relative_url }}">Publications {% include site/arrow.liquid %}</a>
+        <a class="btn-line" href="{{ '/research/' | relative_url }}">Research {% include site/arrow.liquid %}</a>
+      </div>
+      <dl class="hero__figures">
+        <div>
+          <dd><span data-count="{% bibliography_count %}">{% bibliography_count %}</span></dd>
+          <dt>peer-reviewed papers</dt>
+        </div>
+        <div>
+          <dd><span data-count="{{ profile.metrics.citations }}">{{ profile.metrics.citations }}</span></dd>
+          <dt>citations</dt>
+        </div>
+        <div>
+          <dd><span data-count="{{ profile.metrics.h_index }}">{{ profile.metrics.h_index }}</span></dd>
+          <dt>h-index</dt>
+        </div>
+      </dl>
+      <p class="hero__note">
+        Citation figures from <a class="link" href="{{ profile.metrics.source_url }}">{{ profile.metrics.source }}</a>, {{ profile.metrics.as_of }}.
+      </p>
+    </div>
+  </section>
+
+  <section id="about" class="band">
+    <div class="wrap">
+      <h2 class="band__label">About</h2>
+      <div class="about">
+        <div class="about__text prose reveal">{{ content }}</div>
+        <figure class="about__photo reveal">
+          <img src="{{ '/assets/img/prof_pic.jpg' | relative_url }}" alt="Portrait of {{ site.first_name }} {{ site.last_name }}" width="339" height="418">
+          <figcaption>{{ profile.role }}<br>{{ profile.affiliation_short }}</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <h2 class="band__label">Research</h2>
+      <div>
+        <ol class="areas">
+          {% for a in site.data.research %}
+            <li class="reveal">
+              <a href="{{ '/research/' | relative_url }}#{{ a.key }}">
+                <span class="areas__no">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
+                <span>
+                  <span class="areas__title">{{ a.title }}</span>
+                  <span class="areas__tag">{{ a.tagline }}</span>
+                </span>
+                {% include site/arrow.liquid %}
+              </a>
+            </li>
+          {% endfor %}
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <h2 class="band__label">Selected results</h2>
+      <div>
+        {% include site/results.liquid limit=4 %}
+        <p class="band__more reveal"><a class="btn-line" href="{{ '/research/' | relative_url }}#results">All results and open-source code {% include site/arrow.liquid %}</a></p>
+      </div>
+    </div>
+  </section>
+
+  {% if page.selected_papers %}
+    <section class="band">
+      <div class="wrap">
+        <h2 class="band__label">Selected publications</h2>
+        <div>
+          {% include selected_papers.liquid %}
+          <p class="band__more reveal"><a class="btn-line" href="{{ '/publications/' | relative_url }}">All publications {% include site/arrow.liquid %}</a></p>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if page.announcements and page.announcements.enabled %}
+    <section class="band">
+      <div class="wrap">
+        <h2 class="band__label">News</h2>
+        <div>
+          {% include site/news_list.liquid limit=page.announcements.limit compact=true %}
+          <p class="band__more reveal"><a class="btn-line" href="{{ '/news/' | relative_url }}">All news {% include site/arrow.liquid %}</a></p>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="band band--contact">
+    <div class="wrap">
+      <h2 class="band__label">Contact</h2>
+      <div class="contact reveal">
+        <p class="contact__lede">{{ profile.joining }}</p>
+        <div class="contact__grid">
+          <address>
+            {% for line in profile.address %}{{ line }}<br>{% endfor %}
+          </address>
+          <div>
+            {% for e in profile.emails %}<a class="link" href="mailto:{{ e }}">{{ e }}</a><br>{% endfor %}
+            <div class="contact__social">{% social_links %}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

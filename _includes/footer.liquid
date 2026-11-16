@@ -1,0 +1,16 @@
+{%- comment -%} Local override of the al_folio_core footer: a quiet two-line footer. {%- endcomment -%}
+<footer class="sitefooter" role="contentinfo">
+  <div class="container">
+    <div class="sitefooter__row">
+      <div>
+        <span class="sitefooter__name">{{ site.first_name }} {{ site.last_name }}</span>
+        <span class="sitefooter__aff">{{ site.data.profile.faculty }}, {{ site.data.profile.affiliation }}</span>
+      </div>
+      <div class="sitefooter__social">{% social_links %}</div>
+    </div>
+    <div class="sitefooter__row sitefooter__row--small">
+      <span>&copy; {{ site.time | date: '%Y' }} {{ site.first_name }} {{ site.last_name }}</span>
+      <span>{{ site.footer_text }}{% if site.last_updated %} Last updated {{ 'now' | date: '%B %-d, %Y' }}.{% endif %}</span>
+    </div>
+  </div>
+</footer>

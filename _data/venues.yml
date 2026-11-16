@@ -1,0 +1,8 @@
+# Optional: give a venue badge a link or a colour. The key must equal the `abbr` field used in _bibliography/papers.bib.
+# Example:
+# "IEEE TC":
+#   url: https://www.computer.org/csdl/journal/tc
+"IEEE TPDS":
+  url: https://www.computer.org/csdl/journal/td
+"IEEE TC":
+  url: https://www.computer.org/csdl/journal/tc

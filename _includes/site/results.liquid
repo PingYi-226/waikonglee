@@ -1,0 +1,11 @@
+{%- comment -%} Selected results from _data/highlights.yml. Parameter: limit (optional). {%- endcomment -%}
+<div class="results">
+  {% for r in site.data.highlights limit: include.limit %}
+    <article class="result reveal">
+      <div class="result__figure" data-count="{{ r.figure }}">{{ r.figure }}</div>
+      <div class="result__unit">{{ r.unit }}</div>
+      <p class="result__text">{{ r.text }}</p>
+      <a class="result__src link" href="https://doi.org/{{ r.doi }}">{{ r.venue }}, {{ r.year }}</a>
+    </article>
+  {% endfor %}
+</div>

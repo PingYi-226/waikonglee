@@ -1,0 +1,43 @@
+# Selected results. Every number is quoted from the abstract of the cited paper.
+- figure: "58,595"
+  unit: Falcon-512 signatures per second
+  text: The first parallel implementation of the Falcon signature scheme on GPUs, alongside its parallel-friendly alternative Mitaka.
+  venue: IEEE TPDS
+  year: 2024
+  doi: 10.1109/tpds.2024.3367319
+  theme: pqc
+- figure: "4.37×"
+  unit: higher FrodoKEM throughput on a V100 GPU
+  text: DPCrypto repurposes the GPU dot-product instructions designed for machine learning to accelerate lattice-based key exchange, and delivered the first Saber implementation on GPUs.
+  venue: IEEE TCAS-I
+  year: 2022
+  doi: 10.1109/tcsi.2022.3176966
+  theme: pqc
+- figure: "7.47×"
+  unit: faster Saber polynomial multiplication on FPGA
+  text: KaratSaber, a Karatsuba multiplier architecture that is 46.04% more area-time efficient than the schoolbook design it is compared with.
+  venue: IEEE TC
+  year: 2023
+  doi: 10.1109/tc.2023.3238129
+  theme: pqc
+- figure: "33×"
+  unit: faster privacy-preserving SVM classification
+  text: cuFE accelerates inner-product functional encryption on GPUs, classifying an encrypted input against 591 support vectors in 688 ms.
+  venue: IEEE TETC
+  year: 2024
+  doi: 10.1109/tetc.2023.3261360
+  theme: privacy
+- figure: "60 Gb/s"
+  unit: AES on an embedded Jetson Orin Nano GPU
+  text: A bit-sliced implementation of AES-CTR and AES-ECB that set a new speed record on GPUs.
+  venue: IEEE ESL
+  year: 2024
+  doi: 10.1109/les.2024.3409725
+  theme: accel
+- figure: "162,760"
+  unit: Kyber encapsulations per second on an RTX 2060
+  text: The first fine-grained GPU implementation of the Kyber post-quantum key encapsulation mechanism, offered as a key-exchange service for IoT gateways.
+  venue: IEEE TSC
+  year: 2022
+  doi: 10.1109/tsc.2021.3103956
+  theme: pqc

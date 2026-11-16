@@ -1,0 +1,44 @@
+{% assign people = site.data.people %}
+<section class="people">
+  <h2 class="section-title">Principal investigator</h2>
+  <div class="pi reveal">
+    <img class="pi__photo" src="{{ '/assets/img/prof_pic.jpg' | relative_url }}" alt="Portrait of {{ site.first_name }} {{ site.last_name }}" width="339" height="418" loading="lazy">
+    <div>
+      <div class="pi__name">{{ site.first_name }} {{ site.last_name }}</div>
+      <div class="pi__role">{{ site.data.profile.role }}, {{ site.data.profile.faculty }}</div>
+      <div class="pi__role">{{ site.data.profile.affiliation }}</div>
+      <div class="pi__links">{% social_links %}</div>
+    </div>
+  </div>
+
+  <h2 class="section-title">Current students</h2>
+  <ul class="people-grid">
+    {% for p in people.current %}
+      {% assign parts = p.name | split: ' ' %}
+      <li class="person reveal">
+        {% if p.photo %}
+          <img class="person__photo" src="{{ p.photo | prepend: '/assets/img/people/' | relative_url }}" alt="{{ p.name }}" loading="lazy">
+        {% else %}
+          <span class="person__mono" aria-hidden="true">{{ parts.first | slice: 0 }}{{ parts.last | slice: 0 }}</span>
+        {% endif %}
+        <span class="person__name">{% if p.url %}<a class="link" href="{{ p.url }}">{{ p.name }}</a>{% else %}{{ p.name }}{% endif %}</span>
+        <span class="person__meta">{{ p.degree }} · {{ p.year }} · {{ p.country }}</span>
+        <span class="person__role">{{ p.supervision }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+
+  <h2 class="section-title">Alumni</h2>
+  <div class="alumni">
+    {% for p in people.alumni %}
+      <div class="alumni__row reveal">
+        <span class="alumni__name">{{ p.name }}</span>
+        <span class="alumni__deg">{{ p.degree }}{% if p.graduated %}{% if p.degree != '' %}, {% endif %}{{ p.graduated }}{% endif %}</span>
+        <span class="alumni__now">{{ p.now }}</span>
+      </div>
+    {% endfor %}
+  </div>
+
+  <h2 class="section-title">Joining the group</h2>
+  <p class="lede reveal">{{ site.data.profile.joining }}</p>
+</section>

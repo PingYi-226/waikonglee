@@ -1,0 +1,26 @@
+# Group members. Add `photo: file.jpg` (in assets/img/people/) and `url:` to any entry when available.
+current:
+  - {name: Luotong Wang, degree: PhD, year: 2nd year, country: China, supervision: Main supervisor}
+  - {name: Ying Ying Chia, degree: PhD, year: 2nd year, country: Malaysia, supervision: Main supervisor}
+  - {name: Keng Lek See, degree: PhD, year: 2nd year, country: Malaysia, supervision: Main supervisor}
+  - {name: Daniel Jun Jie Looi, degree: PhD, year: 1st year, country: Malaysia, supervision: Co-supervisor}
+  - {name: Yi Neng Chang, degree: Master, year: 2nd year, country: Malaysia, supervision: Main supervisor}
+  - {name: Yee Hong Ong, degree: Master, year: 1st year, country: Malaysia, supervision: Main supervisor}
+  - {name: Elveis Kai Wei Ng, degree: PhD, year: 1st year, country: Malaysia, supervision: Main supervisor}
+  - {name: Jia-Lin Chan, degree: PhD, year: 3rd year, country: Malaysia, supervision: Co-supervisor}
+alumni:
+  - {name: Boon-Chiao Chang, degree: MSc, graduated: 2017, now: "Software engineer, Singapore", supervision: Co-supervised}
+  - {name: Xian-Fu Wong, degree: MSc, graduated: 2018, now: "Software engineer, Malaysia", supervision: Co-supervised}
+  - {name: Jia-Zheng Goey, degree: MSc, graduated: 2018, now: "Software engineer, Malaysia", supervision: Co-supervised}
+  - {name: Wei-Pau Kiat, degree: MSc, graduated: 2018, now: "Software engineer, Malaysia", supervision: Co-supervised}
+  - {name: Jacqueline Li-Fang Ang, degree: MSc, graduated: 2018, now: "Software engineer, Malaysia", supervision: Co-supervised}
+  - {name: Jin-Chuan See, degree: MSc, graduated: 2019, now: "Software engineer, Malaysia", supervision: Co-supervised}
+  - {name: Beng-Liong Tan, degree: MSc, graduated: 2021, now: "Hardware engineer, Malaysia", supervision: Main supervisor}
+  - {name: Zheng-Yan Wong, degree: MSc, graduated: 2021, now: "Firmware engineer, Malaysia", supervision: Co-supervised}
+  - {name: Safiullah Khan, degree: PhD, now: "Assistant Professor, Manchester Metropolitan University, UK", supervision: Co-supervised}
+  - {name: Kyung Hyun Han, degree: "", now: "Postdoctoral researcher, South Korea", supervision: Co-supervised}
+  - {name: Jin-Chuan See, degree: PhD, now: "Hardware engineer, Malaysia", supervision: Co-supervised}
+  - {name: Min-An Yong, degree: MSc, now: "Hardware engineer, Malaysia", supervision: Co-supervised}
+  - {name: Ahmed Mujtaba, degree: "", now: "PhD candidate, United States", supervision: Co-supervised}
+  - {name: Young-Min Kim, degree: MSc, now: "Software engineer, South Korea", supervision: Co-supervised}
+  - {name: Muhammad Asfand Hafeez, degree: "", now: "PhD candidate, United States", supervision: Co-supervised}

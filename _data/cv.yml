@@ -1,0 +1,93 @@
+# Curriculum vitae shown on the CV page (RenderCV-style structure).
+cv:
+  name: Wai-Kong Lee
+  label: Associate Professor
+  email: wklee@utar.edu.my
+  location: Kampar, Perak, Malaysia
+  image: ""
+  summary: Associate Professor at Universiti Tunku Abdul Rahman working on cryptographic engineering, GPU computing and deep-learning hardware.
+  social_networks:
+    - network: GitHub
+      username: benlwk
+    - network: ORCID
+      username: 0000-0003-4659-8979
+    - network: Google Scholar
+      username: 4AV9DOcAAAAJ
+  sections:
+    Experience:
+      - company: Universiti Tunku Abdul Rahman
+        position: Associate Professor, Faculty of Information and Communication Technology
+        location: Kampar, Malaysia
+        start_date: 2024-04
+        end_date: present
+      - company: Gachon University
+        position: Postdoctoral Researcher, Computer Engineering
+        location: Seongnam, South Korea
+        start_date: 2020-03
+        end_date: 2023-12
+      - company: Hongik University
+        position: Postdoctoral Researcher
+        location: Sejong, South Korea
+        start_date: 2019-12
+        end_date: 2020-02
+      - company: Universiti Tunku Abdul Rahman
+        position: Assistant Professor, Faculty of Information and Communication Technology
+        location: Kampar, Malaysia
+        start_date: 2012-09
+        end_date: 2019-11
+      - company: Agilent Technologies (now Keysight)
+        position: R&D Firmware Engineer
+        location: Penang, Malaysia
+        start_date: 2011-01
+        end_date: 2012-09
+      - company: Syabas Technology (now CloudMedia)
+        position: R&D Firmware Engineer
+        location: Penang, Malaysia
+        start_date: 2009-10
+        end_date: 2010-12
+      - company: Xyratex Malaysia
+        position: R&D Hardware Engineer
+        location: Senawang, Malaysia
+        start_date: 2008-10
+        end_date: 2009-09
+    Education:
+      - institution: Universiti Tunku Abdul Rahman
+        location: Malaysia
+        area: Engineering
+        studyType: Doctor of Philosophy
+        start_date: 2013-01
+        end_date: 2018-04
+      - institution: Multimedia University
+        location: Cyberjaya, Malaysia
+        area: Engineering Science
+        studyType: Master
+        start_date: 2007-01
+        end_date: 2009-09
+      - institution: Multimedia University
+        location: Melaka, Malaysia
+        area: Electronics Engineering (Hons)
+        studyType: Bachelor
+        start_date: 2001-05
+        end_date: 2006-05
+    Projects:
+      - name: Development of Privacy Preservation Technologies and Blockchain for Industry 4.0
+        summary: Principal Investigator. Korean Research Fellowship (now the Brain Pool Program).
+        start_date: 2019-12
+        end_date: 2023-11
+      - name: New Post-quantum Identity Based Encryption Scheme With Practical Implementation for Internet of Things Communication
+        summary: Principal Investigator (2018–2019), Project Member (2020–2021). Fundamental Research Grant Scheme (FRGS), Malaysia.
+        start_date: 2018-12
+        end_date: 2021-11
+      - name: Accelerating direct sparse matrix solver in GPU platform with application to circuit simulation
+        summary: Principal Investigator. Carleton University, Canada.
+        start_date: 2017-09
+        end_date: 2021-11
+    Interests:
+      - name: Research interests
+        keywords:
+          - GPU computing
+          - Cryptographic engineering
+          - Deep learning hardware architecture
+          - Internet of Things
+          - Electrochemical impedance spectroscopy
+          - Energy harvesting
