@@ -1,4 +1,7 @@
 # Group members. Add `photo: file.jpg` (in assets/img/people/) and `url:` to any entry when available.
+# The wide picture above the students on the Group page; replace the placeholder with e.g. /assets/img/people/group.jpg
+# (shown at 16:7, cropped from the middle).
+group_photo: /assets/img/placeholder/group.svg
 current:
   - {name: Luotong Wang, degree: PhD, year: 2nd year, country: China, supervision: Main supervisor}
   - {name: Ying Ying Chia, degree: PhD, year: 2nd year, country: Malaysia, supervision: Main supervisor}

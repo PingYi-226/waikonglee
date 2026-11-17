@@ -1,44 +1,136 @@
-{% assign people = site.data.people %}
-<section class="people">
-  <h2 class="section-title">Principal investigator</h2>
-  <div class="pi reveal">
-    <img class="pi__photo" src="{{ '/assets/img/prof_pic.jpg' | relative_url }}" alt="Portrait of {{ site.first_name }} {{ site.last_name }}" width="339" height="418" loading="lazy">
-    <div>
-      <div class="pi__name">{{ site.first_name }} {{ site.last_name }}</div>
-      <div class="pi__role">{{ site.data.profile.role }}, {{ site.data.profile.faculty }}</div>
-      <div class="pi__role">{{ site.data.profile.affiliation }}</div>
-      <div class="pi__links">{% social_links %}</div>
-    </div>
-  </div>
-
-  <h2 class="section-title">Current students</h2>
-  <ul class="people-grid">
-    {% for p in people.current %}
-      {% assign parts = p.name | split: ' ' %}
-      <li class="person reveal">
-        {% if p.photo %}
-          <img class="person__photo" src="{{ p.photo | prepend: '/assets/img/people/' | relative_url }}" alt="{{ p.name }}" loading="lazy">
-        {% else %}
-          <span class="person__mono" aria-hidden="true">{{ parts.first | slice: 0 }}{{ parts.last | slice: 0 }}</span>
-        {% endif %}
-        <span class="person__name">{% if p.url %}<a class="link" href="{{ p.url }}">{{ p.name }}</a>{% else %}{{ p.name }}{% endif %}</span>
-        <span class="person__meta">{{ p.degree }} · {{ p.year }} · {{ p.country }}</span>
-        <span class="person__role">{{ p.supervision }}</span>
-      </li>
-    {% endfor %}
-  </ul>
-
-  <h2 class="section-title">Alumni</h2>
-  <div class="alumni">
-    {% for p in people.alumni %}
-      <div class="alumni__row reveal">
-        <span class="alumni__name">{{ p.name }}</span>
-        <span class="alumni__deg">{{ p.degree }}{% if p.graduated %}{% if p.degree != '' %}, {% endif %}{{ p.graduated }}{% endif %}</span>
-        <span class="alumni__now">{{ p.now }}</span>
+{%- comment -%}
+  Body of the Group page (_pages/group.md prints the page head): principal investigator, the group photograph,
+  current students (filter by degree), alumni (orderable), joining. All text from _data/people.yml and _data/profile.yml.
+  Each person without a photo gets a mark computed from their name (_includes/site/people_glyph.liquid).
+{%- endcomment -%}
+{%- assign people = site.data.people -%}
+{%- assign profile = site.data.profile -%}
+{%- assign pi_name = site.first_name | append: ' ' | append: site.last_name -%}
+{%- assign degrees = people.current | map: 'degree' | uniq -%}
+<div class="group">
+  <section class="section gpi" id="pi" aria-labelledby="pi-h">
+    <div class="wrap">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title" id="pi-h">Principal investigator</h2>
+      </header>
+      <div class="gpi__grid">
+        <figure class="gpi__photo" data-kit="reveal" data-reveal="clip">
+          <div class="gpi__frame" data-kit="tilt" data-max="5" data-shine="true">
+            <img src="{{ '/assets/img/prof_pic.jpg' | relative_url }}" alt="Portrait of {{ pi_name }}" width="339" height="418">
+          </div>
+        </figure>
+        <div class="gpi__body">
+          <h3 class="gpi__name" data-kit="split" data-split="words" data-effect="rise">{{ pi_name }}</h3>
+          <div class="gpi__text" data-kit="reveal-group">
+            <p class="gpi__role">{{ profile.role }}</p>
+            <p class="gpi__aff">{{ profile.faculty }}<br>{{ profile.affiliation }}</p>
+            <p class="gpi__fields">{{ profile.fields | join: ', ' }}</p>
+            <div class="gpi__links">
+              <a class="btn btn--ghost" href="{{ '/cv/' | relative_url }}" data-kit="press"><span data-kit="sliding-text">Curriculum vitae</span>{% include site/icon.liquid name="arrow-right" size="18" %}</a>
+              {% include site/socials.liquid class="gpi__socials" %}
+            </div>
+          </div>
+        </div>
       </div>
-    {% endfor %}
-  </div>
+    </div>
+  </section>
 
-  <h2 class="section-title">Joining the group</h2>
-  <p class="lede reveal">{{ site.data.profile.joining }}</p>
-</section>
+  {%- assign gp = people.group_photo -%}
+  {%- if gp and gp != '' %}
+  {%- assign gp_placeholder = false -%}
+  {%- if gp contains '/placeholder/' -%}{%- assign gp_placeholder = true -%}{%- endif %}
+  <figure class="gphoto wrap">
+    <div class="gphoto__frame" data-kit="reveal" data-reveal="clip">
+      {%- if gp_placeholder %}
+      <img class="gphoto__img" src="{{ gp | relative_url }}" alt="Placeholder for the group photograph, to be supplied" width="1600" height="700">
+      {%- else %}
+      <a class="gphoto__link" href="{{ gp | relative_url }}" data-kit="lightbox" data-caption="The group" data-cursor="View">
+        <img class="gphoto__img" src="{{ gp | relative_url }}" alt="The group" loading="lazy" decoding="async">
+      </a>
+      {%- endif %}
+    </div>
+    <figcaption class="figcap"><span class="figcap__no">Fig. 2</span><span>The group{% if gp_placeholder %}; the photograph is to be supplied{% endif %}.</span></figcaption>
+  </figure>
+  {%- endif %}
+
+  <section class="section gstudents" id="students" aria-labelledby="students-h">
+    <div class="wrap">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title" id="students-h">Current students</h2>
+        <div class="gfilter js-only" role="group" aria-label="Show students by degree" data-kit="highlight" data-mode="both" data-items=".chip" data-filter>
+          <button type="button" class="chip" aria-pressed="true" data-degree="">All<span class="gfilter__n t-data">{{ people.current | size }}</span></button>
+          {%- for d in degrees %}
+          {%- assign n = people.current | where: 'degree', d | size %}
+          <button type="button" class="chip" aria-pressed="false" data-degree="{{ d }}">{{ d }}<span class="gfilter__n t-data">{{ n }}</span></button>
+          {%- endfor %}
+        </div>
+      </header>
+      <ul class="people" data-kit="highlight reveal-group" data-items=".person" data-people>
+        {%- for p in people.current %}
+        <li class="person" data-reveal-item data-degree="{{ p.degree }}">
+          {% include site/people_glyph.liquid name=p.name photo=p.photo kind="tile" %}
+          <h3 class="person__name">{% if p.url %}<a class="link" href="{{ p.url }}">{{ p.name }}</a>{% else %}{{ p.name }}{% endif %}</h3>
+          <p class="person__meta">
+            <span class="person__deg">{{ p.degree }}, {{ p.year }}</span>
+            <span>{{ p.country }}</span>
+            <span>{{ p.supervision }}</span>
+          </p>
+        </li>
+        {%- endfor %}
+      </ul>
+      <p class="gstudents__empty" data-people-empty hidden>No students with this degree at present.</p>
+    </div>
+  </section>
+
+  <section class="section galumni" id="alumni" aria-labelledby="alumni-h">
+    <div class="wrap">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title" id="alumni-h">Alumni</h2>
+      </header>
+      <div class="alumni">
+        <div class="alumni__head" role="group" aria-label="Order the alumni by" data-kit="highlight" data-mode="both" data-items=".alumni__sort" data-alumni-sort>
+          <button type="button" class="alumni__sort alumni__sort--name" data-sort="name" aria-pressed="false">Name{% include site/icon.liquid name="arrow-down" size="14" class="alumni__dir" %}</button>
+          <button type="button" class="alumni__sort alumni__sort--deg" data-sort="degree" aria-pressed="false">Degree{% include site/icon.liquid name="arrow-down" size="14" class="alumni__dir" %}</button>
+          <button type="button" class="alumni__sort alumni__sort--year" data-sort="year" aria-pressed="true">Graduated{% include site/icon.liquid name="arrow-down" size="14" class="alumni__dir" %}</button>
+          <button type="button" class="alumni__sort alumni__sort--now" data-sort="now" aria-pressed="false">Now{% include site/icon.liquid name="arrow-down" size="14" class="alumni__dir" %}</button>
+          <span class="alumni__label alumni__label--sup">Supervision</span>
+        </div>
+        <ol class="alumni__rows" data-kit="highlight reveal-group" data-items=".alum" data-alumni>
+          {%- for p in people.alumni %}
+          <li class="alum" data-reveal-item data-i="{{ forloop.index0 }}" data-name="{{ p.name | escape }}" data-degree="{{ p.degree }}" data-year="{{ p.graduated }}" data-now="{{ p.now | escape }}">
+            {% include site/people_glyph.liquid name=p.name photo=p.photo kind="row" %}
+            <span class="alum__name">{% if p.url %}<a class="link" href="{{ p.url }}">{{ p.name }}</a>{% else %}{{ p.name }}{% endif %}</span>
+            <span class="alum__deg">{% if p.degree != '' %}{{ p.degree }}{% endif %}</span>
+            <span class="alum__year t-data">{{ p.graduated }}</span>
+            <span class="alum__now">{{ p.now }}</span>
+            <span class="alum__sup">{{ p.supervision }}</span>
+          </li>
+          {%- endfor %}
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="section gjoin" id="joining" aria-labelledby="joining-h">
+    <div class="wrap">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title" id="joining-h">Joining the group</h2>
+        <a class="link" href="{{ '/research/' | relative_url }}">Research</a>
+      </header>
+      <div class="gjoin__grid">
+        <p class="gjoin__lede" data-kit="split" data-split="words" data-effect="arrive">{{ profile.joining }}</p>
+        <ul class="gjoin__mail" data-kit="reveal-group" data-items=".gjoin__row">
+          {%- for e in profile.emails %}
+          <li class="gjoin__row" data-reveal-item>
+            <a class="gjoin__addr link" href="mailto:{{ e }}">{{ e }}</a>
+            <button type="button" class="icon-btn gjoin__copy js-only" data-kit="copy press tooltip" data-copy="{{ e }}" data-tip="Copy address" data-toast="Address copied" aria-label="Copy {{ e }}">
+              {%- include site/icon.liquid name="copy" size="18" -%}
+              {%- include site/icon.liquid name="check" size="18" -%}
+            </button>
+          </li>
+          {%- endfor %}
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
