@@ -36,7 +36,10 @@
             {% include site/icon.liquid name="pause" size=16 %}
           </button>
           <p class="rplate__cap figcap" aria-hidden="true">
-            <span class="figcap__no">Fig. <span data-kit="sliding-number" data-trigger="manual" data-value="1" data-from="1" data-rplate-no>1</span></span>
+            {%- comment -%} the figure number is an odometer strip: research.js rolls it to the area being read {%- endcomment %}
+            <span class="figcap__no">Fig. <span class="rplate__no"><span class="rplate__strip" data-rplate-no>
+              {%- for a in areas -%}<span>{{ forloop.index | plus: 1 }}</span>{%- endfor -%}
+            </span></span></span>
             <span class="rplate__tags">
               {%- for a in areas -%}
                 <span class="rplate__tag{% if forloop.first %} is-current{% endif %}" data-rplate-tag>{{ a.tagline }}</span>
@@ -67,7 +70,7 @@
             <span class="rarea__plate" data-rarea-fig>
               {% include site/diagrams/{{ a.key }}.liquid live="always" trigger="manual" detail="full" %}
             </span>
-            <figcaption class="figcap"><span class="figcap__no">Fig. {{ forloop.index }}</span><span>{{ a.tagline }}</span></figcaption>
+            <figcaption class="figcap"><span class="figcap__no">Fig. {{ forloop.index | plus: 1 }}</span><span>{{ a.tagline }}</span></figcaption>
           </figure>
           <div class="rarea__text">
             <h3 class="rarea__title" id="rarea-{{ a.key }}">{{ a.title }}</h3>

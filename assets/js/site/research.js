@@ -104,7 +104,7 @@
         s.drawn = true;
         s.timer = setTimeout(function () {
           if (current === i) drawIn(fig, !paused);
-        }, env.reduce ? 0 : 80);
+        }, env.reduce ? 0 : 60);
       } else if (s.drawn) {
         var c = controller(fig);
         if (c && c.live) c.live(!paused);
@@ -145,8 +145,24 @@
           tag._rAnim = Site.animate(tag, { opacity: 0, filter: blur(T.blur.surface), y: Site.m(-T.shift.handoff * dir) }, Site.t("transition.swap"));
         }
       });
-      var n = kit(numEl, "sliding-number");
-      if (n) n.set(i + 1);
+      roll(i, false);
+    }
+
+    /** The figure number rolls like an odometer to the area's number (a strip of numbers behind a one-line window). */
+    function roll(i, instant) {
+      if (!numEl) return;
+      stop(numEl._rAnim);
+      var to = { transform: "translateY(" + -i * 1.2 + "em)" };
+      if (instant) {
+        numEl.style.transform = to.transform;
+        return;
+      }
+      if (env.reduce) {
+        numEl.style.transform = to.transform;
+        numEl._rAnim = Site.animate(numEl, { opacity: [0, 1], filter: [blur(T.blur.icon), blur(0)] }, Site.t("transition.swap"));
+        return;
+      }
+      numEl._rAnim = Site.animate(numEl, to, Site.t("spring.entrance"));
     }
 
     function select(i) {
@@ -176,14 +192,17 @@
         figs[start].classList.add("is-current");
         tags[0].classList.remove("is-current");
         tags[start].classList.add("is-current");
-        var n0 = kit(numEl, "sliding-number");
-        if (n0) n0.set(start + 1, { instant: true });
+        roll(start, true);
         current = start;
       }
     }
 
-    // the first figure draws when the plate is first seen
-    if ("IntersectionObserver" in window) {
+    // the first figure draws when the plate is first seen ("?static": at once)
+    if (env.static) {
+      seen = true;
+      state[current].drawn = true;
+      drawIn(figs[current], !paused);
+    } else if ("IntersectionObserver" in window) {
       var io = new IntersectionObserver(
         function (entries) {
           if (!entries[entries.length - 1].isIntersecting || !wide.matches) return;
@@ -235,9 +254,13 @@
       });
     }
 
-    // small screens: each area's own figure draws itself the first time it is seen
-    if ("IntersectionObserver" in window) {
-      var own = all(section, "[data-rarea-fig]");
+    // small screens: each area's own figure draws itself the first time it is seen ("?static": all at once)
+    var own = all(section, "[data-rarea-fig]");
+    if (env.static || !("IntersectionObserver" in window)) {
+      own.forEach(function (el) {
+        drawIn(el, false);
+      });
+    } else {
       var io2 = new IntersectionObserver(
         function (entries) {
           entries.forEach(function (e) {
@@ -339,7 +362,7 @@
 
   /* ------------------------------------------- links within this page glide */
   function initJumps() {
-    all(document, ".rtoc a[href^='#']").forEach(function (a) {
+    all(document, ".rtoc a[href^='#'], .rmix a[href^='#']").forEach(function (a) {
       a.addEventListener("click", function (e) {
         if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;
         var t = document.getElementById(decodeURIComponent(a.hash.slice(1)));

@@ -35,6 +35,97 @@
   }
 }
 
+/* ---------- page head: Fig. 1, the papers of each area ---------- */
+.rmix {
+  margin: 0;
+  max-width: 30rem;
+  margin-left: auto;
+}
+
+.rmix__rows {
+  --k-highlight-inset: 0 -0.6rem;
+  --k-highlight-radius: var(--r-1);
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.rmix__row,
+.rmix__row:visited {
+  display: grid;
+  grid-template-columns: 10.5rem minmax(0, 1fr) 2rem;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 1.85rem;
+  font-size: var(--fs-xs);
+  line-height: 1.3;
+  color: var(--muted);
+  transition: color var(--t-color);
+}
+
+.rmix__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rmix__track {
+  position: relative;
+  height: 0.45rem;
+  overflow: clip;
+  border-radius: 2px;
+}
+
+/* the bar slides in from the left inside its track (never scaled: its corners stay round) */
+.rmix__bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: calc(var(--v) * 100%);
+  min-width: 3px;
+  border-radius: 2px;
+  background-color: var(--line-strong);
+  transition:
+    transform 900ms var(--ease-out) calc(380ms + var(--i) * 60ms),
+    background-color var(--t-color);
+}
+
+html.js .pagehead__aside:not(.is-in) .rmix__bar {
+  transform: translateX(-101%);
+}
+
+.rmix__n {
+  text-align: right;
+  color: inherit;
+}
+
+.rmix__row:focus-visible {
+  outline-offset: 2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rmix__row:hover {
+    color: var(--ink);
+  }
+
+  .rmix__row:hover .rmix__bar {
+    background-color: var(--accent);
+    transition:
+      transform 900ms var(--ease-out),
+      background-color var(--t-color);
+  }
+}
+
+.rmix__row:focus-visible .rmix__bar {
+  background-color: var(--accent);
+}
+
+@media (max-width: 860px) {
+  .rmix {
+    max-width: none;
+    margin-left: 0;
+  }
+}
+
 /* ---------- research areas ----------
    Base (small screens, and wide screens without the script): each area is its figure, then its text.
    Wide screens with the script: the plate sticks on the left and the text blocks run on the right. */
@@ -245,7 +336,7 @@
 .rplate__fig {
   grid-area: 1 / 1;
   display: block;
-  width: 84%;
+  width: 90%;
 }
 
 /* only the plate's current figure shows; research.js takes over from here */
@@ -283,6 +374,26 @@ html.is-reduced .rplate__pause {
   flex: none;
   min-width: 3.4rem;
   font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* the figure number: a strip of numbers behind a one-line window */
+.rplate__no {
+  display: inline-block;
+  height: 1.2em;
+  overflow: clip;
+  overflow-clip-margin: 0.1em;
+  vertical-align: bottom;
+}
+
+.rplate__strip {
+  display: flex;
+  flex-direction: column;
+}
+
+.rplate__strip > span {
+  display: block;
+  height: 1.2em;
+  line-height: 1.2em;
 }
 
 .rplate__tags {
@@ -464,6 +575,11 @@ html.js .rplate__tag:not(.is-current) {
 }
 
 /* ---------- open-source software: ruled groups ---------- */
+.rsoft .sechead {
+  flex-wrap: wrap;
+  row-gap: 0.35rem;
+}
+
 .rsoft .sechead .link-arrow {
   padding: 0;
 }
@@ -726,7 +842,7 @@ html.js .rplate__tag:not(.is-current) {
   display: block;
   height: 0.7rem;
   border-radius: 3px;
-  background-color: var(--paper-3);
+  background-color: var(--line-strong);
   clip-path: inset(0 0 0 0 round 3px);
   transition: background-color var(--t-color);
 }

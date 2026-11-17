@@ -7,6 +7,30 @@
 {%- for g in site.data.software -%}{%- assign repo_count = repo_count | plus: g.items.size -%}{%- endfor -%}
 {%- capture paper_count -%}{% bibliography_count %}{%- endcapture -%}
 {%- assign paper_count = paper_count | strip -%}
+{%- comment -%} Fig. 1: the papers of each area, one bar each, in the order of the areas below; a bar takes you to its area {%- endcomment -%}
+{%- capture area_counts -%}
+  {%- for a in site.data.research -%}{% bibliography_count --query @*[theme={{ a.key }}] %}{% unless forloop.last %},{% endunless %}{%- endfor -%}
+{%- endcapture -%}
+{%- assign area_counts = area_counts | strip | split: ',' -%}
+{%- assign peak = 1 -%}
+{%- for c in area_counts -%}{%- assign v = c | plus: 0 -%}{%- if v > peak -%}{%- assign peak = v -%}{%- endif -%}{%- endfor -%}
+{%- capture head_aside -%}
+<figure class="rmix">
+  <ol class="rmix__rows" data-kit="highlight" data-items=".rmix__row">
+    {%- for a in site.data.research -%}
+      {%- assign v = area_counts[forloop.index0] | plus: 0 %}
+    <li>
+      <a class="rmix__row" href="#{{ a.key }}" style="--v: {{ v | times: 1.0 | divided_by: peak | round: 3 }}; --i: {{ forloop.index0 }}">
+        <span class="rmix__name">{{ a.short | default: a.title }}</span>
+        <span class="rmix__track" aria-hidden="true"><span class="rmix__bar"></span></span>
+        <span class="rmix__n t-data">{{ v }}<span class="sr-only"> {% if v == 1 %}paper{% else %}papers{% endif %}</span></span>
+      </a>
+    </li>
+    {%- endfor %}
+  </ol>
+  <figcaption class="figcap"><span class="figcap__no">Fig. 1</span><span>Papers in each research area</span></figcaption>
+</figure>
+{%- endcapture -%}
 {%- capture head_meta -%}
 <nav class="rtoc" aria-label="On this page" data-kit="highlight" data-items=".rtoc__item">
   <a class="rtoc__item" href="#areas">
@@ -27,4 +51,4 @@
   </a>
 </nav>
 {%- endcapture -%}
-{% include site/pagehead.liquid meta=head_meta %}
+{% include site/pagehead.liquid aside=head_aside meta=head_meta %}
