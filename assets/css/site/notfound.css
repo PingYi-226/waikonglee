@@ -1,0 +1,124 @@
+/* ==========================================================================
+   404 page: the page head, a small lattice plate beside it (the pointer is a point that is not on the
+   lattice; the closest lattice point is ringed), the figure 404 and the ways back in the row under it.
+   Markup: _pages/404.md. Behaviour: assets/js/site/notfound.js.
+   ========================================================================== */
+
+body.layout-default main#main {
+  min-height: 72vh;
+}
+
+.nf__fig {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0;
+}
+
+/* a plate: the figure lies on its own surface, hairline, no shadow */
+.nf__plate {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+
+.nf__plate:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.nf__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity var(--t-arrive);
+}
+
+.nf__canvas.is-on {
+  opacity: 1;
+}
+
+.nf__cap {
+  align-items: baseline;
+}
+
+.nf__read {
+  color: inherit;
+}
+
+.nf__data {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+/* on the lattice for a moment (after Enter or a click) */
+.nf__fig.is-on-lattice .nf__data {
+  color: var(--accent);
+}
+
+/* ---------- the row under the rule ---------- */
+.nf__stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1.25rem clamp(2rem, 5vw, 4.5rem);
+  margin: 0;
+}
+
+.nf__addr {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.5rem;
+  min-width: 0;
+  padding-bottom: 0.35rem;
+}
+
+.nf__path {
+  max-width: min(28rem, 70vw);
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--ink-2);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.nf__path:empty::before {
+  content: "\2014";
+  color: var(--muted);
+}
+
+.nf__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-left: auto;
+  padding-bottom: 0.2rem;
+}
+
+@media (max-width: 860px) {
+  .nf__fig {
+    max-width: 34rem;
+  }
+
+  .nf__actions {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .nf__actions .btn {
+    flex: 1 1 auto;
+  }
+}

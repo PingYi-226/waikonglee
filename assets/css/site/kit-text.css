@@ -1,0 +1,309 @@
+/* ==========================================================================
+   kit-text: styles of the text components (kit-text.js; docs in _work/agent_notes/kit-text.md).
+   Initial states live here, under html.js and keyed on the data attribute, so nothing flashes before
+   the script runs and nothing stays hidden if it never does.
+   ========================================================================== */
+
+/* al-folio's main.css gives every span --global-text-color instead of letting it inherit: the spans these kits
+   create, and the spans that host them, take the colour of the text around them (a class on the host still wins) */
+span:where([data-kit~="split"], [data-kit~="sliding-number"], [data-kit~="rotating-text"], [data-kit~="rolling-text"], [data-kit~="sliding-text"], [data-kit~="swap-text"], [data-kit~="highlight-text"], [data-kit~="shimmer-text"], [data-kit~="typing-text"], [data-kit~="scramble"]),
+:where(.k-split, .k-num, .k-rot, .k-roll, .k-slide, .k-swap, .k-shim, .k-type, .k-scr) span {
+  color: inherit;
+}
+
+/* a copy of the text for screen readers next to an aria-hidden visual: never copied twice with the selection */
+.k-sr {
+  user-select: none;
+}
+
+/* ---------- split ---------- */
+html.js [data-kit~="split"]:not(.k-split) {
+  opacity: 0;
+}
+
+.k-split__m,
+.k-split__p {
+  display: inline-block;
+}
+
+.k-split__p {
+  white-space: pre;
+}
+
+/* rise: each word is a clipping line; the bleed keeps ascenders, descenders and the spring's overshoot visible */
+.k-split--rise .k-split__m {
+  overflow-x: visible;
+  overflow-y: clip;
+  padding-block: 0.2em;
+  margin-block: -0.2em;
+}
+
+.k-split__vis {
+  white-space: inherit;
+}
+
+/* ---------- sliding-number ---------- */
+html.js [data-kit~="sliding-number"]:not(.is-built) {
+  opacity: 0;
+}
+
+.k-num {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.k-num__unit {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* a column growing in or shrinking out: clipped sideways only, so the separator's tail still shows */
+.k-num__unit.is-sizing {
+  overflow-x: clip;
+}
+
+/* one column: a "0" sizes it, the ten digits sit on a wheel around it (Animate UI SlidingNumberRoller) */
+.k-num__col {
+  position: relative;
+  display: inline-block;
+  overflow-x: visible;
+  overflow-y: clip;
+  line-height: 1;
+}
+
+.k-num__ghost {
+  visibility: hidden;
+}
+
+.k-num__d {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.k-num__sign[hidden] {
+  display: none;
+}
+
+/* ---------- rotating-text ---------- */
+/* child-span markup: only the first word shows until the script takes over (and without it) */
+[data-kit~="rotating-text"]:not(.k-rot) > span + span {
+  display: none;
+}
+
+/* overflow: clip (not hidden) keeps the line's baseline; the bleed leaves room for descenders */
+.k-rot {
+  position: relative;
+  display: inline-block;
+  vertical-align: baseline;
+  white-space: nowrap;
+  overflow-x: visible;
+  overflow-y: clip;
+  padding-block: 0.2em;
+  margin-block: -0.2em;
+}
+
+.k-rot__w {
+  display: inline-block;
+}
+
+.k-rot__w.is-leaving {
+  position: absolute;
+  pointer-events: none;
+}
+
+.k-rot__meter {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ---------- rolling-text ---------- */
+.k-roll__w {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* each letter: two faces over an invisible copy that holds its place (Animate UI Rolling Text) */
+.k-roll__c {
+  position: relative;
+  display: inline-block;
+  perspective: 9999999px;
+  transform-style: preserve-3d;
+}
+
+.k-roll__f,
+.k-roll__b {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-block;
+  backface-visibility: hidden;
+}
+
+.k-roll__f {
+  transform-origin: 50% 25%;
+}
+
+.k-roll__b {
+  transform-origin: 50% 100%;
+  transform: rotateX(90deg);
+}
+
+.k-roll__g {
+  visibility: hidden;
+}
+
+/* ---------- sliding-text ---------- */
+/* a clipped box with a bleed, so ascenders and descenders are not cut (Animate UI BLEED 0.25em) */
+.k-slide {
+  position: relative;
+  display: inline-block;
+  vertical-align: baseline;
+  overflow: clip;
+  padding-block: 0.25em;
+  margin-block: -0.25em;
+}
+
+.k-slide__w {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.k-slide__t {
+  position: relative;
+  display: inline-block;
+  white-space: pre;
+}
+
+/* the copy waits one label height plus a gap above (below with data-direction="up") */
+.k-slide__copy {
+  position: absolute;
+  left: 0;
+  top: calc(-100% - 0.6em);
+  width: 100%;
+}
+
+.k-slide--up .k-slide__copy {
+  top: calc(100% + 0.6em);
+}
+
+/* ---------- swap-text ---------- */
+.k-swap {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.k-swap__l {
+  display: inline-block;
+}
+
+.k-swap:not(.is-reserved) .k-swap__l.is-leaving {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* every label sits in one grid cell, invisible but the current one: the box is the widest label's */
+.k-swap.is-reserved {
+  display: inline-grid;
+  justify-items: var(--k-swap-align, start);
+}
+
+.k-swap.is-reserved > * {
+  grid-area: 1 / 1;
+}
+
+.k-swap__g {
+  visibility: hidden;
+}
+
+/* ---------- highlight-text ---------- */
+/* hooks: --k-hl-color (default --accent-soft), --k-hl-size (the band's height, default the whole line) */
+:where([data-kit~="highlight-text"]) {
+  color: inherit;
+  background-color: transparent;
+}
+
+[data-kit~="highlight-text"] {
+  background-image: linear-gradient(var(--k-hl-color, var(--accent-soft)), var(--k-hl-color, var(--accent-soft)));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% var(--k-hl-size, 100%);
+  padding-inline: 0.12em;
+  margin-inline: -0.12em;
+  border-radius: 0.12em;
+  -webkit-box-decoration-break: slice;
+  box-decoration-break: slice;
+}
+
+html.js [data-kit~="highlight-text"]:not(.is-in) {
+  background-size: 0% var(--k-hl-size, 100%);
+}
+
+/* ---------- shimmer-text ---------- */
+.k-shim {
+  --k-shimmer-base: var(--muted);
+  --k-shimmer-glint: var(--ink);
+  color: var(--k-shimmer-base);
+}
+
+.k-shim.is-paused .k-shim__c {
+  animation-play-state: paused !important;
+}
+
+/* ---------- typing-text ---------- */
+.k-type__caret {
+  display: inline-block;
+  width: 0.08em;
+  min-width: 1px;
+  height: 1em;
+  margin-left: 0.06em;
+  vertical-align: -0.12em;
+  background-color: currentColor;
+  animation: k-caret 1s linear infinite;
+}
+
+/* solid while typing, blinking while it waits (Animate UI cursor: opacity 0, 0, 1, 1 at 0, .5, .5, 1) */
+@keyframes k-caret {
+  0%,
+  50% {
+    opacity: 0;
+  }
+  50.01%,
+  100% {
+    opacity: 1;
+  }
+}
+
+.k-type.is-typing .k-type__caret,
+.k-type.is-paused .k-type__caret,
+.is-reduced .k-type__caret {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .k-type__caret {
+    animation: none;
+  }
+}
+
+/* ---------- scramble ---------- */
+html.js [data-kit~="scramble"]:not([data-trigger="hover"]):not([data-trigger="manual"]):not(.is-in) {
+  opacity: 0;
+}
+
+.k-scr__vis {
+  white-space: pre;
+}
+
+/* split: a nested link's hairline (or any background decoration) waits until the words have arrived */
+.k-split:not(.is-done) .k-split__deco {
+  background-size: 0 0 !important;
+  transition: none !important;
+}

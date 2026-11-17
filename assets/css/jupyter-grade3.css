@@ -133,14 +133,6 @@ div#notebook {
   border: none;
 }
 
-.navbar-nav > li > .dropdown-menu {
-  margin-top: 0px;
-}
-
-.navbar-nav {
-  margin: 0;
-}
-
 @-webkit-keyframes pulsate {
   0% {
     -webkit-transform: scale(1, 1);
@@ -166,6 +158,16 @@ div#notebook {
     -webkit-transform: scale(1, 1);
     opacity: 0.8;
   }
+}
+
+.fa {
+  display: inline-block;
+  font:
+    normal normal normal 10pt/1 "FontAwesome",
+    sans-serif;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .dropdown-menu {
@@ -435,7 +437,7 @@ h1,
 h2,
 h3,
 h4,
-h6,
+h5,
 pre,
 code,
 form,
@@ -582,6 +584,14 @@ input.raw_input {
   margin: 0em 0.25em;
   -webkit-box-shadow: none;
   box-shadow: none;
+}
+
+
+video {
+  display: inline;
+  vertical-align: middle;
+  align-content: center;
+  margin-left: 20%;
 }
 
 

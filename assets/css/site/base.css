@@ -1,0 +1,582 @@
+/* ==========================================================================
+   Base: element defaults, type classes, layout primitives and the few static
+   components every page shares. Motion lives in the kit-*.css files and in the
+   page stylesheets; this file only says how things look at rest.
+   ========================================================================== */
+
+/* ---------- reset of the template's page frame ---------- */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--nav-h) + 1rem);
+}
+
+body {
+  margin: 0;
+  padding: 0 !important;
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--ink);
+  background-color: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern", "liga", "calt";
+  overflow-x: clip;
+}
+
+/* The template's main.css gives p, div, span, li, em, strong and the headings an explicit colour, so colour stops
+   inheriting. Undone here at the same, lowest specificity: any class still wins. */
+:where(.v2) :is(p, h1, h2, h3, h4, h5, h6, em, div, li, span, strong) {
+  color: inherit;
+}
+
+/* the template shows these two buttons by id, which would beat the hidden attribute */
+#light-toggle[hidden],
+#search-toggle[hidden] {
+  display: none !important;
+}
+
+body > .container[role="main"],
+body > main.container {
+  max-width: none;
+  width: auto;
+  margin: 0 !important;
+  padding: 0;
+}
+
+/* paper grain: one static texture over the page, barely there */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.38;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.44 0 0 0 0 0.41 0 0 0 0.11 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+html[data-theme="dark"] body::before {
+  opacity: 0.5;
+  mix-blend-mode: soft-light;
+}
+
+/* the parts of the page the browser draws: selection, caret, scrollbars, form accents */
+::selection {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--ink);
+}
+
+html {
+  caret-color: var(--accent);
+  accent-color: var(--accent);
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* ---------- type ---------- */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: var(--lh-snug);
+  letter-spacing: -0.012em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+p {
+  margin: 0 0 1.1em;
+  text-wrap: pretty;
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+.t-hero {
+  font-family: var(--font-display);
+  font-size: var(--fs-hero);
+  line-height: 0.9;
+  letter-spacing: -0.032em;
+}
+
+.t-d1 {
+  font-family: var(--font-display);
+  font-size: var(--fs-d1);
+  line-height: var(--lh-tight);
+  letter-spacing: -0.024em;
+}
+
+.t-d2 {
+  font-family: var(--font-display);
+  font-size: var(--fs-d2);
+  line-height: 1.04;
+  letter-spacing: -0.018em;
+}
+
+.t-d3 {
+  font-family: var(--font-display);
+  font-size: var(--fs-d3);
+  line-height: 1.24;
+  letter-spacing: -0.006em;
+}
+
+.t-d4 {
+  font-family: var(--font-display);
+  font-size: var(--fs-d4);
+  line-height: 1.25;
+}
+
+.t-small {
+  font-size: var(--fs-small);
+}
+
+.t-xs {
+  font-size: var(--fs-xs);
+}
+
+/* meta text: section names, captions, short supporting lines. Sentence case, no tracking tricks. */
+.t-label {
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* data: dates, counts, coordinates, identifiers, venue abbreviations, code. The one place for the mono face. */
+.t-data {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  letter-spacing: 0;
+}
+
+.t-muted {
+  color: var(--muted);
+}
+
+.t-ink2 {
+  color: var(--ink-2);
+}
+
+.t-accent {
+  color: var(--accent);
+}
+
+.t-italic {
+  font-family: var(--font-display);
+  font-style: italic;
+}
+
+.t-num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+.measure {
+  max-width: var(--measure);
+}
+
+/* ---------- links ---------- */
+a,
+a:visited {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* a text link: the hairline leaves to the right as a new one draws in from the left */
+.link {
+  position: relative;
+  display: inline;
+  background-image: linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--line-strong), var(--line-strong));
+  background-repeat: no-repeat;
+  background-position:
+    0 100%,
+    100% 100%;
+  background-size:
+    0 1px,
+    100% 1px;
+  padding-bottom: 1px;
+  transition:
+    background-size 420ms var(--ease-out),
+    color var(--t-color);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link:hover {
+    color: var(--accent);
+    background-size:
+      100% 1px,
+      0 1px;
+  }
+}
+
+.prose a,
+.prose a:visited {
+  background-image: linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--line-strong), var(--line-strong));
+  background-repeat: no-repeat;
+  background-position:
+    0 100%,
+    100% 100%;
+  background-size:
+    0 1px,
+    100% 1px;
+  padding-bottom: 1px;
+  transition:
+    background-size 420ms var(--ease-out),
+    color var(--t-color);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .prose a:hover {
+    color: var(--accent);
+    background-size:
+      100% 1px,
+      0 1px;
+  }
+}
+
+/* ---------- focus ---------- */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ---------- media ---------- */
+img,
+svg,
+canvas,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+img {
+  height: auto;
+}
+
+/* ---------- layout primitives ---------- */
+.wrap {
+  width: min(100% - 2 * var(--gutter), var(--page));
+  margin-inline: auto;
+}
+
+.wrap--narrow {
+  width: min(100% - 2 * var(--gutter), 860px);
+}
+
+.wrap--wide {
+  width: min(100% - 2 * var(--gutter), 1480px);
+}
+
+.grid12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: clamp(1rem, 2.2vw, 2rem);
+}
+
+.stack > * + * {
+  margin-top: var(--stack, 1rem);
+}
+
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cluster, 0.75rem);
+}
+
+.rule {
+  height: 1px;
+  border: 0;
+  margin: 0;
+  background: var(--line);
+}
+
+.section {
+  padding-block: var(--s-10);
+}
+
+.page-top {
+  padding-top: calc(var(--nav-h) + clamp(3rem, 9vw, 7rem));
+}
+
+/* ---------- static components ---------- */
+.btn {
+  --btn-bg: var(--ink);
+  --btn-fg: var(--paper);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 2.9rem;
+  padding: 0 1.3rem;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--btn-fg);
+  background: var(--btn-bg);
+  border: 1px solid transparent;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--t-color),
+    color var(--t-color),
+    border-color var(--t-color),
+    box-shadow var(--t-color);
+}
+
+a.btn,
+a.btn:visited {
+  color: var(--btn-fg);
+}
+
+.btn--ghost {
+  --btn-bg: transparent;
+  --btn-fg: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.btn--small {
+  min-height: 2.3rem;
+  padding: 0 0.95rem;
+  font-size: 0.86rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover {
+    --btn-bg: var(--accent);
+    --btn-fg: var(--paper);
+  }
+
+  .btn--ghost:hover {
+    --btn-bg: var(--hover);
+    --btn-fg: var(--ink);
+    border-color: var(--ink);
+  }
+}
+
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--t-color),
+    color var(--t-color);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .icon-btn:hover {
+    color: var(--ink);
+    background: var(--hover);
+  }
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.1rem;
+  padding: 0 0.9rem;
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  line-height: 1;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color var(--t-color),
+    border-color var(--t-color),
+    background-color var(--t-color);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.14rem 0.6rem;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+}
+
+.tag--accent {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: var(--accent-wash);
+}
+
+/* a plate: a self-contained object on the page. (The template's main.css also has a .card with a shadow and
+   "transition: all"; both are taken off here.) */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  box-shadow: none;
+  transition: none;
+}
+
+.field {
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0 0.1rem;
+  font: inherit;
+  font-size: 0.97rem;
+  color: var(--ink);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  transition:
+    border-color var(--t-color),
+    box-shadow var(--t-color);
+}
+
+.field::placeholder {
+  color: var(--muted);
+}
+
+.field:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 var(--accent);
+}
+
+.kbd {
+  display: inline-block;
+  padding: 0.05rem 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--muted);
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+}
+
+/* ---------- accessibility helpers ---------- */
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: -5rem;
+  z-index: calc(var(--z-intro) + 1);
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  color: var(--paper) !important;
+  background: var(--ink);
+  border-radius: var(--r-2);
+  transition: top 200ms var(--ease-out);
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+html.js .no-js-only {
+  display: none !important;
+}
+
+html:not(.js) .js-only {
+  display: none !important;
+}
+
+/* ---------- motion preferences ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+
+/* "?static": every page in its final state */
+.is-static *,
+.is-static *::before,
+.is-static *::after {
+  transition-duration: 0s !important;
+  transition-delay: 0s !important;
+  animation-duration: 0s !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+}
+
+@media print {
+  html[data-theme="dark"] {
+    --paper: #ffffff;
+    --paper-2: #f3f3f3;
+    --surface: #ffffff;
+    --ink: #1c1c1c;
+    --ink-2: #333333;
+    --muted: #555555;
+    --faint: #999999;
+    --faint-text: #777777;
+    --line: rgba(0, 0, 0, 0.2);
+    --line-strong: rgba(0, 0, 0, 0.4);
+    --accent: #2f5d54;
+  }
+
+  body::before {
+    display: none;
+  }
+}

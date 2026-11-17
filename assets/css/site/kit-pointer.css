@@ -1,0 +1,553 @@
+/* ==========================================================================
+   kit-pointer: styles of the pointer and surface components (see _work/KIT_SPEC.md and
+   _work/agent_notes/kit-pointer.md). Classes that start with `k-` belong to the kit; the
+   script adds most of them, so they must survive CSS purging.
+   Every colour and every timing comes from tokens.css.
+   ========================================================================== */
+
+/* ---------- highlight ----------
+   One surface per mode, appended to the group by the script and placed under the items
+   (z-index -1 inside the group's own stacking context), so labels always paint above it. */
+.k-highlight {
+  isolation: isolate;
+}
+
+.k-highlight > .k-highlight__surface {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: -1;
+  display: block;
+  box-sizing: border-box;
+  width: 0;
+  height: 0;
+  padding: 0;
+  /* the inset: read by the script from the computed margins (positive shrinks the surface, negative grows it) */
+  margin: var(--k-highlight-inset, 0) !important;
+  list-style: none;
+  pointer-events: none;
+  opacity: 0;
+  background: var(--k-highlight-bg, var(--hover));
+  /* the corners of the item it lies under, unless the page sets a radius */
+  border-radius: var(--k-highlight-radius, var(--k-item-radius, var(--r-2)));
+  /* showing up from nothing and going: never a cut (transition.color) */
+  transition:
+    opacity var(--t-color),
+    background-color var(--t-color),
+    border-radius var(--t-color);
+}
+
+.k-highlight > .k-highlight__surface--selection {
+  background: var(--k-highlight-selection-bg, var(--k-highlight-bg, var(--paper-3)));
+}
+
+.k-highlight > .k-highlight__surface.is-lit {
+  opacity: 1;
+}
+
+/* taken over while it was fading out: back to full a little quicker (transition.fade) */
+.k-highlight > .k-highlight__surface.is-resuming {
+  transition:
+    opacity var(--t-fade),
+    background-color var(--t-color),
+    border-radius var(--t-color);
+}
+
+/* the frame it is first placed in: nothing animates on page load */
+.k-highlight > .k-highlight__surface.is-still {
+  transition: none;
+}
+
+/* Before the script runs (and without it) the selected item paints the selection itself. */
+[data-kit~="highlight"]:is([data-mode="selection"], [data-mode="both"]):not(.k-highlight)
+  [data-highlight-item]:is([aria-selected="true"], [aria-current]:not([aria-current="false"]), [aria-pressed="true"], .is-active) {
+  background: var(--k-highlight-selection-bg, var(--k-highlight-bg, var(--paper-3)));
+  border-radius: var(--k-highlight-radius, var(--r-2));
+}
+
+/* ---------- tabs ---------- */
+/* before the script runs only the first panel shows (without JavaScript: all of them, one after the other) */
+html.js [data-kit~="tabs"]:not(.is-on) [role="tabpanel"] ~ [role="tabpanel"] {
+  display: none;
+}
+
+/* a page's own `display` on a panel must not bring a hidden one back */
+[data-kit~="tabs"] [role="tabpanel"][hidden] {
+  display: none !important;
+}
+
+/* Optional skin: a segmented row of tabs, chips or links. The selection and the hover are the
+   highlight's surfaces; the items only change colour (transition.color). */
+.k-seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.125rem;
+  max-width: 100%;
+  padding: 0.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+}
+
+.k-seg[aria-orientation="vertical"] {
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: var(--r-3);
+}
+
+.k-seg__item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0 0.95rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--t-color);
+}
+
+.k-seg[aria-orientation="vertical"] > .k-seg__item {
+  justify-content: flex-start;
+  border-radius: var(--r-2);
+}
+
+.k-seg__item:is([aria-selected="true"], [aria-pressed="true"], [aria-current]:not([aria-current="false"]), .is-active) {
+  color: var(--ink);
+}
+
+.k-seg__item:is(:disabled, [aria-disabled="true"]) {
+  color: var(--faint-text);
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .k-seg__item:hover:not(:disabled, [aria-disabled="true"]) {
+    color: var(--ink);
+  }
+}
+
+/* autoplay: the time left on the active tab, a hairline filling under its label (--progress is set by the script) */
+[data-kit~="tabs"][data-autoplay] .k-seg__item::after {
+  content: "";
+  position: absolute;
+  left: 0.95rem;
+  right: 0.95rem;
+  bottom: 0.3rem;
+  height: 1px;
+  background: linear-gradient(currentColor, currentColor) no-repeat left / calc(var(--progress, 0) * 100%) 100%;
+  opacity: 0;
+  transition: opacity var(--t-color);
+}
+
+[data-kit~="tabs"][data-autoplay] .k-seg__item[aria-selected="true"]::after {
+  opacity: 0.45;
+}
+
+/* ---------- disclosure ----------
+   The panel must have no vertical padding, border or margin of its own (pad an inner element):
+   it is animated between a height of 0 and its content's height. */
+/* before the script runs, closed panels are already closed (without JavaScript every panel shows) */
+html.js [data-disclosure-panel]:not(.is-on):not([data-open]) {
+  display: none;
+}
+
+/* a page's own `display` must not bring a closed panel back */
+[data-disclosure-panel][hidden]:not([hidden="until-found"]) {
+  display: none !important;
+}
+
+/* while it moves: clipped, its bottom edge fading over 16px, or over the part still hidden */
+[data-disclosure-panel].is-moving {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 max(100% - 16px, 200% - var(--k-disclosure-content, 100%)), transparent);
+  mask-image: linear-gradient(to bottom, #000 max(100% - 16px, 200% - var(--k-disclosure-content, 100%)), transparent);
+}
+
+/* the trigger's mark turns with the panel, on its timing, so the two read as one gesture */
+[data-kit~="disclosure"] [data-disclosure-icon] {
+  transition: rotate var(--t-disclosure);
+}
+
+[data-kit~="disclosure"][aria-expanded="true"] [data-disclosure-icon] {
+  rotate: var(--k-disclosure-turn, 180deg);
+}
+
+html.is-reduced [data-kit~="disclosure"] [data-disclosure-icon] {
+  transition: none;
+}
+
+/* ---------- flip ---------- */
+/* the copy of a removed item, fading out where the item was */
+[data-flip-ghost] {
+  z-index: 1;
+}
+
+/* ---------- tooltip ----------
+   One popup for the page. The script places .k-tip (left / top / width / height) and animates
+   the box's scale and opacity; the labels slide inside the clip. */
+.k-tip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: calc(var(--z-overlay) + 2);
+  pointer-events: none;
+}
+
+.k-tip[hidden] {
+  display: none;
+}
+
+.k-tip__box {
+  position: absolute;
+  inset: 0;
+  color: var(--k-tip-fg, var(--paper));
+  background: var(--k-tip-bg, var(--ink));
+  border-radius: var(--k-tip-radius, var(--r-2));
+  box-shadow: var(--shadow-1);
+}
+
+.k-tip__clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+/* the template's main.css gives every div and span its own text colour: say again that these inherit */
+.k-tip__clip,
+.k-tip__layer,
+.k-tip__label,
+.k-swap,
+.k-swap > *,
+.k-ripple__wave,
+.k-toast__content {
+  color: inherit;
+}
+
+/* each label keeps its own size, anchored on the side that faces the trigger */
+.k-tip__layer {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 1rem));
+  translate: -50% 0;
+}
+
+.k-tip[data-side="bottom"] .k-tip__layer {
+  top: 0;
+  bottom: auto;
+}
+
+.k-tip__label {
+  padding: 0.42rem 0.7rem;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.005em;
+  text-align: center;
+}
+
+/* ---------- copy: two states in one cell ----------
+   .k-swap holds the idle state and the done state on top of each other; .is-swapped (set by the
+   script) swaps them, both moving at once: from scale.icon out of blur.icon on transition.swap. */
+.k-swap {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  vertical-align: middle;
+}
+
+.k-swap > * {
+  grid-area: 1 / 1;
+  transition:
+    opacity var(--t-swap),
+    scale var(--t-swap),
+    filter var(--t-swap);
+}
+
+.k-swap > :nth-child(2),
+.k-swap.is-swapped > :first-child {
+  opacity: 0;
+  scale: 0.5;
+  filter: blur(2px);
+}
+
+.k-swap.is-swapped > :nth-child(2) {
+  opacity: 1;
+  scale: 1;
+  filter: none;
+}
+
+/* a changing text fades through the blur, it never scales (rule B9) */
+.k-swap.k-swap--text > :nth-child(n) {
+  scale: 1;
+}
+
+/* reduced motion: the fade and the blur stay, the scale goes */
+html.is-reduced .k-swap > :nth-child(n) {
+  scale: 1;
+}
+
+/* ---------- ripple ---------- */
+:where([data-kit~="ripple"]) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.k-ripple__wave {
+  position: absolute;
+  z-index: -1; /* over the button's background, under its label */
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--k-ripple-color, color-mix(in srgb, currentColor 45%, transparent));
+  pointer-events: none;
+}
+
+/* ---------- toast ----------
+   The script sets, on each toast: --i (0 = the newest, in front), --offset (the heights in front
+   of it), --h (its own height); on the region: --front (the front toast's height). One transform
+   whose functions never change, so every state interpolates (recipes/css-driven.md). */
+.k-toasts {
+  position: fixed;
+  left: 50%;
+  bottom: max(var(--k-toast-inset, 1.5rem), env(safe-area-inset-bottom));
+  z-index: calc(var(--z-overlay) + 1);
+  width: min(var(--k-toast-width, 21rem), calc(100vw - 2rem));
+  height: 0;
+  translate: -50% 0;
+  pointer-events: none;
+}
+
+.k-toast {
+  --shrink: max(0.9, calc(1 - var(--i, 0) * 0.05)); /* the ones behind are a little smaller, never below 0.9 */
+  --y: calc(-1 * (var(--i, 0) * 0.75rem + (1 - var(--shrink)) * var(--front, 0px)));
+  --travel: 100%; /* it rises its own height */
+  --rise: 0;
+  --grow: 1;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  height: var(--h, auto);
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+  box-shadow: var(--shadow-2);
+  cursor: pointer;
+  pointer-events: auto;
+  opacity: 1;
+  filter: blur(0px);
+  transform: translateY(calc(var(--y) + var(--rise) * var(--travel))) scale(calc(var(--shrink) * var(--grow)));
+  transform-origin: 50% 100%;
+  transition:
+    transform var(--spring-toast),
+    opacity var(--spring-toast),
+    filter var(--spring-toast),
+    height var(--spring-toast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.k-toast__content {
+  padding: 0.8rem 1.05rem;
+  font-size: var(--fs-small);
+  line-height: 1.45;
+  transition: opacity var(--t-fade);
+}
+
+/* collapsed: the ones behind take the front one's height and keep their words to themselves */
+.k-toast.is-behind {
+  height: var(--front, auto);
+}
+
+.k-toast.is-behind > .k-toast__content {
+  opacity: 0;
+}
+
+/* under the pointer the stack unfolds */
+.k-toasts.is-expanded > .k-toast {
+  --shrink: 1;
+  --y: calc(-1 * (var(--offset, 0px) + var(--i, 0) * 0.75rem));
+  height: var(--h, auto);
+}
+
+.k-toasts.is-expanded > .k-toast > .k-toast__content {
+  opacity: 1;
+}
+
+/* the gaps between unfolded toasts still belong to the stack */
+.k-toasts.is-expanded > .k-toast::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 0.8rem;
+}
+
+.k-toasts.is-expanded > .k-toast {
+  overflow: visible;
+}
+
+/* front to back, only on the change that unfolds or folds the stack (stagger.stack) */
+.k-toasts.is-cascading > .k-toast,
+.k-toasts.is-cascading > .k-toast > .k-toast__content {
+  transition-delay: calc(var(--i, 0) * 30ms);
+}
+
+/* more than three: the oldest wait out of sight */
+.k-toast.is-limited {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* where it comes from, and where it goes back to (from scale.toast out of blur.surface) */
+.k-toast.is-entering,
+.k-toast.is-leaving {
+  --rise: 1;
+  --grow: 0.96;
+  opacity: 0;
+  filter: blur(4px);
+}
+
+.k-toast.is-entering {
+  transition: none;
+}
+
+.k-toast.is-leaving {
+  pointer-events: none;
+  transition:
+    transform var(--t-dismiss),
+    opacity var(--t-dismiss),
+    filter var(--t-dismiss);
+}
+
+/* reduced motion: no travel, no growth; it still fades in out of its blur */
+html.is-reduced .k-toast {
+  --travel: 0%;
+  transition-delay: 0s !important;
+}
+
+html.is-reduced .k-toast.is-entering,
+html.is-reduced .k-toast.is-leaving {
+  --grow: 1;
+}
+
+/* ---------- lightbox ---------- */
+[data-kit~="lightbox"] {
+  cursor: zoom-in;
+}
+
+.k-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  cursor: zoom-out;
+}
+
+.k-lightbox[hidden] {
+  display: none;
+}
+
+/* on its way out it no longer stands between the pointer and the page */
+.k-lightbox:not(.is-open) {
+  pointer-events: none;
+}
+
+/* the page recedes through the veil's colour, never through an opacity fade (recipes/modal.md) */
+.k-lightbox__scrim {
+  position: absolute;
+  inset: 0;
+  background-color: transparent;
+  transition: background-color var(--t-overlay);
+}
+
+.k-lightbox.is-open .k-lightbox__scrim {
+  background-color: var(--k-lightbox-scrim, color-mix(in srgb, var(--paper) 92%, transparent));
+}
+
+/* laid out at its open size by the script; its radius is the open picture's corners (read by the script) */
+.k-lightbox__frame {
+  position: absolute;
+  transform-origin: 0 0;
+  border-radius: var(--k-lightbox-radius, var(--r-2));
+}
+
+.k-lightbox__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* what only exists in the large view comes once the picture is on its way, and goes first */
+.k-lightbox__caption,
+.k-lightbox__close {
+  opacity: 0;
+  transition: opacity var(--t-swap);
+}
+
+.k-lightbox.is-open .k-lightbox__caption,
+.k-lightbox.is-open .k-lightbox__close {
+  opacity: 1;
+  transition: opacity var(--t-reveal);
+}
+
+/* the caption waits until the picture is most of the way there (the close button is there at once, for the keyboard) */
+.k-lightbox.is-open .k-lightbox__caption {
+  transition-delay: var(--k-lightbox-caption-delay, 200ms);
+}
+
+.k-lightbox__caption {
+  position: absolute;
+  left: 50%;
+  width: max-content;
+  max-width: min(40rem, calc(100vw - 2rem));
+  margin: 0.9rem 0 0;
+  translate: -50% 0;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  text-align: center;
+  color: var(--muted);
+}
+
+.k-lightbox__close {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: 1rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  color: var(--ink-2);
+  background: transparent;
+  border: 0;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .k-lightbox__close:hover {
+    color: var(--ink);
+    background: var(--hover);
+  }
+}

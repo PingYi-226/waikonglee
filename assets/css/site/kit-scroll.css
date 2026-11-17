@@ -1,0 +1,294 @@
+/* ==========================================================================
+   kit-scroll: initial states and structure of the scroll and pointer kits
+   (kit-scroll.js; usage in _work/agent_notes/kit-scroll.md).
+   Hidden states live under html.js so nothing flashes before the script runs
+   and nothing stays hidden if it never does. Motion itself is in the script.
+   ========================================================================== */
+
+/* The template's main.css gives div, span, li ... an explicit text colour; the wrappers the kits
+   insert must not break the colour their content inherits. */
+.k-marquee__track,
+.k-marquee__group,
+.k-pin__stage,
+.k-autoh__inner,
+.k-cursor__text {
+  color: inherit;
+}
+
+/* ---------- reveal, reveal-group ---------- */
+html.js [data-kit~="reveal"]:not(.is-in),
+html.js [data-kit~="reveal-group"]:not([data-items]) > :not(.is-in),
+html.js [data-kit~="reveal-group"] [data-reveal-item]:not(.is-in) {
+  opacity: 0;
+}
+
+/* ---------- draw: hidden until the script has set its strokes up (manual draws rest whole) ---------- */
+html.js [data-kit~="draw"]:not(.k-draw):not([data-trigger="manual"]) {
+  opacity: 0;
+}
+
+@media print {
+  html.js [data-kit~="reveal"],
+  html.js [data-kit~="reveal-group"] > *,
+  html.js [data-kit~="reveal-group"] [data-reveal-item],
+  html.js [data-kit~="draw"] {
+    opacity: 1 !important;
+  }
+}
+
+/* ---------- scroll-progress: an optional bar reading --progress ---------- */
+.k-progress {
+  display: block;
+  height: 2px;
+  background: var(--accent);
+  transform-origin: 0 50%;
+  transform: scaleX(var(--progress, 0));
+}
+
+/* ---------- word-scrub: each word mixes from the faint colour to its own (currentColor, inherited) ---------- */
+.k-scrub__w {
+  color: color-mix(in srgb, currentColor calc(var(--k-w, 0) * 100%), var(--k-scrub-from, var(--faint-text)));
+}
+
+/* ---------- marquee ---------- */
+/* without the script: a row that scrolls sideways */
+[data-kit~="marquee"] {
+  display: flex;
+  align-items: center;
+  gap: var(--k-marquee-gap, 2.5rem);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.k-marquee {
+  display: block;
+  overflow: hidden;
+  /* room for focus rings inside the clip */
+  padding-block: 6px;
+  margin-block: -6px;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--k-marquee-fade, 8%), #000 calc(100% - var(--k-marquee-fade, 8%)), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 var(--k-marquee-fade, 8%), #000 calc(100% - var(--k-marquee-fade, 8%)), transparent);
+}
+
+.k-marquee__track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+
+.k-marquee__group {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--k-marquee-gap, 2.5rem);
+  padding-inline-end: var(--k-marquee-gap, 2.5rem);
+}
+
+/* reduced motion: a still row that can be scrolled */
+.k-marquee--still {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.k-marquee--still .k-marquee__track {
+  will-change: auto;
+}
+
+.k-marquee--still .k-marquee__group[aria-hidden] {
+  display: none;
+}
+
+/* ---------- pin-x ---------- */
+/* without the script, and in its native mode: a swipeable row with snap points */
+[data-kit~="pin-x"] [data-pin-track] {
+  position: relative;
+  display: flex;
+  gap: var(--k-pin-gap, 1.25rem);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: var(--k-pin-snap-pad, 0px);
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+  /* room for focus rings: an overflowing row clips on both axes */
+  padding-block: 6px;
+  margin-block: -6px;
+}
+
+[data-kit~="pin-x"] [data-pin-item] {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+.k-pin--pinned > .k-pin__stage {
+  position: sticky;
+  top: var(--k-pin-top, 0px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: calc(100svh - var(--k-pin-top, 0px));
+  overflow-x: clip;
+}
+
+.k-pin--pinned[data-bleed] > .k-pin__stage {
+  overflow-x: visible;
+}
+
+.k-pin--pinned [data-pin-track] {
+  overflow: visible;
+  scroll-snap-type: none;
+  will-change: transform;
+}
+
+/* ---------- auto-height ---------- */
+.k-autoh {
+  overflow: clip;
+  overflow-clip-margin: 6px;
+}
+
+.k-autoh__inner {
+  display: flow-root;
+}
+
+/* ---------- tilt: the optional light ---------- */
+.k-tilt__shine {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* follows the pointer: in light the far side shades a little, in dark the near side lightens */
+.k-tilt__shine--light {
+  opacity: 0;
+  background: radial-gradient(circle at var(--k-x, 50%) var(--k-y, 50%), transparent 18%, color-mix(in srgb, var(--ink) 6%, transparent) 95%);
+  transition: opacity var(--t-color);
+}
+
+html[data-theme="dark"] .k-tilt__shine--light {
+  background: radial-gradient(circle at var(--k-x, 50%) var(--k-y, 50%), color-mix(in srgb, var(--ink) 9%, transparent), transparent 62%);
+}
+
+.k-tilt.is-lit > .k-tilt__shine--light {
+  opacity: 1;
+}
+
+/* primitives/effects/shine: a band of currentColor at 30% sweeping once, skewed -15deg */
+.k-tilt__band {
+  position: absolute;
+  inset: 0;
+  opacity: var(--k-shine-opacity, 0.3);
+  background: linear-gradient(to right, transparent, var(--k-shine-color, currentColor), transparent);
+  transform: translateX(-100%) skewX(-15deg);
+  will-change: transform;
+}
+
+/* ---------- cursor label ---------- */
+.k-cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: var(--z-cursor);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.k-cursor__pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 1.7rem;
+  padding: 0 0.7rem;
+  overflow: clip;
+  white-space: nowrap;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: var(--r-pill);
+  box-shadow: var(--shadow-1);
+  /* it grows out of the pointer, which sits at its top left */
+  transform-origin: 0 0;
+}
+
+.k-cursor__text.is-leaving {
+  position: absolute;
+  left: 0.7rem;
+}
+
+/* ---------- hover-preview ---------- */
+.k-preview {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: calc(var(--z-cursor) - 1);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.k-preview__card {
+  position: relative;
+  width: var(--k-preview-w, 17rem);
+  aspect-ratio: var(--k-preview-ratio, 4 / 3);
+  overflow: hidden;
+  border-radius: var(--r-3);
+  background: var(--paper-3);
+  box-shadow: var(--shadow-2);
+}
+
+.k-preview__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- avatar-group ---------- */
+[data-kit~="avatar-group"] {
+  display: flex;
+  align-items: center;
+}
+
+[data-kit~="avatar-group"] > * {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+[data-kit~="avatar-group"] > * + * {
+  margin-inline-start: calc(var(--k-avatar-overlap, 0.7rem) * -1);
+}
+
+/* an avatar: a picture or initials in a ring of the page colour */
+.k-avatar {
+  display: grid;
+  place-items: center;
+  width: var(--k-avatar-size, 2.75rem);
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--ink-2);
+  background: var(--paper-3);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--paper);
+  cursor: default;
+}
+
+.k-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+button.k-avatar,
+a.k-avatar {
+  cursor: pointer;
+}

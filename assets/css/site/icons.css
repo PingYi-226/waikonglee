@@ -1,0 +1,535 @@
+/* ==========================================================================
+   Icons: the inline SVGs of _includes/site/icon.liquid and how each one moves.
+   An icon animates when its closest a / button / [data-icon-trigger] is hovered (fine pointers) or gets
+   keyboard focus: icons.js puts .is-hot on the svg while that lasts, and .is-play for one gesture.
+   - a state (download arrow lowered, sheets of the copy icon apart) holds while hot and eases back;
+   - a gesture (an arrow leaving and coming back, a bell-like swing) plays once through, ends at rest.
+   The motion follows Animate UI's icon principles (references/icons.md) and its registry icons' values:
+   0.3s for a state, ~0.6s for a gesture, Motion's easeInOut, moves of 0.5 to 4 units on the 24 grid.
+   Icons own their timing (outside the motion tokens), like Animate UI's.
+   ========================================================================== */
+
+.icon {
+  --k-ie: cubic-bezier(0.42, 0, 0.58, 1); /* Motion's easeInOut */
+  --k-io: cubic-bezier(0, 0, 0.58, 1); /* Motion's easeOut */
+  display: inline-block;
+  flex-shrink: 0;
+  width: var(--icon-size, 1.25em);
+  height: var(--icon-size, 1.25em);
+  vertical-align: -0.25em;
+  overflow: hidden; /* an arrow leaving its box comes back in from the other side, inside it */
+}
+
+/* every piece turns and scales around its own box, like Motion's SVG pieces */
+.icon * {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* ---------- states: held while hot ---------- */
+.icon--download .k-i-a,
+.icon--copy .k-i-front,
+.icon--copy .k-i-back,
+.icon--code .k-i-l,
+.icon--code .k-i-r,
+.icon--play .k-i-a,
+.icon--pause .k-i-l,
+.icon--pause .k-i-r {
+  transition: transform 0.3s var(--k-ie);
+}
+
+.icon--download.is-hot .k-i-a {
+  transform: translateY(2px); /* the arrow drops into its tray */
+}
+
+.icon--copy.is-hot .k-i-front {
+  transform: translate(1px, 1px);
+}
+
+.icon--copy.is-hot .k-i-back {
+  transform: translate(-1px, -1px);
+}
+
+.icon--code.is-hot .k-i-l {
+  transform: translateX(-1px);
+}
+
+.icon--code.is-hot .k-i-r {
+  transform: translateX(1px);
+}
+
+.icon--play.is-hot .k-i-a {
+  transform: translateX(3px);
+}
+
+.icon--pause.is-hot .k-i-l {
+  transform: translateX(-1.5px);
+}
+
+.icon--pause.is-hot .k-i-r {
+  transform: translateX(1.5px);
+}
+
+/* the envelope opens: its outline and its flap morph (Animate UI mail "open"; browsers without CSS d stay still) */
+.icon--mail .k-i-body,
+.icon--mail .k-i-flap {
+  transition: d 0.35s var(--k-ie);
+}
+
+.icon--mail.is-hot .k-i-body {
+  d: path("M21.2 8.4c0.5 0.38 0.8 0.97 0.8 1.6v10a2 2 0 0 1 -2 2H4a2 2 0 0 1 -2 -2V10a2 2 0 0 1 0.8 -1.6l8 -6a2 2 0 0 1 2.4 0l8 6Z");
+  transition-duration: 0.45s;
+}
+
+.icon--mail.is-hot .k-i-flap {
+  d: path("m22 10 -8.97 5.7a1.94 1.94 0 0 1 -2.06 0L2 10");
+  transition-duration: 0.45s;
+}
+
+/* ---------- menu <-> close: the toggle's aria-expanded turns the bars into a cross (Animate UI menu) ---------- */
+.icon--menu .k-i-l1,
+.icon--menu .k-i-l3 {
+  transition: transform var(--spring-entrance); /* Animate UI: spring 200 / 20, the same as spring.entrance */
+}
+
+.icon--menu .k-i-l1 {
+  transform-origin: top right;
+}
+
+.icon--menu .k-i-l3 {
+  transform-origin: bottom right;
+}
+
+.icon--menu .k-i-l2 {
+  transition: opacity 0.2s var(--k-ie);
+}
+
+[aria-expanded="true"] .icon--menu .k-i-l1 {
+  transform: translate(-2.35px, 0.35px) rotate(-45deg);
+}
+
+[aria-expanded="true"] .icon--menu .k-i-l2 {
+  opacity: 0;
+}
+
+[aria-expanded="true"] .icon--menu .k-i-l3 {
+  transform: translate(-2.35px, -0.35px) rotate(45deg);
+}
+
+/* ---------- gestures: played once per hover or focus ---------- */
+/* arrows fly out and come back in from the other side (Animate UI arrow "out": 0.6s, through times 0, .5, .5, 1) */
+@keyframes k-i-out-x {
+  50% {
+    transform: translateX(150%);
+  }
+  50.01% {
+    transform: translateX(-150%);
+  }
+}
+
+@keyframes k-i-out-y-down {
+  50% {
+    transform: translateY(150%);
+  }
+  50.01% {
+    transform: translateY(-150%);
+  }
+}
+
+@keyframes k-i-out-y-up {
+  50% {
+    transform: translateY(-150%);
+  }
+  50.01% {
+    transform: translateY(150%);
+  }
+}
+
+@keyframes k-i-out-diag {
+  50% {
+    transform: translate(150%, -150%);
+  }
+  50.01% {
+    transform: translate(-150%, 150%);
+  }
+}
+
+.icon--arrow-right.is-play .k-i-a {
+  animation: k-i-out-x 0.6s var(--k-ie);
+}
+
+.icon--arrow-down.is-play .k-i-a {
+  animation: k-i-out-y-down 0.6s var(--k-ie);
+}
+
+.icon--arrow-up.is-play .k-i-a {
+  animation: k-i-out-y-up 0.6s var(--k-ie);
+}
+
+.icon--arrow-up-right.is-play .k-i-a,
+.icon--external.is-play .k-i-a {
+  animation: k-i-out-diag 0.6s var(--k-ie);
+}
+
+/* a chevron nudges the way it points and comes back (Animate UI chevron "default-loop": 4 units, 0.6s) */
+@keyframes k-i-nudge-y {
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+@keyframes k-i-nudge-x {
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+.icon--chevron-down.is-play .k-i-a {
+  animation: k-i-nudge-y 0.6s var(--k-ie);
+}
+
+.icon--chevron-right.is-play .k-i-a {
+  animation: k-i-nudge-x 0.6s var(--k-ie);
+}
+
+/* the check draws itself and pops a little (Animate UI check) */
+@keyframes k-i-draw {
+  from {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+}
+
+@keyframes k-i-check {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.icon--check .k-i-a,
+.icon--scopus .k-i-s,
+.icon--file-text .k-i-l1,
+.icon--file-text .k-i-l2,
+.icon--file-text .k-i-l3 {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+.icon--check.is-play .k-i-a {
+  animation: k-i-check 0.6s var(--k-ie);
+}
+
+/* the lens goes round once (Animate UI search "find", made a circle: up to 2 units, inside the grid) */
+@keyframes k-i-circle {
+  12.5% {
+    transform: translate(0.71px, -0.29px);
+  }
+  25% {
+    transform: translate(1px, -1px);
+  }
+  37.5% {
+    transform: translate(0.71px, -1.71px);
+  }
+  50% {
+    transform: translate(0, -2px);
+  }
+  62.5% {
+    transform: translate(-0.71px, -1.71px);
+  }
+  75% {
+    transform: translate(-1px, -1px);
+  }
+  87.5% {
+    transform: translate(-0.71px, -0.29px);
+  }
+}
+
+.icon--search.is-play .k-i-a {
+  animation: k-i-circle 1s var(--k-ie);
+}
+
+/* a cross turns a quarter, its strokes one after the other (Animate UI x / plus) */
+@keyframes k-i-quarter {
+  to {
+    transform: rotate(90deg);
+  }
+}
+
+.icon--close.is-play .k-i-l1,
+.icon--plus.is-play .k-i-l2 {
+  animation: k-i-quarter 0.4s var(--k-ie);
+}
+
+.icon--close.is-play .k-i-l2,
+.icon--plus.is-play .k-i-l1 {
+  animation: k-i-quarter 0.4s var(--k-ie) 0.1s;
+}
+
+@keyframes k-i-half {
+  to {
+    transform: rotate(180deg);
+  }
+}
+
+.icon--minus.is-play .k-i-a {
+  animation: k-i-half 0.4s var(--k-ie);
+}
+
+/* the sun's rays turn an eighth (they look the same after) while its core breathes */
+.icon--sun .k-i-rays {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+}
+
+@keyframes k-i-rays {
+  to {
+    transform: rotate(45deg);
+  }
+}
+
+@keyframes k-i-breathe {
+  50% {
+    transform: scale(0.85);
+  }
+}
+
+.icon--sun.is-play .k-i-rays {
+  animation: k-i-rays 0.6s var(--k-ie);
+}
+
+.icon--sun.is-play .k-i-core {
+  animation: k-i-breathe 0.6s var(--k-ie);
+}
+
+/* the moon rocks, each swing smaller (Animate UI moon) */
+@keyframes k-i-rock {
+  25% {
+    transform: rotate(-15deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+  75% {
+    transform: rotate(-3deg);
+  }
+}
+
+.icon--moon.is-play .k-i-a {
+  animation: k-i-rock 0.9s var(--k-ie);
+}
+
+/* the octocat's tail waves from where it joins the body */
+.icon--github .k-i-tail {
+  transform-box: view-box;
+  transform-origin: 9px 18px;
+}
+
+@keyframes k-i-wave {
+  25% {
+    transform: rotate(14deg);
+  }
+  55% {
+    transform: rotate(-10deg);
+  }
+  80% {
+    transform: rotate(4deg);
+  }
+}
+
+.icon--github.is-play .k-i-tail {
+  animation: k-i-wave 0.8s var(--k-ie);
+}
+
+/* the mortarboard tilts and its tassel swings behind it (Animate UI graduation-cap) */
+@keyframes k-i-tilt {
+  35% {
+    transform: rotate(-8deg);
+  }
+  70% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes k-i-tassel {
+  30% {
+    transform: rotate(12deg);
+  }
+  60% {
+    transform: rotate(-8deg);
+  }
+  85% {
+    transform: rotate(4deg);
+  }
+}
+
+.icon--scholar .k-i-tassel {
+  transform-origin: 50% 0%;
+}
+
+.icon--scholar.is-play .k-i-board {
+  animation: k-i-tilt 0.9s var(--k-ie);
+}
+
+.icon--scholar.is-play .k-i-tassel {
+  animation: k-i-tassel 0.9s var(--k-ie) 0.1s;
+}
+
+/* a hop: up, down, a smaller hop (icons.md: y [0, -2, 0, -0.8, 0] at times 0, .3, .55, .75, 1) */
+@keyframes k-i-hop {
+  30% {
+    transform: translateY(-2px);
+  }
+  55% {
+    transform: translateY(0);
+  }
+  75% {
+    transform: translateY(-0.8px);
+  }
+}
+
+.icon--orcid.is-play .k-i-dot,
+.icon--quote.is-play .k-i-q1 {
+  animation: k-i-hop 0.6s var(--k-ie);
+}
+
+.icon--quote.is-play .k-i-q2 {
+  animation: k-i-hop 0.6s var(--k-ie) 0.08s;
+}
+
+/* strokes drawing themselves (icons.md: pathLength and opacity 0 -> 1) */
+.icon--scopus.is-play .k-i-s {
+  animation: k-i-draw 0.6s var(--k-ie);
+}
+
+.icon--file-text.is-play .k-i-l1 {
+  animation: k-i-draw 0.35s var(--k-io) 0.05s backwards;
+}
+
+.icon--file-text.is-play .k-i-l2 {
+  animation: k-i-draw 0.35s var(--k-io) 0.25s backwards;
+}
+
+.icon--file-text.is-play .k-i-l3 {
+  animation: k-i-draw 0.35s var(--k-io) 0.45s backwards;
+}
+
+/* the links of a chain pull apart and snap back (Animate UI link: times 0, .4, 1, easeOut then backOut) */
+@keyframes k-i-pull-a {
+  0% {
+    animation-timing-function: var(--k-io);
+  }
+  40% {
+    transform: translate(1px, -1px);
+    animation-timing-function: cubic-bezier(0.33, 1.53, 0.69, 0.99);
+  }
+}
+
+@keyframes k-i-pull-b {
+  0% {
+    animation-timing-function: var(--k-io);
+  }
+  40% {
+    transform: translate(-1px, 1px);
+    animation-timing-function: cubic-bezier(0.33, 1.53, 0.69, 0.99);
+  }
+}
+
+.icon--link.is-play .k-i-l1 {
+  animation: k-i-pull-a 0.6s;
+}
+
+.icon--link.is-play .k-i-l2 {
+  animation: k-i-pull-b 0.6s;
+}
+
+/* the pin hops and lands, leaning (Animate UI map-pin, from its tip) */
+.icon--map-pin .k-i-a {
+  transform-origin: bottom center;
+}
+
+@keyframes k-i-pin {
+  33% {
+    transform: translateY(-6px) scale(0.75) rotate(30deg);
+  }
+  66% {
+    transform: translateY(0) scale(1) rotate(-15deg);
+  }
+}
+
+.icon--map-pin.is-play .k-i-a {
+  animation: k-i-pin 1s var(--k-ie);
+}
+
+/* the minute hand goes round once, the hour hand steps forward and back, both around the centre */
+.icon--clock .k-i-min,
+.icon--clock .k-i-hr {
+  transform-box: view-box;
+  transform-origin: 12px 12px;
+}
+
+@keyframes k-i-round {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes k-i-step {
+  50% {
+    transform: rotate(20deg);
+  }
+}
+
+.icon--clock.is-play .k-i-min {
+  animation: k-i-round 0.6s var(--k-ie);
+}
+
+.icon--clock.is-play .k-i-hr {
+  animation: k-i-step 0.6s var(--k-ie);
+}
+
+/* the lens swells and its plus turns a quarter (Animate UI zoom-in) */
+.icon--zoom .k-i-lens,
+.icon--zoom .k-i-sign {
+  transform-box: view-box;
+  transform-origin: 11px 11px;
+}
+
+@keyframes k-i-swell {
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.icon--zoom.is-play .k-i-lens {
+  animation: k-i-swell 0.5s var(--k-ie);
+}
+
+.icon--zoom.is-play .k-i-sign {
+  animation: k-i-quarter 0.5s var(--k-ie);
+}
+
+/* ---------- Site.icons.swap: the leaving icon keeps its place while the next one comes in ---------- */
+.icon.is-leaving {
+  position: absolute;
+  pointer-events: none;
+}
+
+/* ---------- reduced motion: icons stay at rest (the menu still becomes a cross, at once) ---------- */
+.is-reduced .icon *,
+.is-reduced .icon {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon *,
+  .icon {
+    animation: none !important;
+    transition: none !important;
+  }
+}
