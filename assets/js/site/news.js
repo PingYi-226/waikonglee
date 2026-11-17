@@ -140,6 +140,11 @@
         b.setAttribute("aria-pressed", b === button ? "true" : "false");
       });
       var total = 0;
+      // read deep into the list, a shorter list would leave the page past its end: the list starts again at the rail's
+      // height, and what stays on screen glides from where it was to its new place
+      var rail = root.querySelector(".ntl__rail");
+      var railTop = rail ? parseFloat(getComputedStyle(rail).top) || 0 : 0;
+      var startY = Math.max(0, Math.round(root.getBoundingClientRect().top + window.scrollY - railTop));
       var done = Site.flip(
         body,
         function () {
@@ -154,6 +159,7 @@
             g.el.classList.toggle("is-empty", empty);
             if (g.link) g.link.hidden = empty;
           });
+          if (window.scrollY > startY) window.scrollTo(0, startY);
         },
         { items: ".nitem, .ntl__yearhead" },
       );
