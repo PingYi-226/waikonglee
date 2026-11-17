@@ -759,6 +759,11 @@ html.is-reduced .pubbar__end > * {
   html:not(.js) .publist--all {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  /* a breath before each year that has rows to show (padding, so the sections touch and the rail never loses its year) */
+  html.js .publist--all .pubyear:not(:first-of-type):has(> ol > li:not([hidden])) {
+    padding-top: clamp(1.75rem, 3vw, 2.75rem);
+  }
 }
 
 /* a search answered by the abstracts only says so */

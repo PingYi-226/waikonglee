@@ -459,9 +459,10 @@
             }
           }
           if (!hit) {
-            // above the list nothing is being read; below it the last year stays
+            // above the list nothing is being read; below it the last year stays; in between, the year read last
             var b = body.getBoundingClientRect();
             if (b.bottom <= line) hit = lastShownYear();
+            else if (b.top < line) hit = currentYear;
           }
           setCurrent(hit);
         },
