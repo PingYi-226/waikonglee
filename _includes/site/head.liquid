@@ -1,5 +1,5 @@
 {%- comment -%} Site design layer: loaded after the al-folio core styles so it can refine them. {%- endcomment -%}
-{% if site.noindex %}<meta name="robots" content="noindex">{% endif %}
+{% if site.noindex or page.noindex %}<meta name="robots" content="noindex">{% endif %}
 <script>
   // Mark that JavaScript is available so content can start hidden and animate in.
   // If the site script has not started within a few seconds, drop the mark so nothing stays hidden.
@@ -10,7 +10,17 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url | bust_file_cache }}">
+{% if page.v2 %}
+  {% assign site_css = 'tokens,base,kit-text,kit-pointer,kit-scroll,icons,shell' | split: ',' %}
+  {% for name in site_css %}
+    <link rel="stylesheet" href="{{ '/assets/css/site/' | append: name | append: '.css' | relative_url | bust_file_cache }}">
+  {% endfor %}
+  {% for name in page.site_css %}
+    <link rel="stylesheet" href="{{ '/assets/css/site/' | append: name | append: '.css' | relative_url | bust_file_cache }}">
+  {% endfor %}
+{% else %}
+  <link rel="stylesheet" href="{{ '/assets/css/site/legacy.css' | relative_url | bust_file_cache }}">
+{% endif %}
 <style>
   /* soft cross-fade between pages in browsers that support cross-document view transitions */
   @view-transition { navigation: auto; }

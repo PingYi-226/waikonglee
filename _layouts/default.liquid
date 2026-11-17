@@ -1,10 +1,12 @@
 <!doctype html>
 {%- comment -%}
   Local override of the al_folio_core default layout. Differences from the gem version:
-  1. includes site/head.liquid after the core head (site stylesheet, no-JS guard);
-  2. adds a layout-<name> class on <body> so pages can be styled individually;
-  3. includes site/scripts.liquid after the core scripts (site JavaScript);
-  4. adds a skip link and an id on the main region.
+  1. includes site/head.liquid after the core head (site stylesheets, no-JS guard);
+  2. adds layout-<name> (and "v2" for redesigned pages) on <body> so pages can be styled individually;
+  3. redesigned pages (front matter `v2: true`) get the site's own header and footer and a plain <main>;
+     `bare: true` leaves the header and footer out (the component test page);
+  4. includes site/scripts.liquid after the core scripts (site JavaScript);
+  5. adds a skip link and an id on the main region.
 {%- endcomment -%}
 {%- capture html_attributes -%}
   {%- if site.plugins contains 'al_rtl' -%}
@@ -29,49 +31,60 @@
     {% include site/head.liquid %}
   </head>
 
-  <body class="{% if site.navbar_fixed %}fixed-top-nav{% endif %} {% unless site.footer_fixed %}sticky-bottom-footer{% endunless %} layout-{{ page.layout | default: 'none' }}">
-    <a class="skip-link" href="#main">Skip to content</a>
-    {% include header.liquid %}
+  {% if page.v2 %}
+    <body class="v2 layout-{{ page.layout | default: 'none' }}{% if page.body_class %} {{ page.body_class }}{% endif %}">
+      <a class="skip-link" href="#main">Skip to content</a>
+      {% if page.bare %}<button id="light-toggle" type="button" hidden></button>{% else %}{% include site/header.liquid %}{% endif %}
+      <main id="main">{{ content }}</main>
+      {% unless page.bare %}{% include site/footer.liquid %}{% endunless %}
+      {% include scripts.liquid %}
+      {% include site/scripts.liquid %}
+    </body>
+  {% else %}
+    <body class="{% if site.navbar_fixed %}fixed-top-nav{% endif %} {% unless site.footer_fixed %}sticky-bottom-footer{% endunless %} layout-{{ page.layout | default: 'none' }}">
+      <a class="skip-link" href="#main">Skip to content</a>
+      {% include header.liquid %}
 
-    <div class="container mt-5" role="main" id="main">
-      {% if page.toc and page.toc.sidebar %}
-        {% assign toc_collapse = page.toc.collapse | default: 'expanded' %}
-        {% assign toc_collapse_depth = page.toc.collapse_depth | default: '' %}
-        {% if page.toc.sidebar == 'right' %}
-          <div class="row">
-            <div class="col-sm-9">{{ content }}</div>
-            <div class="col-sm-3">
-              <nav
-                id="toc-sidebar"
-                class="sticky-top toc toc-sidebar"
-                aria-label="Table of contents"
-                data-toc-collapse="{{ toc_collapse }}"
-                data-toc-collapse-depth="{{ toc_collapse_depth }}"
-              ></nav>
+      <div class="container mt-5" role="main" id="main">
+        {% if page.toc and page.toc.sidebar %}
+          {% assign toc_collapse = page.toc.collapse | default: 'expanded' %}
+          {% assign toc_collapse_depth = page.toc.collapse_depth | default: '' %}
+          {% if page.toc.sidebar == 'right' %}
+            <div class="row">
+              <div class="col-sm-9">{{ content }}</div>
+              <div class="col-sm-3">
+                <nav
+                  id="toc-sidebar"
+                  class="sticky-top toc toc-sidebar"
+                  aria-label="Table of contents"
+                  data-toc-collapse="{{ toc_collapse }}"
+                  data-toc-collapse-depth="{{ toc_collapse_depth }}"
+                ></nav>
+              </div>
             </div>
-          </div>
+          {% else %}
+            <div class="row">
+              <div class="col-sm-3">
+                <nav
+                  id="toc-sidebar"
+                  class="sticky-top toc toc-sidebar"
+                  aria-label="Table of contents"
+                  data-toc-collapse="{{ toc_collapse }}"
+                  data-toc-collapse-depth="{{ toc_collapse_depth }}"
+                ></nav>
+              </div>
+              <div class="col-sm-9">{{ content }}</div>
+            </div>
+          {% endif %}
         {% else %}
-          <div class="row">
-            <div class="col-sm-3">
-              <nav
-                id="toc-sidebar"
-                class="sticky-top toc toc-sidebar"
-                aria-label="Table of contents"
-                data-toc-collapse="{{ toc_collapse }}"
-                data-toc-collapse-depth="{{ toc_collapse_depth }}"
-              ></nav>
-            </div>
-            <div class="col-sm-9">{{ content }}</div>
-          </div>
+          {{ content }}
         {% endif %}
-      {% else %}
-        {{ content }}
-      {% endif %}
-    </div>
+      </div>
 
-    {% include footer.liquid %}
+      {% include footer.liquid %}
 
-    {% include scripts.liquid %}
-    {% include site/scripts.liquid %}
-  </body>
+      {% include scripts.liquid %}
+      {% include site/scripts.liquid %}
+    </body>
+  {% endif %}
 </html>

@@ -1,1 +1,13 @@
-<script defer src="{{ '/assets/js/site.js' | relative_url | bust_file_cache }}"></script>
+{% if page.v2 %}
+  {%- comment -%} Order matters: the animation library, the core (tokens + registry), the kits, the shell, then page scripts. {%- endcomment -%}
+  <script defer src="{{ '/assets/js/vendor/motion.js' | relative_url | bust_file_cache }}"></script>
+  {% assign site_js = 'core,kit-text,kit-pointer,kit-scroll,icons,shell' | split: ',' %}
+  {% for name in site_js %}
+    <script defer src="{{ '/assets/js/site/' | append: name | append: '.js' | relative_url | bust_file_cache }}"></script>
+  {% endfor %}
+  {% for name in page.site_js %}
+    <script defer src="{{ '/assets/js/site/' | append: name | append: '.js' | relative_url | bust_file_cache }}"></script>
+  {% endfor %}
+{% else %}
+  <script defer src="{{ '/assets/js/site/legacy.js' | relative_url | bust_file_cache }}"></script>
+{% endif %}
