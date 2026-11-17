@@ -25,27 +25,29 @@
             </span>
             {%- endfor %}
           </div>
-          <button
-            type="button"
-            class="rplate__pause icon-btn"
-            data-kit="press tooltip"
-            data-tip="Pause the figure"
-            aria-label="Pause the figure"
-            data-rplate-pause
-          >
-            {% include site/icon.liquid name="pause" size=16 %}
-          </button>
-          <p class="rplate__cap figcap" aria-hidden="true">
-            {%- comment -%} the figure number is an odometer strip: research.js rolls it to the area being read {%- endcomment %}
-            <span class="figcap__no">Fig. <span class="rplate__no"><span class="rplate__strip" data-rplate-no>
-              {%- for a in areas -%}<span>{{ forloop.index | plus: 1 }}</span>{%- endfor -%}
-            </span></span></span>
-            <span class="rplate__tags">
-              {%- for a in areas -%}
-                <span class="rplate__tag{% if forloop.first %} is-current{% endif %}" data-rplate-tag>{{ a.tagline }}</span>
-              {%- endfor -%}
-            </span>
-          </p>
+          <div class="rplate__bar">
+            <p class="rplate__cap figcap" aria-hidden="true">
+              {%- comment -%} the figure number is an odometer strip: research.js rolls it to the area being read {%- endcomment %}
+              <span class="figcap__no">Fig. <span class="rplate__no"><span class="rplate__strip" data-rplate-no>
+                {%- for a in areas -%}<span>{{ forloop.index | plus: 1 }}</span>{%- endfor -%}
+              </span></span></span>
+              <span class="rplate__tags">
+                {%- for a in areas -%}
+                  <span class="rplate__tag{% if forloop.first %} is-current{% endif %}" data-rplate-tag>{{ a.tagline }}</span>
+                {%- endfor -%}
+              </span>
+            </p>
+            <button
+              type="button"
+              class="rplate__pause icon-btn"
+              data-kit="press tooltip"
+              data-tip="Pause the figure"
+              aria-label="Pause the figure"
+              data-rplate-pause
+            >
+              {% include site/icon.liquid name="pause" size=16 %}
+            </button>
+          </div>
           <nav class="rindex" aria-label="Research areas">
             <ol class="rindex__list" data-kit="scrollspy highlight" data-mode="both" data-items=".rindex__link" data-rindex>
               {%- for a in areas %}

@@ -350,12 +350,19 @@ html.js .rarea__plate .diagram:not([data-kit~="diagram"]) {
   opacity: 0;
 }
 
+.rplate__bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
 .rplate__pause {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  flex: none;
   width: 2.25rem;
   height: 2.25rem;
+  margin: -0.35rem -0.45rem 0 0;
   color: var(--muted);
 }
 
@@ -366,7 +373,6 @@ html.is-reduced .rplate__pause {
 .rplate__cap {
   flex-wrap: nowrap;
   align-items: baseline;
-  margin-top: 0.9rem;
   min-height: 2.6em;
 }
 
@@ -673,6 +679,7 @@ html.js .rplate__tag:not(.is-current) {
 .rrepo__paper {
   max-width: 60ch;
   margin: 0.35rem 0 0;
+  line-height: 1.45;
   font-size: var(--fs-xs);
   color: var(--muted);
 }
@@ -1060,4 +1067,10 @@ html.is-reduced .rproj__fig.is-in .rproj__bar {
 .rsoft[tabindex="-1"]:focus,
 .rproj[tabindex="-1"]:focus {
   outline: none;
+}
+
+/* WORKAROUND (request to the lead): the footer's cursor element carries `hidden` and the cursor kit adopts it without
+   taking the attribute off, so the label never shows. Until that is fixed in the kit or the footer, show it here. */
+html.js .k-cursor[hidden] {
+  display: block;
 }
