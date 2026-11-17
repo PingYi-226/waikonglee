@@ -313,7 +313,7 @@
       rays[1].setAttribute("y2", util.round(oy + C, 2));
     }
     return {
-      beat: 760,
+      beat: 900,
       rest: function (n) {
         var k = (K0 + n) % 16;
         place(at(k));
