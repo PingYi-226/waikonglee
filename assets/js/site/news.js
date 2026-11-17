@@ -162,7 +162,6 @@
           groups.forEach(function (g) {
             var empty = count(g) === 0;
             g.head.hidden = empty;
-            g.el.classList.toggle("is-empty", empty);
             if (g.link) g.link.hidden = empty;
           });
           if (window.scrollY > startY) window.scrollTo(0, startY);
