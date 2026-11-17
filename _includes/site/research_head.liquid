@@ -1,0 +1,30 @@
+{%- comment -%}
+  Research page, page head: the title and lede from the page's front matter, and under the rule a row of contents:
+  each figure counts what a section of the page holds and takes you there. Counts come from the data files
+  (_data/research.yml, _data/software.yml, _data/grants.yml) and the bibliography.
+{%- endcomment -%}
+{%- assign repo_count = 0 -%}
+{%- for g in site.data.software -%}{%- assign repo_count = repo_count | plus: g.items.size -%}{%- endfor -%}
+{%- capture paper_count -%}{% bibliography_count %}{%- endcapture -%}
+{%- assign paper_count = paper_count | strip -%}
+{%- capture head_meta -%}
+<nav class="rtoc" aria-label="On this page" data-kit="highlight" data-items=".rtoc__item">
+  <a class="rtoc__item" href="#areas">
+    <span class="stat__value"><span data-kit="sliding-number" data-value="{{ site.data.research.size }}" data-delay="700">{{ site.data.research.size }}</span></span>
+    <span class="stat__label">research areas</span>
+  </a>
+  <a class="rtoc__item" href="{{ '/publications/' | relative_url }}">
+    <span class="stat__value"><span data-kit="sliding-number" data-value="{{ paper_count }}" data-delay="760">{{ paper_count }}</span></span>
+    <span class="stat__label">peer-reviewed papers</span>
+  </a>
+  <a class="rtoc__item" href="#software">
+    <span class="stat__value"><span data-kit="sliding-number" data-value="{{ repo_count }}" data-delay="820">{{ repo_count }}</span></span>
+    <span class="stat__label">open-source repositories</span>
+  </a>
+  <a class="rtoc__item" href="#projects">
+    <span class="stat__value"><span data-kit="sliding-number" data-value="{{ site.data.grants.size }}" data-delay="880">{{ site.data.grants.size }}</span></span>
+    <span class="stat__label">funded projects</span>
+  </a>
+</nav>
+{%- endcapture -%}
+{% include site/pagehead.liquid meta=head_meta %}
