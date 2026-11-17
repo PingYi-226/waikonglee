@@ -1,4 +1,382 @@
+{%- comment -%}
+  Demos of the scroll and pointer kits (group S). Demo-only layout lives in the <style> below (ks-* classes);
+  the kits' own styles are in assets/css/site/kit-scroll.css. Placeholder pictures are inline SVG.
+{%- endcomment -%}
+{%- capture ph1 -%}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23e8e4db'/%3E%3Cg fill='%232f5d54' opacity='.55'%3E%3Ccircle cx='60' cy='60' r='3'/%3E%3Ccircle cx='120' cy='60' r='3'/%3E%3Ccircle cx='180' cy='60' r='3'/%3E%3Ccircle cx='240' cy='60' r='3'/%3E%3Ccircle cx='300' cy='60' r='3'/%3E%3Ccircle cx='90' cy='120' r='3'/%3E%3Ccircle cx='150' cy='120' r='3'/%3E%3Ccircle cx='210' cy='120' r='3'/%3E%3Ccircle cx='270' cy='120' r='3'/%3E%3Ccircle cx='330' cy='120' r='3'/%3E%3Ccircle cx='60' cy='180' r='3'/%3E%3Ccircle cx='120' cy='180' r='3'/%3E%3Ccircle cx='180' cy='180' r='3'/%3E%3Ccircle cx='240' cy='180' r='3'/%3E%3Ccircle cx='300' cy='180' r='3'/%3E%3Ccircle cx='90' cy='240' r='3'/%3E%3Ccircle cx='150' cy='240' r='3'/%3E%3Ccircle cx='210' cy='240' r='3'/%3E%3Ccircle cx='270' cy='240' r='3'/%3E%3Ccircle cx='330' cy='240' r='3'/%3E%3C/g%3E%3Cpath d='M60 60 L150 120 L240 180 L330 240' stroke='%232f5d54' stroke-width='2' fill='none'/%3E%3C/svg%3E{%- endcapture -%}
+{%- capture ph2 -%}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%232b2d33'/%3E%3Cg fill='none' stroke='%2393bfb2' stroke-width='1.5' opacity='.7'%3E%3Crect x='70' y='60' width='60' height='40' rx='4'/%3E%3Crect x='150' y='60' width='60' height='40' rx='4'/%3E%3Crect x='230' y='60' width='60' height='40' rx='4'/%3E%3Crect x='70' y='120' width='60' height='40' rx='4'/%3E%3Crect x='150' y='120' width='60' height='40' rx='4'/%3E%3Crect x='230' y='120' width='60' height='40' rx='4'/%3E%3Crect x='70' y='180' width='60' height='40' rx='4'/%3E%3Crect x='150' y='180' width='60' height='40' rx='4'/%3E%3Crect x='230' y='180' width='60' height='40' rx='4'/%3E%3C/g%3E%3Crect x='150' y='120' width='60' height='40' rx='4' fill='%2393bfb2' opacity='.5'/%3E%3C/svg%3E{%- endcapture -%}
+{%- capture ph3 -%}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23efece5'/%3E%3Cg fill='none' stroke='%23a6583a' stroke-width='1.5' opacity='.6'%3E%3Ccircle cx='200' cy='300' r='60'/%3E%3Ccircle cx='200' cy='300' r='110'/%3E%3Ccircle cx='200' cy='300' r='160'/%3E%3Ccircle cx='200' cy='300' r='210'/%3E%3C/g%3E%3C/svg%3E{%- endcapture -%}
+{%- capture ph4 -%}data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23dcdad3'/%3E%3Crect x='140' y='90' width='120' height='120' rx='10' fill='none' stroke='%234b4e56' stroke-width='2'/%3E%3Cg stroke='%234b4e56' stroke-width='2'%3E%3Cpath d='M160 90V60M200 90V60M240 90V60M160 210v30M200 210v30M240 210v30M140 110h-30M140 150h-30M140 190h-30M260 110h30M260 150h30M260 190h30'/%3E%3C/g%3E%3Crect x='175' y='125' width='50' height='50' rx='4' fill='%234b4e56' opacity='.25'/%3E%3C/svg%3E{%- endcapture -%}
+
+<style>
+  .ks-note { margin-top: 1rem; font-size: var(--fs-xs); color: var(--muted); }
+  .ks-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; }
+  .ks-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+  .ks-card { display: block; padding: 1.25rem; }
+  .ks-card h5 { font-family: var(--font-display); font-size: var(--fs-d4); line-height: 1.2; margin: 0.4rem 0 0.6rem; }
+  .ks-card p { font-size: var(--fs-small); color: var(--muted); margin: 0; }
+  .ks-media { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.5rem; }
+  .ks-media figure { margin: 0; overflow: hidden; border-radius: var(--r-3); }
+  .ks-media img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+  .ks-rows { list-style: none; margin: 1.5rem 0 0; padding: 0; border-top: 1px solid var(--line); }
+  .ks-rows li { display: flex; gap: 1rem; padding: 0.85rem 0; border-bottom: 1px solid var(--line); font-size: var(--fs-small); }
+  .ks-rows .t-mono { color: var(--muted); min-width: 3rem; }
+  .ks-tall { position: relative; min-height: 150vh; }
+  .ks-sticky { position: sticky; top: 20vh; }
+  .ks-track { height: 2px; background: var(--line); overflow: hidden; margin: 0.5rem 0 1.5rem; }
+  .ks-parallax { position: relative; height: 120vh; display: grid; place-items: center; overflow: hidden; border-radius: var(--r-3); background: var(--paper-2); }
+  .ks-parallax img { width: min(70%, 34rem); border-radius: var(--r-3); box-shadow: var(--shadow-2); }
+  .ks-parallax .ks-num { position: absolute; right: 8%; top: 22%; font-family: var(--font-display); font-size: var(--fs-d1); color: var(--accent); }
+  .ks-parallax .ks-cap { position: absolute; left: 8%; bottom: 24%; }
+  .ks-scrub { padding-block: 30vh; }
+  .ks-scrub p { font-family: var(--font-display); font-size: var(--fs-d3); line-height: 1.3; max-width: 32ch; }
+  .ks-strip { font-family: var(--font-display); font-size: var(--fs-d3); color: var(--ink-2); }
+  .ks-strip span { white-space: nowrap; }
+  .ks-strip i { font-style: normal; color: var(--faint); }
+  .ks-pin-head { display: flex; justify-content: space-between; align-items: end; gap: 1rem; margin-bottom: 1.5rem; }
+  .ks-pin-card { width: min(22rem, 78vw); padding: 1.5rem; }
+  .ks-pin-card img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--r-2); margin-bottom: 1rem; }
+  .ks-pin-card h5 { font-family: var(--font-display); font-size: var(--fs-d4); margin: 0.3rem 0 0.5rem; }
+  .ks-pin-card p { font-size: var(--fs-small); color: var(--muted); margin: 0; }
+  .ks-pin-card { transition: border-color var(--t-color); }
+  .ks-pin-card.is-current { border-color: var(--line-strong); }
+  .ks-pin-bar { width: 8rem; height: 2px; background: var(--line); overflow: hidden; }
+  .ks-spy { display: grid; grid-template-columns: 10rem minmax(0, 1fr); gap: 2rem; }
+  .ks-spy nav { position: sticky; top: 2rem; align-self: start; }
+  .ks-spy nav ul { list-style: none; margin: 0; padding: 0; }
+  .ks-spy nav a { position: relative; display: block; padding: 0.35rem 0.75rem; font-size: var(--fs-small); color: var(--muted); border-radius: var(--r-2); transition: color var(--t-color); }
+  .ks-spy nav a[aria-current="true"] { color: var(--ink); }
+  .ks-spy nav a[aria-current="true"]::before { content: ""; position: absolute; left: 0; top: 50%; width: 3px; height: 1rem; margin-top: -0.5rem; border-radius: 2px; background: var(--accent); }
+  .ks-spy section { min-height: 60vh; padding: 1rem 0 2rem; border-top: 1px solid var(--line); }
+  .ks-fadebox { height: 16rem; overflow-y: auto; padding-right: 0.5rem; }
+  .ks-fadebox ol { list-style: none; margin: 0; padding: 0; }
+  .ks-fadebox li { padding: 0.7rem 0; border-bottom: 1px solid var(--line); font-size: var(--fs-small); }
+  .ks-chips { display: flex; gap: 0.5rem; overflow-x: auto; margin-top: 1.5rem; padding-bottom: 0.25rem; scrollbar-width: none; }
+  .ks-chips .chip { flex: 0 0 auto; }
+  .ks-draws { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.5rem; }
+  .ks-draws svg { width: 100%; height: auto; color: var(--accent); }
+  .ks-draw-link { display: inline-flex; flex-direction: column; gap: 0.1rem; font-family: var(--font-display); font-size: var(--fs-d4); }
+  .ks-draw-link svg { width: 100%; height: 0.6rem; color: var(--accent); overflow: visible; }
+  .ks-timeline { position: relative; min-height: 110vh; padding: 10vh 0 10vh 4rem; display: grid; }
+  .ks-timeline svg { position: absolute; left: 0.75rem; top: 10vh; width: 1.5rem; height: calc(100% - 20vh); color: var(--accent); }
+  .ks-timeline ol { list-style: none; margin: 0; padding: 0; display: grid; align-content: space-between; }
+  .ks-timeline li { font-size: var(--fs-small); }
+  .ks-timeline b { display: block; font-family: var(--font-display); font-weight: 400; font-size: var(--fs-d4); }
+  .ks-ah { padding: 1.25rem; max-width: 36rem; }
+  .ks-tilt-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1.25rem; }
+  .ks-tilt-card { padding: 1.5rem; min-height: 12rem; display: flex; flex-direction: column; justify-content: space-between; }
+  .kitdemo a.ks-tilt-card--ink { background: var(--ink); color: var(--paper); border-color: transparent; }
+  .ks-tilt-card--ink span { color: inherit; }
+  .ks-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+  .ks-tiles a { display: block; overflow: hidden; border-radius: var(--r-3); }
+  .ks-tiles img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+  .ks-plist { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .ks-plist a { display: grid; grid-template-columns: 4rem minmax(0, 1fr) auto; gap: 1rem; align-items: baseline; padding: 1.1rem 0.25rem; border-bottom: 1px solid var(--line); transition: color var(--t-color); }
+  .ks-plist .t-mono { color: var(--muted); }
+  .ks-plist b { font-family: var(--font-display); font-weight: 400; font-size: var(--fs-d4); }
+  @media (hover: hover) and (pointer: fine) { .ks-plist:hover a:not(:hover) { color: var(--muted); } }
+  @media (max-width: 760px) {
+    .ks-spy { grid-template-columns: 1fr; }
+    .ks-spy nav { position: static; }
+    .ks-media, .ks-tiles { grid-template-columns: 1fr; }
+    .ks-plist a { grid-template-columns: 3rem minmax(0, 1fr); }
+    .ks-plist a > :last-child { display: none; }
+  }
+</style>
+
 <section class="kitdemo" id="kit-scroll">
-  <h2 class="t-d2">scroll</h2>
-  <p class="t-muted">Demos for this group go here.</p>
+  <h2 class="t-d2">Scroll and follow</h2>
+
+  <article class="kitdemo__item" id="demo-reveal">
+    <header>
+      <h3>reveal, reveal-group</h3>
+      <p>Scroll to it: what enters together cascades in reading order. Tab into a card to play it at once. Replay hides everything again.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <p class="t-label" data-kit="reveal" data-reveal="fade">Selected research</p>
+      <h4 class="t-d3" data-kit="reveal">Fast, side-channel aware cryptography on GPUs and embedded processors.</h4>
+      <div class="ks-cards" data-kit="reveal-group" data-reveal="card">
+        <a class="card ks-card" href="#demo-reveal"><span class="tag tag--accent">GPU</span><h5>Homomorphic encryption at memory speed</h5><p>Bootstrapping kernels that keep the GPU busy.</p></a>
+        <a class="card ks-card" href="#demo-reveal"><span class="tag">PQC</span><h5>Lattice schemes on microcontrollers</h5><p>Kyber and Dilithium in a few kilobytes of RAM.</p></a>
+        <a class="card ks-card" href="#demo-reveal"><span class="tag">FPGA</span><h5>Number-theoretic transforms in hardware</h5><p>Pipelined NTT cores for large polynomials.</p></a>
+        <a class="card ks-card" href="#demo-reveal"><span class="tag tag--clay">ML</span><h5>Private inference</h5><p>Neural networks evaluated on encrypted data.</p></a>
+      </div>
+      <div class="ks-media">
+        <figure data-kit="reveal" data-reveal="clip"><img src="{{ ph1 }}" alt="Placeholder: a lattice of points"></figure>
+        <figure data-kit="reveal" data-reveal="zoom"><img src="{{ ph2 }}" alt="Placeholder: a grid of GPU cores"></figure>
+      </div>
+      <ol class="ks-rows" data-kit="reveal-group" data-reveal="rise">
+        <li><span class="t-mono">2026</span>Accelerating CKKS bootstrapping on a single GPU</li>
+        <li><span class="t-mono">2025</span>Compact Kyber for 32-bit microcontrollers</li>
+        <li><span class="t-mono">2025</span>Batch verification of Dilithium signatures on GPUs</li>
+        <li><span class="t-mono">2024</span>A pipelined NTT engine for FPGA</li>
+        <li><span class="t-mono">2024</span>Masked AES on RISC-V with vector extensions</li>
+        <li><span class="t-mono">2023</span>Parallel Falcon signing on graphics processors</li>
+        <li><span class="t-mono">2023</span>Lightweight ciphers for IoT, revisited</li>
+        <li><span class="t-mono">2022</span>Fast polynomial multiplication with tensor cores</li>
+        <li><span class="t-mono">2022</span>Chaos-based image encryption, a critical look</li>
+        <li><span class="t-mono">2021</span>Binarised neural networks on embedded GPUs</li>
+        <li><span class="t-mono">2021</span>SIKE on ARMv8, constant time</li>
+        <li><span class="t-mono">2020</span>Tensor-core accelerated matrix multiplication for cryptography</li>
+      </ol>
+      <p class="ks-note"><button type="button" class="btn btn--ghost btn--small" onclick="document.querySelectorAll('#demo-reveal [data-kit~=reveal]').forEach(function(e){Site.get(e,'reveal').reset()});document.querySelectorAll('#demo-reveal [data-kit~=reveal-group]').forEach(function(e){Site.get(e,'reveal-group').reset()})">Replay</button></p>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-scroll-progress">
+    <header>
+      <h3>scroll-progress</h3>
+      <p>Two bars reading <code>--progress</code>: the page's scroll, and this tall block's passage through the viewport.</p>
+    </header>
+    <div class="kitdemo__stage ks-tall" id="ks-passage">
+      <div class="ks-sticky">
+        <p class="t-label">Page</p>
+        <div class="ks-track"><span class="k-progress" data-kit="scroll-progress"></span></div>
+        <p class="t-label">This block</p>
+        <div class="ks-track"><span class="k-progress" data-kit="scroll-progress" data-target="#ks-passage"></span></div>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-parallax">
+    <header>
+      <h3>parallax</h3>
+      <p>Three layers drifting at different fractions of their distance from the viewport centre. Still under reduced motion.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <div class="ks-parallax">
+        <img data-kit="parallax" data-speed="-0.12" src="{{ ph3 }}" alt="Placeholder: concentric arcs">
+        <span class="ks-num t-num" data-kit="parallax" data-speed="-0.3">26</span>
+        <p class="ks-cap t-label" data-kit="parallax" data-speed="0.12">h-index, Google Scholar</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-word-scrub">
+    <header>
+      <h3>word-scrub</h3>
+      <p>The words light up as the paragraph crosses the viewport, and dim again scrolling back. The link and the emphasis survive.</p>
+    </header>
+    <div class="kitdemo__stage ks-scrub">
+      <p data-kit="word-scrub">We build <em>fast</em> and side-channel aware implementations of post-quantum and homomorphic cryptography, on GPUs, FPGAs and the smallest microcontrollers, and we <a class="link" href="#demo-word-scrub">publish the code</a> so that others can measure it.</p>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-marquee">
+    <header>
+      <h3>marquee</h3>
+      <p>Constant motion that speeds up while the page scrolls and settles back. The second strip stops under the pointer and when a link in it has focus.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <div class="ks-strip" data-kit="marquee" data-speed="34">
+        <span>Fully homomorphic encryption</span><i>/</i><span>Post-quantum cryptography</span><i>/</i><span>GPU acceleration</span><i>/</i><span>Lattice-based schemes</span><i>/</i><span>Side-channel resistance</span><i>/</i>
+      </div>
+      <div class="ks-row" style="margin-top:1.5rem" data-kit="marquee" data-direction="right" data-speed="28" data-pause-on-hover>
+        <a class="tag" href="#demo-marquee">IEEE TIFS</a><a class="tag" href="#demo-marquee">TCHES</a><a class="tag" href="#demo-marquee">IEEE TC</a><a class="tag" href="#demo-marquee">ACM TECS</a><a class="tag" href="#demo-marquee">IEEE TPDS</a><a class="tag" href="#demo-marquee">ACNS</a><a class="tag" href="#demo-marquee">CHES</a>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-pin-x">
+    <header>
+      <h3>pin-x</h3>
+      <p>Scrolling down moves the track sideways while the block stays put. Tab into a card to bring it into view. Touch, narrow screens and reduced motion get a swipeable row.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <section data-kit="pin-x" id="ks-pin" aria-label="Research themes">
+        <div class="ks-pin-head">
+          <h4 class="t-d3">Research themes</h4>
+          <div class="ks-row">
+            <button type="button" class="btn btn--ghost btn--small" onclick="var p=Site.get(document.getElementById('ks-pin'),'pin-x');p.go(p.index-1)">Previous</button>
+            <button type="button" class="btn btn--ghost btn--small" onclick="var p=Site.get(document.getElementById('ks-pin'),'pin-x');p.go(p.index+1)">Next</button>
+            <span class="ks-pin-bar"><span class="k-progress"></span></span>
+          </div>
+        </div>
+        <div data-pin-track>
+          <a data-pin-item class="card ks-pin-card" href="#demo-pin-x"><img src="{{ ph2 }}" alt=""><span class="t-label">01</span><h5>Homomorphic encryption on GPUs</h5><p>Bootstrapping, key switching and the memory they need.</p></a>
+          <a data-pin-item class="card ks-pin-card" href="#demo-pin-x"><img src="{{ ph1 }}" alt=""><span class="t-label">02</span><h5>Post-quantum signatures</h5><p>Dilithium and Falcon, signed and verified in batches.</p></a>
+          <a data-pin-item class="card ks-pin-card" href="#demo-pin-x"><img src="{{ ph4 }}" alt=""><span class="t-label">03</span><h5>Microcontrollers</h5><p>Constant-time code in kilobytes, measured on real boards.</p></a>
+          <a data-pin-item class="card ks-pin-card" href="#demo-pin-x"><img src="{{ ph3 }}" alt=""><span class="t-label">04</span><h5>Side channels</h5><p>Masking that survives the compiler and the power probe.</p></a>
+          <a data-pin-item class="card ks-pin-card" href="#demo-pin-x"><img src="{{ ph2 }}" alt=""><span class="t-label">05</span><h5>Private inference</h5><p>Neural networks evaluated without seeing the data.</p></a>
+          <a data-pin-item class="card ks-pin-card" href="#demo-pin-x"><img src="{{ ph1 }}" alt=""><span class="t-label">06</span><h5>Open source</h5><p>Every implementation published with its benchmarks.</p></a>
+        </div>
+      </section>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-scrollspy">
+    <header>
+      <h3>scrollspy</h3>
+      <p>The link of the section being read gets <code>aria-current</code>. Clicking marks it at once and holds it while the page glides there.</p>
+    </header>
+    <div class="kitdemo__stage ks-spy">
+      <nav aria-label="Demo sections">
+        <ul data-kit="scrollspy highlight" data-mode="selection" data-items="a">
+          <li><a href="#ks-spy-1">Biography</a></li>
+          <li><a href="#ks-spy-2">Research</a></li>
+          <li><a href="#ks-spy-3">Teaching</a></li>
+          <li><a href="#ks-spy-4">Service</a></li>
+        </ul>
+      </nav>
+      <div>
+        <section id="ks-spy-1"><p class="t-label">01</p><h4 class="t-d4">Biography</h4></section>
+        <section id="ks-spy-2"><p class="t-label">02</p><h4 class="t-d4">Research</h4></section>
+        <section id="ks-spy-3"><p class="t-label">03</p><h4 class="t-d4">Teaching</h4></section>
+        <section id="ks-spy-4"><p class="t-label">04</p><h4 class="t-d4">Service</h4></section>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-scroll-fade">
+    <header>
+      <h3>scroll-fade</h3>
+      <p>Scroll the list or the chip row: the edges fade where there is more, and items in the fade shrink a little and blur.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <div class="ks-fadebox" data-kit="scroll-fade" tabindex="0" aria-label="Recent papers">
+        <ol>
+          <li>Accelerating CKKS bootstrapping on a single GPU</li>
+          <li>Compact Kyber for 32-bit microcontrollers</li>
+          <li>Batch verification of Dilithium signatures on GPUs</li>
+          <li>A pipelined NTT engine for FPGA</li>
+          <li>Masked AES on RISC-V with vector extensions</li>
+          <li>Parallel Falcon signing on graphics processors</li>
+          <li>Lightweight ciphers for IoT, revisited</li>
+          <li>Fast polynomial multiplication with tensor cores</li>
+          <li>Binarised neural networks on embedded GPUs</li>
+          <li>SIKE on ARMv8, constant time</li>
+          <li>Tensor-core accelerated matrix multiplication for cryptography</li>
+          <li>Chaos-based image encryption, a critical look</li>
+        </ol>
+      </div>
+      <div class="ks-chips" data-kit="scroll-fade">
+        <button type="button" class="chip">All</button><button type="button" class="chip">Homomorphic encryption</button><button type="button" class="chip">Post-quantum</button><button type="button" class="chip">GPU</button><button type="button" class="chip">FPGA</button><button type="button" class="chip">Microcontrollers</button><button type="button" class="chip">Side channels</button><button type="button" class="chip">Machine learning</button><button type="button" class="chip">Image encryption</button>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-draw">
+    <header>
+      <h3>draw</h3>
+      <p>On view (the chart), on hover or focus of a link (the underline), by hand (Play / Reset), and tied to the scroll (the timeline below).</p>
+    </header>
+    <div class="kitdemo__stage">
+      <div class="ks-draws">
+        <figure style="margin:0">
+          <svg data-kit="draw" viewBox="0 0 240 120" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Citations per year, rising">
+            <path d="M10 110 H230" stroke="var(--line-strong)"/>
+            <path d="M10 104 L40 98 L70 92 L100 80 L130 70 L160 52 L190 38 L220 18"/>
+            <circle cx="220" cy="18" r="3"/>
+          </svg>
+          <figcaption class="t-label">Citations per year</figcaption>
+        </figure>
+        <div>
+          <a class="ks-draw-link" href="#demo-draw">Read the paper
+            <svg data-kit="draw" data-trigger="hover" viewBox="0 0 200 10" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M2 6 C 50 2, 120 9, 198 4"/></svg>
+          </a>
+          <p class="ks-note">Hover or Tab to the link.</p>
+        </div>
+        <div>
+          <svg id="ks-check" data-kit="draw" data-trigger="manual" viewBox="0 0 48 48" width="48" height="48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:3rem">
+            <circle cx="24" cy="24" r="20"/><path d="M15 25 L21 31 L33 18"/>
+          </svg>
+          <div class="ks-row" style="margin-top:0.75rem">
+            <button type="button" class="btn btn--ghost btn--small" onclick="Site.get(document.getElementById('ks-check'),'draw').play()">Play</button>
+            <button type="button" class="btn btn--ghost btn--small" onclick="Site.get(document.getElementById('ks-check'),'draw').reset()">Reset</button>
+            <button type="button" class="btn btn--ghost btn--small" onclick="Site.get(document.getElementById('ks-check'),'draw').erase()">Erase</button>
+          </div>
+        </div>
+      </div>
+      <div class="ks-timeline" id="ks-timeline">
+        <svg data-kit="draw" data-scrub data-start="0.8" data-end="0.35" viewBox="0 0 24 400" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 0 V400" vector-effect="non-scaling-stroke"/></svg>
+        <ol>
+          <li><span class="t-label">2009</span><b>B.Eng.</b>Electronics engineering</li>
+          <li><span class="t-label">2013</span><b>Ph.D.</b>Computer science</li>
+          <li><span class="t-label">2018</span><b>Assistant professor</b>Cryptographic engineering</li>
+          <li><span class="t-label">2024</span><b>Associate professor</b>GPU and embedded security</li>
+        </ol>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-auto-height">
+    <header>
+      <h3>auto-height</h3>
+      <p>The card's height follows its content on <code>spring.height</code>. Click twice quickly: it turns back from where it is.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <div class="card ks-ah" id="ks-ah" data-kit="auto-height">
+        <p class="t-label">Abstract</p>
+        <p id="ks-ah-text">We present a GPU implementation of CKKS bootstrapping that keeps every stage on the device.</p>
+      </div>
+      <p class="ks-note"><button type="button" class="btn btn--ghost btn--small" onclick="var t=document.getElementById('ks-ah-text');var l=t.dataset.long==='1';t.dataset.long=l?'0':'1';t.textContent=l?'We present a GPU implementation of CKKS bootstrapping that keeps every stage on the device.':'We present a GPU implementation of CKKS bootstrapping that keeps every stage on the device. Key switching is fused with the number-theoretic transform, so the ciphertext stays in shared memory between stages, and the rotation keys are generated on the fly instead of being read from global memory. On one A100 the full bootstrapping takes a fraction of the time of the best published multi-GPU result, and the code is open source.'">Toggle the abstract</button></p>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-magnetic">
+    <header>
+      <h3>magnetic</h3>
+      <p>Bring the pointer near: the buttons lean toward it and spring back. Pointer only; nothing on touch or under reduced motion.</p>
+    </header>
+    <div class="kitdemo__stage ks-row" style="gap:2.5rem;padding-block:2rem">
+      <a class="btn" href="#demo-magnetic" data-kit="magnetic">Get in touch</a>
+      <button type="button" class="icon-btn" data-kit="magnetic" data-strength="0.4" data-range="90" aria-label="Next" style="border:1px solid var(--line-strong);width:3.25rem;height:3.25rem">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-tilt">
+    <header>
+      <h3>tilt</h3>
+      <p>Cards turn toward the pointer and settle back. The first carries a light that follows; the second a sweep on entering.</p>
+    </header>
+    <div class="kitdemo__stage ks-tilt-row">
+      <a class="card ks-tilt-card" href="#demo-tilt" data-kit="tilt" data-shine><span class="t-label">Software</span><span class="t-d4">GPU-FHE, open source</span></a>
+      <a class="card ks-tilt-card ks-tilt-card--ink" href="#demo-tilt" data-kit="tilt" data-max="7" data-shine="sweep"><span class="t-label" style="color:inherit;opacity:.7">Highlight</span><span class="t-d4">2,801 citations</span></a>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-cursor">
+    <header>
+      <h3>cursor</h3>
+      <p>A label beside the pointer over each tile; moving between tiles swaps its text. The native cursor stays.</p>
+    </header>
+    <div class="kitdemo__stage ks-tiles">
+      <a href="#demo-cursor" data-cursor="View"><img src="{{ ph1 }}" alt="Placeholder: lattice figure"></a>
+      <a href="#demo-cursor" data-cursor="Open PDF"><img src="{{ ph4 }}" alt="Placeholder: chip figure"></a>
+      <a href="#demo-cursor" data-cursor="Source code"><img src="{{ ph2 }}" alt="Placeholder: GPU figure"></a>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-hover-preview">
+    <header>
+      <h3>hover-preview</h3>
+      <p>Move over the rows: a picture follows beside the pointer, leaning with its speed, and changes with the row. Tab to a row to see it beside the row.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <ul class="ks-plist" data-kit="hover-preview">
+        <li><a href="#demo-hover-preview" data-preview="{{ ph2 }}"><span class="t-mono">2026</span><b>GPU bootstrapping</b><span class="t-label">Project</span></a></li>
+        <li><a href="#demo-hover-preview" data-preview="{{ ph1 }}"><span class="t-mono">2025</span><b>Lattice signatures in batches</b><span class="t-label">Paper</span></a></li>
+        <li><a href="#demo-hover-preview" data-preview="{{ ph4 }}"><span class="t-mono">2024</span><b>Kyber on a Cortex-M4</b><span class="t-label">Code</span></a></li>
+        <li><a href="#demo-hover-preview" data-preview="{{ ph3 }}"><span class="t-mono">2023</span><b>Masking under the probe</b><span class="t-label">Talk</span></a></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-avatar-group">
+    <header>
+      <h3>avatar-group</h3>
+      <p>Hover or Tab across: the avatar rises and its neighbours make room. Pairs with <code>tooltip-group</code> for the names.</p>
+    </header>
+    <div class="kitdemo__stage" style="padding-top:2.5rem">
+      <div data-kit="avatar-group tooltip-group">
+        <button type="button" class="k-avatar" data-tip="Ph.D. student" aria-label="Ph.D. student">AL</button>
+        <button type="button" class="k-avatar" data-tip="Ph.D. student" aria-label="Ph.D. student">MS</button>
+        <button type="button" class="k-avatar" data-tip="M.Sc. student" aria-label="M.Sc. student">JC</button>
+        <button type="button" class="k-avatar" data-tip="Research assistant" aria-label="Research assistant">YK</button>
+        <button type="button" class="k-avatar" data-tip="Alumnus" aria-label="Alumnus">HT</button>
+        <button type="button" class="k-avatar" data-tip="Visiting student" aria-label="Visiting student">RW</button>
+      </div>
+    </div>
+  </article>
 </section>

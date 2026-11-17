@@ -1,4 +1,179 @@
 <section class="kitdemo" id="kit-text">
   <h2 class="t-d2">text</h2>
-  <p class="t-muted">Demos for this group go here.</p>
+
+  <article class="kitdemo__item" id="demo-split">
+    <header>
+      <h3>split</h3>
+      <p>Characters rise out of their line, a title arrives out of a blur, a paragraph comes in line by line (the link and the emphasis survive). Resize the window and replay: lines are re-measured.</p>
+    </header>
+    <div class="kitdemo__stage stack" style="--stack: 1.5rem">
+      <h2 class="t-d1" id="split-a" data-kit="split" data-split="chars" data-effect="rise">Wai Kong Lee</h2>
+      <p class="t-d3" id="split-b" data-kit="split" data-split="words" data-effect="arrive" data-delay="200">Fast and secure implementations of modern cryptography</p>
+      <p class="measure t-ink2" id="split-c" data-kit="split" data-split="lines" data-effect="rise" data-delay="300">Our group builds <a class="link" href="#demo-split">accelerators for homomorphic encryption</a> on GPUs and FPGAs, and studies the <em>side channels</em> of post-quantum schemes on small embedded devices, from the arithmetic up to the systems that use it.</p>
+      <p class="t-label" id="split-d" data-kit="split" data-split="words" data-effect="fade" data-delay="500">Gachon University &middot; Seongnam, Korea</p>
+      <p><button class="btn btn--ghost btn--small" type="button" data-demo-replay="split-a split-b split-c split-d">Replay</button></p>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-sliding-number">
+    <header>
+      <h3>sliding-number</h3>
+      <p>Counts from 0 the first time it scrolls in. Set a value: every column rolls forward like an odometer; crossing 1,000 a column grows in (or leaves) and the other digits glide.</p>
+    </header>
+    <div class="kitdemo__stage stack">
+      <p class="t-d1 t-num" style="margin:0"><span id="num-a" data-kit="sliding-number" data-value="2801">2,801</span></p>
+      <p class="t-label">citations, Google Scholar</p>
+      <div class="cluster" style="--cluster: 2.5rem; margin-top: 1.5rem">
+        <p class="t-d3" style="margin:0"><span id="num-b" data-kit="sliding-number" data-value="90" data-delay="150">90</span> <span class="t-label">papers</span></p>
+        <p class="t-d3" style="margin:0"><span id="num-c" data-kit="sliding-number" data-value="20.03" data-delay="300">20.03&times;</span> <span class="t-label">faster NTT</span></p>
+        <p class="t-d3" style="margin:0"><span id="num-d" data-kit="sliding-number" data-value="38" data-delay="450">+38%</span> <span class="t-label">throughput</span></p>
+      </div>
+      <div class="cluster" style="margin-top: 1rem">
+        <button class="btn btn--ghost btn--small" type="button" data-demo-num="999">999</button>
+        <button class="btn btn--ghost btn--small" type="button" data-demo-num="2801">2,801</button>
+        <button class="btn btn--ghost btn--small" type="button" data-demo-num="12480">12,480</button>
+        <button class="btn btn--ghost btn--small" type="button" data-demo-num="+1">+1</button>
+        <button class="btn btn--ghost btn--small" type="button" data-demo-num="random">Random</button>
+        <button class="btn btn--ghost btn--small" type="button" data-demo-num="instant">7 (instant)</button>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-rotating-text">
+    <header>
+      <h3>rotating-text</h3>
+      <p>Words take turns inside a sentence; the words after it glide to the new width. The centred line moves on both sides. The last one reserves the widest word (data-align).</p>
+    </header>
+    <div class="kitdemo__stage stack" style="--stack: 1.75rem">
+      <p class="t-d3" style="margin:0">Fast homomorphic encryption on <span id="rot-a" class="t-accent t-italic" data-kit="rotating-text" data-words='["GPUs","FPGAs","embedded devices","ASICs"]'>GPUs</span>, from the arithmetic up.</p>
+      <p class="t-d2" style="margin:0; text-align:center">We make <span id="rot-b" class="t-italic" data-kit="rotating-text" data-duration="2200" data-delay="600"><span>lattices</span><span>FHE</span><span>signatures</span></span> fast.</p>
+      <p style="margin:0">Currently reading about <span id="rot-c" class="t-accent" data-kit="rotating-text" data-align="start" data-words='["NTT on tensor cores","Kyber","masking"]'>NTT on tensor cores</span> and its neighbours.</p>
+      <div class="cluster">
+        <button class="btn btn--ghost btn--small" type="button" data-demo-rot="next">Next</button>
+        <button class="btn btn--ghost btn--small" type="button" data-demo-rot="pause">Pause</button>
+        <button class="btn btn--ghost btn--small" type="button" data-demo-rot="play">Play</button>
+      </div>
+    </div>
+  </article>
+  <article class="kitdemo__item" id="demo-rolling-text">
+    <header>
+      <h3>rolling-text</h3>
+      <p>Letters roll over like a flip board. The nav-style links roll on hover or focus; the line below rolls when it scrolls in (Roll replays it).</p>
+    </header>
+    <div class="kitdemo__stage stack" style="--stack: 1.25rem">
+      <nav class="cluster" style="--cluster: 2rem" aria-label="Demo navigation">
+        <a href="#demo-rolling-text" class="t-small" id="roll-nav-a"><span data-kit="rolling-text">Research</span></a>
+        <a href="#demo-rolling-text" class="t-small"><span data-kit="rolling-text">Publications</span></a>
+        <a href="#demo-rolling-text" class="t-small"><span data-kit="rolling-text">Teaching</span></a>
+      </nav>
+      <p class="t-d3" style="margin:0"><span id="roll-a" data-kit="rolling-text" data-trigger="view">Cryptographic Engineering Lab</span></p>
+      <p><button class="btn btn--ghost btn--small" type="button" data-demo-roll>Roll</button></p>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-sliding-text">
+    <header>
+      <h3>sliding-text</h3>
+      <p>A label slides out as a copy slides in, on hover or keyboard focus of its link or button: as one block, by words, by characters.</p>
+    </header>
+    <div class="kitdemo__stage cluster" style="--cluster: 1rem">
+      <a class="btn" href="#demo-sliding-text" id="slide-a"><span data-kit="sliding-text">Download CV</span></a>
+      <a class="btn btn--ghost" href="#demo-sliding-text" id="slide-b"><span data-kit="sliding-text" data-by="words">All publications</span> {% include site/icon.liquid name="arrow-right" size="18" %}</a>
+      <a class="t-label" href="#demo-sliding-text" id="slide-c"><span data-kit="sliding-text" data-by="chars">Get in touch</span></a>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-swap-text">
+    <header>
+      <h3>swap-text</h3>
+      <p>A label changing in place through a light blur, never scaling. The first box follows the label's width; the button reserves its widest label.</p>
+    </header>
+    <div class="kitdemo__stage stack" style="--stack: 1rem">
+      <p style="margin:0">Status: <span id="swap-a" class="t-accent" data-kit="swap-text">Accepting students</span> for spring 2027.</p>
+      <div class="cluster">
+        <button class="btn btn--ghost btn--small" type="button" data-demo-swap-text="next">Change status</button>
+        <button class="btn btn--small" type="button" id="swap-btn" data-demo-swap-text="btn"><span id="swap-b" data-kit="swap-text" data-texts='["Follow","Following"]'>Follow</span></button>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-highlight-text">
+    <header>
+      <h3>highlight-text</h3>
+      <p>A highlighter sweeps behind a phrase when it scrolls in; on a wrapped phrase it runs line after line.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <p class="measure t-d4" style="margin:0">We show that <span id="hl-a" data-kit="highlight-text" data-delay="200">bootstrapping on a single GPU can run in under a second for practical parameters</span>, and that the same kernels carry over to FPGAs.</p>
+      <p style="margin-top:1rem"><button class="btn btn--ghost btn--small" type="button" data-demo-hl>Replay</button></p>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-shimmer-text">
+    <header>
+      <h3>shimmer-text</h3>
+      <p>A slow glint across a status line; pauses off screen and in hidden tabs, stops under reduced motion.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <p class="t-small" style="margin:0"><span id="shim-a" data-kit="shimmer-text">Updating citation counts from Google Scholar…</span></p>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-typing-text">
+    <header>
+      <h3>typing-text</h3>
+      <p>Typed out with a caret; several strings loop. Solid caret while typing, blinking while it waits.</p>
+    </header>
+    <div class="kitdemo__stage stack" style="--stack: 1rem">
+      <p class="t-d3" style="margin:0">Interested in <span id="type-a" data-kit="typing-text" data-loop data-strings='["homomorphic encryption","post-quantum cryptography","side-channel analysis"]'>homomorphic encryption</span></p>
+      <p class="t-mono t-muted" style="margin:0">$ <span id="type-b" data-kit="typing-text" data-speed="45" data-delay="400">git clone github.com/lab/fast-ntt</span></p>
+      <p><button class="btn btn--ghost btn--small" type="button" data-demo-type>Replay</button></p>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-scramble">
+    <header>
+      <h3>scramble</h3>
+      <p>Short mono labels decrypting left to right in at most ~700 ms; the width never changes. The second one plays on hover or focus.</p>
+    </header>
+    <div class="kitdemo__stage stack" style="--stack: 1rem">
+      <p class="t-label" style="margin:0"><span id="scr-a" data-kit="scramble">Selected publications &middot; 2019&ndash;2026</span></p>
+      <p style="margin:0"><a class="t-label" href="#demo-scramble" id="scr-link"><span data-kit="scramble" data-trigger="hover">Open the archive</span></a></p>
+      <p><button class="btn btn--ghost btn--small" type="button" data-demo-scr>Replay</button></p>
+    </div>
+  </article>
 </section>
+<script>
+  // demo controls (the page's own code: the kits are driven through Site.get(el, name))
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-demo-replay],[data-demo-num],[data-demo-rot],[data-demo-roll],[data-demo-swap-text],[data-demo-hl],[data-demo-type],[data-demo-scr]");
+    if (!b || !window.Site) return;
+    if (b.dataset.demoReplay) b.dataset.demoReplay.split(" ").forEach(function (id) {
+      var c = Site.get(document.getElementById(id), "split");
+      if (c) { c.reset(); c.play(); }
+    });
+    if (b.dataset.demoNum) {
+      var n = Site.get(document.getElementById("num-a"), "sliding-number"), v = b.dataset.demoNum;
+      if (!n) return;
+      if (v === "+1") n.set(n.value + 1);
+      else if (v === "random") n.set(Math.round(Math.random() * 20000));
+      else if (v === "instant") n.set(7, { instant: true });
+      else n.set(Number(v));
+    }
+    if (b.dataset.demoRot) ["rot-a", "rot-b", "rot-c"].forEach(function (id) {
+      var r = Site.get(document.getElementById(id), "rotating-text");
+      if (r) r[b.dataset.demoRot]();
+    });
+    if (b.matches("[data-demo-roll]")) Site.get(document.getElementById("roll-a"), "rolling-text").roll();
+    if (b.dataset.demoSwapText === "next") {
+      var sa = Site.get(document.getElementById("swap-a"), "swap-text"), all = ["Accepting students", "Full", "On sabbatical", "Accepting students"];
+      sa.set(all[all.indexOf(sa.text) + 1]);
+    }
+    if (b.dataset.demoSwapText === "btn") {
+      var sb = Site.get(document.getElementById("swap-b"), "swap-text");
+      sb.set(sb.text === "Follow" ? "Following" : "Follow");
+    }
+    if (b.matches("[data-demo-hl]")) { var h = Site.get(document.getElementById("hl-a"), "highlight-text"); h.reset(); requestAnimationFrame(function () { requestAnimationFrame(h.play); }); }
+    if (b.matches("[data-demo-type]")) ["type-a", "type-b"].forEach(function (id) { Site.get(document.getElementById(id), "typing-text").play(); });
+    if (b.matches("[data-demo-scr]")) Site.get(document.getElementById("scr-a"), "scramble").play();
+  });
+</script>

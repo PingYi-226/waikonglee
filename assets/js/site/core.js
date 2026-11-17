@@ -171,7 +171,11 @@
       }
     });
   };
+  /* Errors caught on the way (a kit that fails must not take the page down) are kept in Site.errors,
+     because the production build removes console calls. */
+  Site.errors = [];
   function report(where, e) {
+    Site.errors.push({ where: String(where), message: String((e && e.message) || e), stack: String((e && e.stack) || "").slice(0, 600) });
     if (window.console && console.warn) console.warn("[site] " + where, e);
   }
   function onChange(mq, fn) {
