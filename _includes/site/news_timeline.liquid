@@ -1,0 +1,92 @@
+{%- comment -%}
+  The news page's timeline: a rail (the year being read, in large figures that roll as the years hand over; the years;
+  the filter) beside the items, which sit along a hairline that fills in as the page is read.
+  Items come from _news/ (newest first). An item with an `image` is a print (framed, opens large); the others are ruled rows.
+  Category, for the filter: `label` "Paper" -> papers, "Code" -> code, a label containing "call" -> calls, anything else
+  (and no label) -> activities. Behaviour: assets/js/site/news.js; looks: assets/css/site/news.css.
+{%- endcomment -%}
+{%- assign news = site.news | sort: 'date' | reverse -%}
+{%- assign years = news | group_by_exp: 'item', "item.date | date: '%Y'" -%}
+{%- assign c_all = news | size -%}
+{%- assign c_activities = 0 -%}
+{%- assign c_papers = 0 -%}
+{%- assign c_code = 0 -%}
+{%- assign c_calls = 0 -%}
+{%- for item in news -%}
+  {%- assign l = item.label | default: '' | downcase -%}
+  {%- if l == 'paper' -%}{%- assign c_papers = c_papers | plus: 1 -%}
+  {%- elsif l == 'code' -%}{%- assign c_code = c_code | plus: 1 -%}
+  {%- elsif l contains 'call' -%}{%- assign c_calls = c_calls | plus: 1 -%}
+  {%- else -%}{%- assign c_activities = c_activities | plus: 1 -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign first_year = years.first -%}
+
+<div class="ntl wrap" data-kit="news">
+  <aside class="ntl__rail" aria-label="Years and filter" data-kit="reveal" data-reveal="fade" data-delay="640">
+    <div class="ntl__now js-only" aria-hidden="true">
+      <p class="ntl__year"><span data-kit="sliding-number" data-value="{{ first_year.name }}" data-from="{{ first_year.name }}" data-trigger="manual" data-news-year>{{ first_year.name }}</span></p>
+      <p class="ntl__count">
+        <span data-kit="sliding-number" data-value="{{ first_year.size }}" data-from="{{ first_year.size }}" data-trigger="manual" data-news-count>{{ first_year.size }}</span>
+        <span data-kit="swap-text" data-news-noun>{% if first_year.size == 1 %}item{% else %}items{% endif %}</span>
+      </p>
+    </div>
+
+    <nav class="ntl__years" aria-label="Years" data-kit="scrollspy highlight" data-mode="selection" data-items="a">
+      {%- for y in years -%}
+        <a class="ntl__yearlink" href="#y{{ y.name }}" data-year="{{ y.name }}">{{ y.name }}</a>
+      {%- endfor -%}
+    </nav>
+
+    <div class="ntl__filter js-only" role="group" aria-label="Show" data-kit="highlight" data-mode="both" data-items=".nfilter">
+      <button type="button" class="nfilter" data-kit="press" data-filter="all" data-noun="item,items" aria-pressed="true">
+        <span class="nfilter__name">All</span><span class="nfilter__n">{{ c_all }}</span>
+      </button>
+      {%- if c_activities > 0 %}
+        <button type="button" class="nfilter" data-kit="press" data-filter="activities" data-noun="activity,activities" aria-pressed="false">
+          <span class="nfilter__name">Activities</span><span class="nfilter__n">{{ c_activities }}</span>
+        </button>
+      {%- endif -%}
+      {%- if c_papers > 0 %}
+        <button type="button" class="nfilter" data-kit="press" data-filter="papers" data-noun="paper,papers" aria-pressed="false">
+          <span class="nfilter__name">Papers</span><span class="nfilter__n">{{ c_papers }}</span>
+        </button>
+      {%- endif -%}
+      {%- if c_code > 0 %}
+        <button type="button" class="nfilter" data-kit="press" data-filter="code" data-noun="release,releases" aria-pressed="false">
+          <span class="nfilter__name">Code</span><span class="nfilter__n">{{ c_code }}</span>
+        </button>
+      {%- endif -%}
+      {%- if c_calls > 0 %}
+        <button type="button" class="nfilter" data-kit="press" data-filter="calls" data-noun="call,calls" aria-pressed="false">
+          <span class="nfilter__name">Calls</span><span class="nfilter__n">{{ c_calls }}</span>
+        </button>
+      {%- endif %}
+    </div>
+  </aside>
+
+  <div class="ntl__body" data-kit="highlight tooltip-group" data-mode="hover" data-items=".nitem--row" data-inview>
+    <span class="ntl__spine" aria-hidden="true"></span>
+    <span class="ntl__progress" aria-hidden="true"></span>
+    {%- for y in years %}
+      {%- assign first_group = forloop.first %}
+      <section class="ntl__group" id="y{{ y.name }}" data-year="{{ y.name }}" aria-labelledby="y{{ y.name }}-h">
+        <h2 class="ntl__yearhead" id="y{{ y.name }}-h"><span class="ntl__yearname">{{ y.name }}</span></h2>
+        <ol class="ntl__list" data-kit="reveal-group" data-items="[data-reveal-item]">
+          {%- for item in y.items %}
+            {%- assign l = item.label | default: '' | downcase -%}
+            {%- if l == 'paper' -%}{%- assign cat = 'papers' -%}
+            {%- elsif l == 'code' -%}{%- assign cat = 'code' -%}
+            {%- elsif l contains 'call' -%}{%- assign cat = 'calls' -%}
+            {%- else -%}{%- assign cat = 'activities' -%}
+            {%- endif -%}
+            {%- assign delay = '' -%}
+            {%- if first_group and forloop.index0 < 3 -%}{%- assign delay = forloop.index0 | times: 90 | plus: 520 -%}{%- endif -%}
+            {%- assign words = item.content | strip_html | strip | size -%}
+            {% include site/news_item.liquid item=item cat=cat delay=delay words=words %}
+          {%- endfor %}
+        </ol>
+      </section>
+    {%- endfor %}
+  </div>
+</div>

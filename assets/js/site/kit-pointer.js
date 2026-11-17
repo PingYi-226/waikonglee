@@ -344,7 +344,15 @@
       const startTime = moving ? handoverTime(r.animation) : performance.now();
       this.value = value;
       const offset = from - value;
-      if (Math.abs(offset) < 0.0005) return; // already there: whatever holds it stays
+      if (Math.abs(offset) < 0.0005) {
+        // already there: whatever holds it stays, except a run that has not moved yet toward another value
+        // (pressed and released in one frame): back at rest, it ends here
+        if (r && r.to !== value && value === this.rest) {
+          r.animation.cancel();
+          this.run = null;
+        }
+        return;
+      }
       this.run = null;
       if (env.static || (env.reduce && !this.always) || !canAnimate(this.el)) {
         if (r) r.animation.cancel();

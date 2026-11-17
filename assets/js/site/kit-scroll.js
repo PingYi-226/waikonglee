@@ -1643,6 +1643,7 @@
     if (cursorInstance) return null;
     el.classList.add("k-cursor");
     el.setAttribute("aria-hidden", "true");
+    el.hidden = false; // the markup may hide it until the script runs (footer.liquid does)
     el.innerHTML = "";
     var pill = document.createElement("span");
     pill.className = "k-cursor__pill";
