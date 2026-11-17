@@ -1,5 +1,107 @@
-{%- comment -%} Placeholder figure for the "hpc" research area (to be replaced by the real animated diagram; same file name, same viewBox). {%- endcomment -%}
-<svg class="diagram diagram--hpc" viewBox="0 0 320 180" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true">
-  <g opacity="0.55"><path d="M40 150h240M40 100h240M40 50h240M80 30v140M160 30v140M240 30v140"/></g>
-  <circle cx="160" cy="100" r="34" stroke="var(--accent)"/><circle cx="160" cy="100" r="3" fill="var(--accent)" stroke="none"/>
+{%- comment -%}
+  GPU numerical computing: sparse LU factorisation of an 8 x 8 circuit-like matrix (structurally symmetric, nonzeros
+  as solid dots, zeros as faint points). Eliminating column k with the pivot (accent ring) creates fill-in: new nonzeros
+  (rings) at (3,6), (6,3) from pivot 1 and (5,6), (6,5) from pivot 3. At rest the factorisation is done and the
+  triangles L (below the diagonal) and U (the diagonal and above) stand apart.
+  Live: L and U close up, the fill-in clears, the pivot runs down the diagonal with the elimination front (the trailing
+  submatrix) shrinking behind it, the fill-in appears where it is created, and L and U part again (diagrams.js, SCENES.hpc).
+  Parameters: live (hover | always | off), trigger (view | manual), detail ("full" shows the labels), class.
+{%- endcomment -%}
+<svg class="diagram diagram--hpc{% if include.class %} {{ include.class }}{% endif %}" viewBox="0 0 320 180" data-kit="diagram" data-live="{{ include.live | default: 'hover' }}" data-trigger="{{ include.trigger | default: 'view' }}"{% if include.detail == 'full' %} data-detail="full"{% endif %} role="img" aria-label="A sparse matrix factorised into lower and upper triangles: a pivot runs down the diagonal, a few new nonzeros of fill-in appear, and the two triangles separate." fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+  {%- comment -%} the elimination front (live only): the trailing submatrix, shrinking towards the corner {%- endcomment %}
+  <rect class="dg-h dg-x" data-dg="front" x="96" y="26" width="128" height="128" opacity="0"/>
+  {%- comment -%} L: the lower triangle {%- endcomment %}
+  <g data-dg="L" transform="translate(-6 6)">
+    <path class="dg-h dg-d" style="--t: 0" pathLength="1" d="M96 42V154H208Z"/>
+    <g style="--t: 0.06">
+      <circle class="dg-s dg-p" style="--k: 0.7" cx="104" cy="50" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 1.4" cx="104" cy="66" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 2.1" cx="120" cy="66" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 2.1" cx="104" cy="82" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 3.5" cx="136" cy="82" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 3.5" cx="120" cy="98" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.2" cx="136" cy="98" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.9" cx="152" cy="98" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 3.5" cx="104" cy="114" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.2" cx="120" cy="114" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.9" cx="136" cy="114" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 6.3" cx="168" cy="114" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.2" cx="104" cy="130" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 7" cx="168" cy="130" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.9" cx="104" cy="146" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 5.6" cx="120" cy="146" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 6.3" cx="136" cy="146" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 7" cx="152" cy="146" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 8.4" cx="184" cy="146" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 9.1" cx="200" cy="146" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+    </g>
+    <g style="--t: 0.3">
+      <circle class="dg-s dg-p" style="--k: 2.8" cx="120" cy="82" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 2.8" cx="104" cy="98" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 5.6" cx="152" cy="114" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 4.9" cx="120" cy="130" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 5.6" cx="136" cy="130" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 7.7" cx="168" cy="146" r="2.5" fill="currentColor"/>
+    </g>
+    <g style="--t: 0.66">
+      <circle class="dg-k dg-d" data-dg="fill" data-k="1" style="--k: 1" pathLength="1" cx="152" cy="130" r="2.6"/>
+      <circle class="dg-k dg-d" data-dg="fill" data-k="3" style="--k: 3" pathLength="1" cx="184" cy="130" r="2.6"/>
+    </g>
+  </g>
+  {%- comment -%} U: the upper triangle {%- endcomment %}
+  <g data-dg="U" transform="translate(6 -6)">
+    <path class="dg-h dg-d" style="--t: 0.08" pathLength="1" d="M96 26H224V154H208L96 42Z"/>
+    <g style="--t: 0.06">
+      <circle class="dg-s dg-p" style="--k: 0.7" cx="120" cy="34" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 1.4" cx="136" cy="34" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 2.1" cx="152" cy="34" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 3.5" cx="184" cy="34" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.2" cx="200" cy="34" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.9" cx="216" cy="34" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 2.1" cx="136" cy="50" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 3.5" cx="168" cy="50" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.2" cx="184" cy="50" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 5.6" cx="216" cy="50" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 3.5" cx="152" cy="66" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.2" cx="168" cy="66" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.9" cx="184" cy="66" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 6.3" cx="216" cy="66" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 4.9" cx="168" cy="82" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 7" cx="216" cy="82" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 6.3" cx="184" cy="98" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 7" cx="200" cy="98" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 8.4" cx="216" cy="114" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+      <circle class="dg-s dg-p" style="--k: 9.1" cx="216" cy="130" r="0.9" fill="currentColor" fill-opacity="0.32"/>
+    </g>
+    <g style="--t: 0.3">
+      <circle class="dg-s dg-p" cx="104" cy="34" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 2.8" cx="168" cy="34" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 1.4" cx="120" cy="50" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 2.8" cx="152" cy="50" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 4.9" cx="200" cy="50" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 2.8" cx="136" cy="66" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 5.6" cx="200" cy="66" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 4.2" cx="152" cy="82" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 5.6" cx="184" cy="82" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 5.6" cx="168" cy="98" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 7.7" cx="216" cy="98" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 7" cx="184" cy="114" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 8.4" cx="200" cy="130" r="2.5" fill="currentColor"/>
+      <circle class="dg-s dg-p" style="--k: 9.8" cx="216" cy="146" r="2.5" fill="currentColor"/>
+    </g>
+    <g style="--t: 0.66">
+      <circle class="dg-k dg-d" data-dg="fill" data-k="1" style="--k: 1" pathLength="1" cx="200" cy="82" r="2.6"/>
+      <circle class="dg-k dg-d" data-dg="fill" data-k="3" style="--k: 3" pathLength="1" cx="200" cy="114" r="2.6"/>
+    </g>
+  </g>
+  {%- comment -%} the pivot, at rest on the last diagonal entry (it moves with U) {%- endcomment %}
+  <g data-dg="pivot" data-x="222" data-y="140">
+    <circle class="dg-a dg-d" style="--t: 0.86" pathLength="1" cx="222" cy="140" r="6"/>
+  </g>
+  {%- if include.detail == 'full' %}
+  <g class="dg-f" style="--t: 1">
+    <text class="dg-sym" x="83" y="160" text-anchor="end">L</text>
+    <text class="dg-sym" x="237" y="29">U</text>
+  </g>
+  {%- endif %}
 </svg>

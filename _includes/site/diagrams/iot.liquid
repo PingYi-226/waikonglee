@@ -1,5 +1,63 @@
-{%- comment -%} Placeholder figure for the "iot" research area (to be replaced by the real animated diagram; same file name, same viewBox). {%- endcomment -%}
-<svg class="diagram diagram--iot" viewBox="0 0 320 180" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true">
-  <g opacity="0.55"><path d="M40 150h240M40 100h240M40 50h240M80 30v140M160 30v140M240 30v140"/></g>
-  <circle cx="160" cy="100" r="34" stroke="var(--accent)"/><circle cx="160" cy="100" r="3" fill="var(--accent)" stroke="none"/>
+{%- comment -%}
+  Embedded processors: a five-stage pipeline (fetch, decode, execute, memory, write-back) and its clock.
+  Instructions are small solids that move one stage per clock tick; one that does not touch memory is hollow, and while it
+  passes the memory stage that stage is clock-gated (drawn dashed): skipped, as a low-power core does. The clock scrolls
+  under the pipeline; the accent dot reads it where the execute stage is, and each rising edge advances the pipeline.
+  Live: one tick per beat (diagrams.js, SCENES.iot; the instruction kinds repeat as "mmamamm").
+  Parameters: live (hover | always | off), trigger (view | manual), detail ("full" shows the labels), class.
+{%- endcomment -%}
+<svg class="diagram diagram--iot{% if include.class %} {{ include.class }}{% endif %}" viewBox="0 0 320 180" data-kit="diagram" data-live="{{ include.live | default: 'hover' }}" data-trigger="{{ include.trigger | default: 'view' }}"{% if include.detail == 'full' %} data-detail="full"{% endif %} role="img" aria-label="A five-stage processor pipeline with instructions moving one stage per clock tick; the memory stage is skipped and gated when an instruction does not need it." fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+  {%- comment -%} the stages and the path between them {%- endcomment %}
+  <g style="--t: 0">
+    <rect class="dg-k dg-d" pathLength="1" x="41" y="50" width="38" height="28" rx="2"/>
+    <rect class="dg-k dg-d" style="--k: 3" pathLength="1" x="91" y="50" width="38" height="28" rx="2"/>
+    <rect class="dg-k dg-d" style="--k: 6" pathLength="1" x="141" y="50" width="38" height="28" rx="2"/>
+    <rect class="dg-k dg-x" data-dg="mem-on" x="191" y="50" width="38" height="28" rx="2" opacity="0"/>
+    <rect class="dg-m dg-f" data-dg="mem-off" style="--t: 0.3" x="191" y="50" width="38" height="28" rx="2" stroke-dasharray="2 3"/>
+    <rect class="dg-k dg-d" style="--k: 12" pathLength="1" x="241" y="50" width="38" height="28" rx="2"/>
+  </g>
+  <path class="dg-h dg-d" style="--t: 0.3" pathLength="1" d="M33 64H41M79 64H91M129 64H141M179 64H191M229 64H241M279 64H287"/>
+  {%- comment -%} the instructions in flight (six, so one can enter as one leaves) {%- endcomment %}
+  <g data-dg="tok" transform="translate(60 64)">
+    <circle class="dg-s dg-p" style="--t: 0.5" cx="0" cy="0" r="3.2" fill="currentColor"/>
+    <circle class="dg-k dg-p" style="--t: 0.5" cx="0" cy="0" r="2.7" opacity="0"/>
+  </g>
+  <g data-dg="tok" transform="translate(10 64)" opacity="0">
+    <circle class="dg-s dg-p" style="--t: 0.5" cx="0" cy="0" r="3.2" fill="currentColor"/>
+    <circle class="dg-k dg-p" style="--t: 0.5" cx="0" cy="0" r="2.7" opacity="0"/>
+  </g>
+  <g data-dg="tok" transform="translate(260 64)">
+    <circle class="dg-s dg-p" style="--t: 0.5; --k: 4" cx="0" cy="0" r="3.2" fill="currentColor"/>
+    <circle class="dg-k dg-p" style="--t: 0.5; --k: 4" cx="0" cy="0" r="2.7" opacity="0"/>
+  </g>
+  <g data-dg="tok" transform="translate(210 64)">
+    <circle class="dg-s dg-p" style="--t: 0.5; --k: 3" cx="0" cy="0" r="3.2" fill="currentColor" opacity="0"/>
+    <circle class="dg-k dg-p" style="--t: 0.5; --k: 3" cx="0" cy="0" r="2.7"/>
+  </g>
+  <g data-dg="tok" transform="translate(160 64)">
+    <circle class="dg-s dg-p" style="--t: 0.5; --k: 2" cx="0" cy="0" r="3.2" fill="currentColor"/>
+    <circle class="dg-k dg-p" style="--t: 0.5; --k: 2" cx="0" cy="0" r="2.7" opacity="0"/>
+  </g>
+  <g data-dg="tok" transform="translate(110 64)">
+    <circle class="dg-s dg-p" style="--t: 0.5; --k: 1" cx="0" cy="0" r="3.2" fill="currentColor"/>
+    <circle class="dg-k dg-p" style="--t: 0.5; --k: 1" cx="0" cy="0" r="2.7" opacity="0"/>
+  </g>
+  {%- comment -%} the clock: a square wave scrolling under the pipeline, read at the probe {%- endcomment %}
+  <svg x="41" y="110" width="238" height="20" viewBox="41 110 238 20">
+    <path class="dg-m dg-d" data-dg="clk" style="--t: 0.36" pathLength="1" d="M-52.5 126H-27.5V114H-2.5V126H22.5V114H47.5V126H72.5V114H97.5V126H122.5V114H147.5V126H172.5V114H197.5V126H222.5V114H247.5V126H272.5V114H297.5V126H322.5V114H347.5V126H372.5V114H397.5V126"/>
+  </svg>
+  <path class="dg-h dg-d" style="--t: 0.62" pathLength="1" d="M160 105V131"/>
+  <g data-dg="probe" data-y="126">
+    <circle class="dg-sa dg-p" style="--t: 0.9" cx="160" cy="126" r="2.6" fill="currentColor"/>
+  </g>
+  {%- if include.detail == 'full' %}
+  <g class="dg-f" style="--t: 1">
+    <text class="dg-num" x="60" y="43" text-anchor="middle">IF</text>
+    <text class="dg-num" x="110" y="43" text-anchor="middle">ID</text>
+    <text class="dg-num" x="160" y="43" text-anchor="middle">EX</text>
+    <text class="dg-num" x="210" y="43" text-anchor="middle">MEM</text>
+    <text class="dg-num" x="260" y="43" text-anchor="middle">WB</text>
+    <text class="dg-num" x="35" y="128" text-anchor="end">clk</text>
+  </g>
+  {%- endif %}
 </svg>

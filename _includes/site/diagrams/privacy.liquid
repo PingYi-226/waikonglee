@@ -1,5 +1,77 @@
-{%- comment -%} Placeholder figure for the "privacy" research area (to be replaced by the real animated diagram; same file name, same viewBox). {%- endcomment -%}
-<svg class="diagram diagram--privacy" viewBox="0 0 320 180" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true">
-  <g opacity="0.55"><path d="M40 150h240M40 100h240M40 50h240M80 30v140M160 30v140M240 30v140"/></g>
-  <circle cx="160" cy="100" r="34" stroke="var(--accent)"/><circle cx="160" cy="100" r="3" fill="var(--accent)" stroke="none"/>
+{%- comment -%}
+  Privacy-preserving computation: two ciphertexts, each a small cloud of noisy samples inside the same bound, travel
+  along wires into one homomorphic operation (x) and leave as one ciphertext whose noise has grown: a wider cloud, still
+  inside the bound, so it still decrypts. Nothing is shown in the clear.
+  Live: tokens travel the wires, the node answers, the result's noise breathes out (diagrams.js, SCENES.privacy).
+  Parameters: live (hover | always | off), trigger (view | manual), detail ("full" shows the labels), class.
+{%- endcomment -%}
+<svg class="diagram diagram--privacy{% if include.class %} {{ include.class }}{% endif %}" viewBox="0 0 320 180" data-kit="diagram" data-live="{{ include.live | default: 'hover' }}" data-trigger="{{ include.trigger | default: 'view' }}"{% if include.detail == 'full' %} data-detail="full"{% endif %} role="img" aria-label="Two encrypted values, small clouds of noise, travel along wires into one operation and leave as one encrypted result with a wider cloud of noise; nothing is decrypted." fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+  {%- comment -%} the bounds (same modulus for all three) and the wires {%- endcomment %}
+  <g class="dg-h" style="--t: 0">
+    <circle class="dg-d" pathLength="1" cx="66" cy="50" r="20"/>
+    <circle class="dg-d" style="--k: 3" pathLength="1" cx="66" cy="130" r="20"/>
+    <circle class="dg-d" style="--k: 6" pathLength="1" cx="252" cy="90" r="20"/>
+  </g>
+  <g class="dg-m" style="--t: 0.2">
+    <path class="dg-d" data-dg="wire" pathLength="1" d="M86 50C122 50 130 90 162 90"/>
+    <path class="dg-d" data-dg="wire" style="--k: 2" pathLength="1" d="M86 130C122 130 130 90 162 90"/>
+    <path class="dg-d" data-dg="wire" style="--t: 0.5" pathLength="1" d="M182 90H231"/>
+    <path class="dg-d" style="--t: 0.72" pathLength="1" d="M225.4 86.4L231 90L225.4 93.6"/>
+  </g>
+  {%- comment -%} the noise: samples of each ciphertext {%- endcomment %}
+  <g data-dg="cloud" style="--t: 0.32">
+    <circle class="dg-s dg-p" cx="64.72" cy="52.56" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 1" cx="64.87" cy="48.42" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 2" cx="71.56" cy="52.12" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 3" cx="67.97" cy="50.93" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 4" cx="57.67" cy="54.28" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 5" cx="68.6" cy="46.79" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 6" cx="62.69" cy="58.59" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 7" cx="68.78" cy="55.99" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 8" cx="68.13" cy="42.55" r="1.5" fill="currentColor"/>
+  </g>
+  <g data-dg="cloud" style="--t: 0.38">
+    <circle class="dg-s dg-p" cx="66.24" cy="136.53" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 1" cx="55.93" cy="128.39" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 2" cx="65.47" cy="125.91" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 3" cx="68.49" cy="129.69" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 4" cx="58.68" cy="134.14" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 5" cx="73.2" cy="131.81" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 6" cx="61.16" cy="127.34" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 7" cx="70.21" cy="120.94" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 8" cx="59.44" cy="138.05" r="1.5" fill="currentColor"/>
+  </g>
+  <g data-dg="out" data-x="252" data-y="90" style="--t: 0.76">
+    <circle class="dg-s dg-p" cx="256.86" cy="88.68" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 1" cx="254.86" cy="95.72" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 2" cx="253.06" cy="100.08" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 3" cx="246.18" cy="86.35" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 4" cx="261.17" cy="90.24" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 5" cx="244.25" cy="98.33" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 6" cx="264.9" cy="86.09" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 7" cx="239.86" cy="88.81" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 8" cx="250.69" cy="87.38" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 9" cx="264.36" cy="80.96" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 10" cx="261.93" cy="97.56" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 11" cx="250.45" cy="92.44" r="1.5" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 12" cx="258.72" cy="94.98" r="1.5" fill="currentColor"/>
+  </g>
+  {%- comment -%} the operation, evaluated on ciphertexts {%- endcomment %}
+  <g data-dg="node" data-x="172" data-y="90">
+    <circle class="dg-a dg-d" style="--t: 0.42" pathLength="1" cx="172" cy="90" r="10"/>
+    <path class="dg-k dg-d" style="--t: 0.56" pathLength="1" d="M168.2 86.2L175.8 93.8"/>
+    <path class="dg-k dg-d" style="--t: 0.56; --k: 3" pathLength="1" d="M175.8 86.2L168.2 93.8"/>
+  </g>
+  {%- comment -%} live only: the node's answer and the tokens on the wires {%- endcomment %}
+  <circle class="dg-h dg-x" data-dg="ping" cx="172" cy="90" r="10" opacity="0"/>
+  <circle class="dg-s dg-x" data-dg="tok" cx="0" cy="0" r="2.6" fill="currentColor" opacity="0"/>
+  <circle class="dg-s dg-x" data-dg="tok" cx="0" cy="0" r="2.6" fill="currentColor" opacity="0"/>
+  <circle class="dg-s dg-x" data-dg="tok" cx="0" cy="0" r="2.6" fill="currentColor" opacity="0"/>
+  {%- if include.detail == 'full' %}
+  <g class="dg-f" style="--t: 1">
+    <text class="dg-sym" x="40" y="54" text-anchor="end">c<tspan class="dg-sub" dy="2.5">1</tspan></text>
+    <text class="dg-sym" x="40" y="134" text-anchor="end">c<tspan class="dg-sub" dy="2.5">2</tspan></text>
+    <text class="dg-sym" x="252" y="125" text-anchor="middle">c<tspan class="dg-sub" dy="2.5">1</tspan><tspan dy="-2.5"> · c</tspan><tspan class="dg-sub" dy="2.5">2</tspan></text>
+  </g>
+  {%- endif %}
 </svg>

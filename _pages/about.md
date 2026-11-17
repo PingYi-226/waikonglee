@@ -3,8 +3,8 @@ layout: home
 title: About
 permalink: /
 v2: true
-site_css: [pub, home]
-site_js: [pub, home]
+site_css: [pub, home, diagrams]
+site_js: [pub, home, diagrams]
 
 selected_papers: true # show the papers marked selected = {true} in papers.bib
 announcements:
