@@ -561,10 +561,10 @@
     if (i > -1) running.splice(i, 1);
   }
 
-  /** The opacity an element is painted with, its ancestors' included (a card fading in an orbit counts). */
+  /** The opacity its ancestors paint an element with (a card fading in an orbit counts; its own blank state does not). */
   function seenOpacity(el) {
     var o = 1;
-    for (var n = el; n && n.nodeType === 1 && n !== document.body; n = n.parentElement) {
+    for (var n = el.parentElement; n && n.nodeType === 1 && n !== document.body; n = n.parentElement) {
       o *= parseFloat(getComputedStyle(n).opacity);
       if (o < 0.05) break;
     }

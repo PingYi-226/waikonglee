@@ -93,6 +93,12 @@
   fill: var(--muted);
 }
 
+/* the closing bracket of a ket, |0>, drawn: the serif has no glyph for it */
+.diagram .dg-ket {
+  stroke-width: 1;
+  fill: none;
+}
+
 .diagram .dg-gate {
   font-family: var(--font-display);
   font-size: 10.5px;
