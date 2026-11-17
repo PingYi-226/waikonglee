@@ -27,7 +27,7 @@
   tagline: Accelerators and quantisation for constrained devices.
   description: >-
     FPGA accelerators and co-processors for convolutional networks, sub-byte and power-of-two quantisation, and
-    compact models for sensing, vision and text on resource-constrained devices.
+    compact models for sensing, vision and text, many of them aimed at resource-constrained devices.
 - key: iot
   short: "Embedded & IoT"
   title: Embedded processors and IoT systems

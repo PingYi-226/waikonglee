@@ -136,7 +136,7 @@ papers:
   4AV9DOcAAAAJ:NhqRSupF_l8C:
     citations: 11
     title: 'cuGimli: Optimized implementation of the Gimli authenticated encryption and hash function on GPU for IoT applications'
-    year: '2021'
+    year: '2022'
   4AV9DOcAAAAJ:bFI3QPDXJZMC:
     citations: 48
     title: High throughput implementation of post-quantum key encapsulation and decapsulation on GPU for Internet of Things applications
@@ -156,7 +156,7 @@ papers:
   4AV9DOcAAAAJ:ldfaerwXgEUC:
     citations: 34
     title: 'Parallel implementation of Nussbaumer algorithm and number theoretic transform on a GPU platform: application to qTESLA: W.-K. Lee et al.'
-    year: '2020'
+    year: '2021'
   4AV9DOcAAAAJ:4OULZ7Gr8RgC:
     citations: 25
     title: High-speed RLWE-oriented polynomial multiplier utilizing Karatsuba algorithm
@@ -172,7 +172,7 @@ papers:
   4AV9DOcAAAAJ:RYcK_YlVTxYC:
     citations: 43
     title: 'Accelerating number theoretic transform in GPU platform for fully homomorphic encryption: J.-Z. Goey et al.'
-    year: '2020'
+    year: '2021'
   4AV9DOcAAAAJ:SeFeTyx0c_EC:
     citations: 7
     title: Gpu-accelerated adaptive PCBSO mode-based hybrid RLA for sparse LU factorization in circuit simulation
@@ -204,7 +204,7 @@ papers:
   4AV9DOcAAAAJ:HoB7MX3m0LUC:
     citations: 10
     title: Fast and energy-efficient block ciphers implementations in ARM processors and mali GPU
-    year: '2020'
+    year: '2022'
   4AV9DOcAAAAJ:YFjsv_pBGBYC:
     citations: 40
     title: An energy efficient FPGA partial reconfiguration based micro-architectural technique for IoT applications
@@ -224,7 +224,7 @@ papers:
   4AV9DOcAAAAJ:e5wmG9Sq2KIC:
     citations: 20
     title: 'Terabit encryption in a second: Performance evaluation of block ciphers in GPU with Kepler, Maxwell, and Pascal architectures'
-    year: '2018'
+    year: '2019'
   4AV9DOcAAAAJ:r0BpntZqJG4C:
     citations: 623
     title: Blockchain based searchable encryption for electronic health record sharing
@@ -257,10 +257,14 @@ papers:
     citations: 132
     title: Multi-source energy harvesting and storage for floating wireless sensor network nodes with long range communication capability
     year: '2018'
+  4AV9DOcAAAAJ:dhFuZR0502QC:
+    citations: 70
+    title: 'SPRING: a novel parallel chaos-based image encryption scheme'
+    year: '2018'
   4AV9DOcAAAAJ:mVmsd5A6BfQC:
     citations: 11
     title: 'SearchaStore: Fast and secure searchable cloud services'
-    year: '2017'
+    year: '2018'
   4AV9DOcAAAAJ:_kc_bZDykSQC:
     citations: 43
     title: Fast implementation of block ciphers and PRNGs in Maxwell GPU architecture
@@ -284,6 +288,10 @@ papers:
   4AV9DOcAAAAJ:P5F9QuxV20EC:
     citations: 10
     title: Masked implementation of PIPO block cipher on 8-bit AVR microcontrollers
+    year: '2021'
+  4AV9DOcAAAAJ:1sJd4Hv_s6UC:
+    citations: 11
+    title: 'ARMed frodo: FrodoKEM on 64-bit ARMv8 processors'
     year: '2021'
   4AV9DOcAAAAJ:70eg2SAEIzsC:
     citations: 9

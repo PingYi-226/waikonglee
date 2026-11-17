@@ -1,6 +1,6 @@
 {%- comment -%} Controls for the publication list. The chart and the counts are computed in the browser from the list itself. {%- endcomment -%}
 <div class="pubtools" data-pubtools hidden>
-  <div class="pubchart" data-pubchart aria-label="Publications per year"></div>
+  <div class="pubchart" data-pubchart role="group" aria-label="Publications per year"></div>
   <div class="pubfilters">
     <div class="chips" role="group" aria-label="Filter by type">
       <button type="button" class="chip is-active" data-filter-type="all">All</button>
@@ -20,3 +20,4 @@
     </div>
   </div>
 </div>
+<p class="pubempty" data-pubempty hidden>No papers match these filters.</p>

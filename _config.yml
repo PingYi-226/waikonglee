@@ -2,7 +2,7 @@
 # Site settings
 # -----------------------------------------------------------------------------
 
-title: blank # the website title (if blank, full name will be used instead)
+title: Wai-Kong Lee # the website title
 first_name: Wai-Kong
 middle_name:
 last_name: Lee
@@ -193,7 +193,7 @@ collections:
   news:
     defaults:
       layout: post
-    output: true
+    output: false # news items are shown in lists only; they do not get pages of their own
   projects:
     output: true
   teachings:
@@ -236,6 +236,8 @@ exclude:
   - _pages/about_einstein.md
   - purgecss.config.js
   - README.md
+  - requirements.txt
+  - CLAUDE.md
   - readme_preview/
   - gems/
   - migrations/

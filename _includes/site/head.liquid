@@ -1,7 +1,12 @@
 {%- comment -%} Site design layer: loaded after the al-folio core styles so it can refine them. {%- endcomment -%}
 {% if site.noindex %}<meta name="robots" content="noindex">{% endif %}
 <script>
+  // Mark that JavaScript is available so content can start hidden and animate in.
+  // If the site script has not started within a few seconds, drop the mark so nothing stays hidden.
   document.documentElement.classList.add('js');
+  setTimeout(function () {
+    if (!document.documentElement.classList.contains('is-ready')) document.documentElement.classList.remove('js');
+  }, 4000);
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -24,7 +24,7 @@ Edit a file (directly on github.com is fine), commit, and the site rebuilds itse
 
 ### Adding a paper
 
-Paste the BibTeX entry at the top of `_bibliography/papers.bib` and add the site-specific fields:
+Paste the BibTeX entry into `_bibliography/papers.bib`, below the comment block and above the first entry, and add the site-specific fields:
 
 ```bibtex
 @article{lee2027example,
@@ -45,6 +45,7 @@ Paste the BibTeX entry at the top of `_bibliography/papers.bib` and add the site
 ```
 
 Papers are grouped by year and shown in the order they appear in the file. The chart, the filters and the paper count update on their own.
+Journal papers carry the year of the issue they appeared in. `pubtype` decides which filter a paper appears under.
 Write the author's own name as `Lee, Wai-Kong` so that it is emphasised.
 
 ### Adding a news item
@@ -68,22 +69,24 @@ One or two sentences. Markdown links work.
 
 | Automation                                     | When                               | What it does                                                                                           |
 | ---------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `.github/workflows/deploy.yml`                 | every push to `main`               | builds the site (Jekyll, responsive images, minified CSS/JS) and publishes it to the `gh-pages` branch |
+| `.github/workflows/deploy.yml`                 | every push to `main`, and after each citation refresh | builds the site (Jekyll, responsive images, minified CSS/JS) and publishes it to the `gh-pages` branch |
 | `.github/workflows/broken-links-site.yml`      | after each successful deploy       | rebuilds the site and checks all internal links                                                        |
 | `.github/workflows/update-citations.yml`       | Mon / Wed / Fri, or run by hand    | reads Google Scholar and updates the citation counts in `_data/citations.yml`                          |
 
 Notes: GitHub pauses scheduled workflows after 60 days without any commit (re-enable them on the Actions tab), and Google Scholar often refuses
-requests from GitHub's servers, in which case the citation counts simply stay as they are.
+requests from GitHub's servers, in which case the citation counts simply stay as they are. The totals on the home page
+(citations, h-index) are not refreshed automatically: update them in `_data/profile.yml` together with the date.
 
 ## Previewing on your own computer
 
-With Docker: `docker compose up`, then open http://localhost:8080/waikonglee/ .
-With Ruby 3.3: `bundle install`, then `bundle exec jekyll serve` (ImageMagick and Node.js must be installed).
+With Ruby 3.3: `bundle install`, then `bundle exec jekyll serve` (ImageMagick and Node.js must be installed); the address is printed in the terminal.
+The template also ships a Docker setup (`docker compose up`, port 8080); it has not been tried with this site.
 
 ## Moving the site to another GitHub account
 
 1. Transfer the repository (Settings → General → Transfer ownership). For an address without a sub-path, rename it to `<account>.github.io`.
-2. In `_config.yml` set `url: https://<account>.github.io`, leave `baseurl:` empty, and set `noindex: false`.
+2. In `_config.yml` set `url: https://<account>.github.io` and `noindex: false`. Leave `baseurl:` empty only if the repository is named
+   `<account>.github.io`; under any other name set `baseurl: /<repository-name>`.
 3. Settings → Actions → General → Workflow permissions: "Read and write permissions".
 4. Settings → Pages → Build and deployment: "Deploy from a branch", branch `gh-pages`.
 

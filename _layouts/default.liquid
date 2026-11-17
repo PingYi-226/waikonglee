@@ -3,7 +3,8 @@
   Local override of the al_folio_core default layout. Differences from the gem version:
   1. includes site/head.liquid after the core head (site stylesheet, no-JS guard);
   2. adds a layout-<name> class on <body> so pages can be styled individually;
-  3. includes site/scripts.liquid after the core scripts (site JavaScript).
+  3. includes site/scripts.liquid after the core scripts (site JavaScript);
+  4. adds a skip link and an id on the main region.
 {%- endcomment -%}
 {%- capture html_attributes -%}
   {%- if site.plugins contains 'al_rtl' -%}
@@ -29,9 +30,10 @@
   </head>
 
   <body class="{% if site.navbar_fixed %}fixed-top-nav{% endif %} {% unless site.footer_fixed %}sticky-bottom-footer{% endunless %} layout-{{ page.layout | default: 'none' }}">
+    <a class="skip-link" href="#main">Skip to content</a>
     {% include header.liquid %}
 
-    <div class="container mt-5" role="main">
+    <div class="container mt-5" role="main" id="main">
       {% if page.toc and page.toc.sidebar %}
         {% assign toc_collapse = page.toc.collapse | default: 'expanded' %}
         {% assign toc_collapse_depth = page.toc.collapse_depth | default: '' %}

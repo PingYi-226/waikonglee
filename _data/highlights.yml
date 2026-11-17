@@ -1,6 +1,6 @@
 # Selected results. Every number is quoted from the abstract of the cited paper.
 - figure: "58,595"
-  unit: Falcon-512 signatures per second
+  unit: Falcon-512 signatures per second on an A100 GPU
   text: The first parallel implementation of the Falcon signature scheme on GPUs, alongside its parallel-friendly alternative Mitaka.
   venue: IEEE TPDS
   year: 2024
@@ -15,7 +15,7 @@
   theme: pqc
 - figure: "7.47×"
   unit: faster Saber polynomial multiplication on FPGA
-  text: KaratSaber, a Karatsuba multiplier architecture that is 46.04% more area-time efficient than the schoolbook design it is compared with.
+  text: KaratSaber, a Karatsuba multiplier architecture. Faster than the schoolbook design at 4.96× the hardware, which makes it 46.04% more area-time efficient.
   venue: IEEE TC
   year: 2023
   doi: 10.1109/tc.2023.3238129

@@ -18,16 +18,16 @@ layout: default
       </div>
       <dl class="hero__figures">
         <div>
-          <dd><span data-count="{% bibliography_count %}">{% bibliography_count %}</span></dd>
           <dt>peer-reviewed papers</dt>
+          <dd data-count="{% bibliography_count %}">{% bibliography_count %}</dd>
         </div>
         <div>
-          <dd><span data-count="{{ profile.metrics.citations }}">{{ profile.metrics.citations }}</span></dd>
           <dt>citations</dt>
+          <dd data-count="{{ profile.metrics.citations }}">{{ profile.metrics.citations }}</dd>
         </div>
         <div>
-          <dd><span data-count="{{ profile.metrics.h_index }}">{{ profile.metrics.h_index }}</span></dd>
           <dt>h-index</dt>
+          <dd data-count="{{ profile.metrics.h_index }}">{{ profile.metrics.h_index }}</dd>
         </div>
       </dl>
       <p class="hero__note">
@@ -43,7 +43,6 @@ layout: default
         <div class="about__text prose reveal">{{ content }}</div>
         <figure class="about__photo reveal">
           <img src="{{ '/assets/img/prof_pic.jpg' | relative_url }}" alt="Portrait of {{ site.first_name }} {{ site.last_name }}" width="339" height="418">
-          <figcaption>{{ profile.role }}<br>{{ profile.affiliation_short }}</figcaption>
         </figure>
       </div>
     </div>

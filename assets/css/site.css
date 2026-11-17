@@ -12,8 +12,9 @@
   --surface: #fbfaf7;
   --ink: #2b2d33;
   --ink-2: #4b4e56;
-  --muted: #6f727a;
-  --faint: #a8a7a0;
+  --muted: #686b73;
+  --faint: #a8a7a0; /* hairlines, dots, decoration only */
+  --faint-text: #8a8983; /* large display text and placeholders */
   --line: rgba(43, 45, 51, 0.12);
   --line-strong: rgba(43, 45, 51, 0.24);
   --accent: #2f5d54;
@@ -54,6 +55,7 @@ html[data-theme="dark"] {
   --ink-2: #c2c0b9;
   --muted: #9a9ca3;
   --faint: #686a71;
+  --faint-text: #7c7e85;
   --line: rgba(255, 255, 255, 0.1);
   --line-strong: rgba(255, 255, 255, 0.22);
   --accent: #93bfb2;
@@ -166,6 +168,24 @@ a:hover {
 img {
   max-width: 100%;
   height: auto;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -5rem;
+  z-index: 2000;
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: 3px;
+  transition: top 0.2s var(--ease);
+}
+
+.skip-link:focus {
+  top: 0.6rem;
+  color: var(--paper);
 }
 
 .sr-only {
@@ -288,11 +308,13 @@ body.is-scrolled #navbar {
   background-position: 50% 82%;
 }
 
+/* the template prints the keyboard shortcut next to the search icon; show the icon only */
 #navbar #search-toggle .nav-link {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0;
+}
+
+#navbar #search-toggle .nav-link i {
+  font-size: 0.9rem;
 }
 
 #navbar #light-toggle {
@@ -371,7 +393,7 @@ progress#progress::-moz-progress-bar {
   position: relative;
   display: grid;
   align-items: center;
-  min-height: min(100vh - 57px, 900px);
+  min-height: min(88vh, 800px);
   padding-block: clamp(3.5rem, 9vh, 7rem) clamp(2.5rem, 6vh, 4.5rem);
   overflow: hidden;
 }
@@ -452,6 +474,11 @@ progress#progress::-moz-progress-bar {
   max-width: 42rem;
 }
 
+.hero__figures > div {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
 .hero__figures dd {
   margin: 0;
   font-family: var(--font-display);
@@ -474,7 +501,7 @@ progress#progress::-moz-progress-bar {
 .hero__note {
   margin: 1.1rem 0 0;
   font-size: 0.8rem;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .hero__note a {
@@ -581,16 +608,6 @@ progress#progress::-moz-progress-bar {
   filter: none;
 }
 
-.about__photo figcaption {
-  margin-top: 0.8rem;
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  line-height: 1.7;
-  color: var(--muted);
-}
-
 /* research areas */
 .areas {
   list-style: none;
@@ -623,7 +640,7 @@ progress#progress::-moz-progress-bar {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   letter-spacing: 0.08em;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .areas__title {
@@ -772,6 +789,14 @@ progress#progress::-moz-progress-bar {
   color: var(--ink);
 }
 
+.newsitem__body p {
+  margin: 0 0 0.6em;
+}
+
+.newsitem__body p:last-child {
+  margin: 0;
+}
+
 .newsitem__img {
   grid-column: 2;
   margin: 0.75rem 0 0;
@@ -852,7 +877,7 @@ progress#progress::-moz-progress-bar {
   font-weight: 400;
   line-height: 1;
   letter-spacing: -0.02em;
-  color: var(--faint);
+  color: var(--faint-text);
   text-align: left;
   border: 0;
   margin: clamp(2.75rem, 6vw, 4.25rem) 0 0.9rem;
@@ -962,22 +987,41 @@ a.pub__abbr {
 
 .pub__links a.pub__cites {
   border-bottom-color: transparent;
-  color: var(--faint);
+  color: var(--muted);
 }
 
-.pub__panel {
+/* panels are collapsed only when JavaScript is there to open them */
+.js .pub__panel {
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 0.55s var(--ease);
 }
 
-.pub__panel > div {
+.js .pub__panel > div {
   overflow: hidden;
   min-height: 0;
+  visibility: hidden;
+  transition: visibility 0s linear 0.55s;
 }
 
-.pub__panel.is-open {
+.js .pub__panel.is-open {
   grid-template-rows: 1fr;
+}
+
+.js .pub__panel.is-open > div {
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+/* without JavaScript the abstracts are simply shown; the toggle buttons and the BibTeX blocks are left out */
+html:not(.js) .pub__toggle,
+html:not(.js) .pub__panel[data-panel-body="bibtex"] {
+  display: none;
+}
+
+.pubempty {
+  margin: 2.5rem 0;
+  color: var(--muted);
 }
 
 .pub__abstract {
@@ -1077,6 +1121,10 @@ a.pub__abbr {
   background: var(--accent);
 }
 
+.pubchart__bar:disabled {
+  cursor: default;
+}
+
 .pubchart__label {
   position: absolute;
   bottom: -1.5rem;
@@ -1086,7 +1134,7 @@ a.pub__abbr {
   font-size: 0.62rem;
   letter-spacing: 0.04em;
   white-space: nowrap;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .pubchart__value {
@@ -1167,16 +1215,18 @@ a.pub__abbr {
   border: 0;
   border-bottom: 1px solid var(--line-strong);
   border-radius: 0;
-  outline: none;
-  transition: border-color 0.3s var(--ease);
+  transition:
+    border-color 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
 }
 
 .pubsearch input::placeholder {
-  color: var(--faint);
+  color: var(--faint-text);
 }
 
 .pubsearch input:focus {
   border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 var(--accent);
 }
 
 .pubcount {
@@ -1375,7 +1425,7 @@ a.pub__abbr {
   font-size: 0.64rem;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .alumni__row {
@@ -1490,7 +1540,7 @@ a.pub__abbr {
 .cv .location {
   margin: 0.2rem 0 0;
   font-size: 0.8rem;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .cv .iconlocation {
@@ -1570,7 +1620,7 @@ a.pub__abbr {
 .sitefooter__row--small {
   margin-top: 1.4rem;
   font-size: 0.78rem;
-  color: var(--faint);
+  color: var(--muted);
 }
 
 .sitefooter__row--small a {
@@ -1724,6 +1774,25 @@ a.pub__abbr {
 }
 
 @media print {
+  html[data-theme="dark"] {
+    --paper: #ffffff;
+    --paper-2: #f3f3f3;
+    --surface: #ffffff;
+    --ink: #1c1c1c;
+    --ink-2: #333333;
+    --muted: #555555;
+    --faint: #999999;
+    --faint-text: #777777;
+    --line: rgba(0, 0, 0, 0.2);
+    --line-strong: rgba(0, 0, 0, 0.4);
+    --accent: #2f5d54;
+  }
+
+  .hero {
+    min-height: 0;
+  }
+
+  .skip-link,
   #navbar,
   .hero__lattice,
   .pubtools,

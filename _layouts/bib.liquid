@@ -5,7 +5,11 @@
   Extra BibTeX fields used here: abbr, theme, pubtype, code, pdf, html, slides, poster, google_scholar_id, abstract, bibtex_show.
 {%- endcomment -%}
 {%- assign venue = entry.journal | default: entry.booktitle -%}
-<div class="pub" id="{{ entry.key }}" data-type="{{ entry.pubtype | default: entry.type }}" data-area="{{ entry.theme }}" data-year="{{ entry.year }}">
+{%- assign pubtype = entry.pubtype -%}
+{%- unless pubtype -%}
+  {%- if entry.type == 'article' -%}{%- assign pubtype = 'journal' -%}{%- else -%}{%- assign pubtype = 'conference' -%}{%- endif -%}
+{%- endunless -%}
+<div class="pub" id="{{ entry.key }}" data-type="{{ pubtype }}" data-area="{{ entry.theme }}" data-year="{{ entry.year }}">
   <div class="pub__side">
     {%- if entry.abbr -%}
       {%- assign v = site.data.venues[entry.abbr] -%}
@@ -30,8 +34,8 @@
       , {{ entry.year }}
     </div>
     <div class="pub__links">
-      {%- if entry.abstract %}<button type="button" class="pub__toggle" data-panel="abstract" aria-expanded="false">Abstract</button>{% endif -%}
-      {%- if entry.bibtex_show %}<button type="button" class="pub__toggle" data-panel="bibtex" aria-expanded="false">BibTeX</button>{% endif -%}
+      {%- if entry.abstract %}<button type="button" class="pub__toggle" data-panel="abstract" aria-expanded="false" aria-controls="{{ entry.key }}-abstract">Abstract</button>{% endif -%}
+      {%- if entry.bibtex_show %}<button type="button" class="pub__toggle" data-panel="bibtex" aria-expanded="false" aria-controls="{{ entry.key }}-bibtex">BibTeX</button>{% endif -%}
       {%- if entry.doi %}<a href="https://doi.org/{{ entry.doi }}">DOI</a>{% elsif entry.html %}<a href="{{ entry.html }}">Link</a>{% endif -%}
       {%- if entry.pdf %}<a href="{% if entry.pdf contains '://' %}{{ entry.pdf }}{% else %}{{ entry.pdf | prepend: '/assets/pdf/' | relative_url }}{% endif %}">PDF</a>{% endif -%}
       {%- if entry.code %}<a href="{{ entry.code }}">Code</a>{% endif -%}
@@ -46,10 +50,10 @@
       {%- endif -%}
     </div>
     {%- if entry.abstract %}
-      <div class="pub__panel" data-panel-body="abstract"><div><p class="pub__abstract">{{ entry.abstract }}</p></div></div>
+      <div class="pub__panel" id="{{ entry.key }}-abstract" data-panel-body="abstract"><div><p class="pub__abstract">{{ entry.abstract }}</p></div></div>
     {%- endif %}
     {%- if entry.bibtex_show %}
-      <div class="pub__panel" data-panel-body="bibtex"><div><div class="pub__bibtex">{% highlight bibtex %}{{- entry.bibtex | hideCustomBibtex -}}{% endhighlight %}</div></div></div>
+      <div class="pub__panel" id="{{ entry.key }}-bibtex" data-panel-body="bibtex"><div><div class="pub__bibtex">{% highlight bibtex %}{{- entry.bibtex | hideCustomBibtex -}}{% endhighlight %}</div></div></div>
     {%- endif %}
   </div>
 </div>

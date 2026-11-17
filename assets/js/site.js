@@ -9,11 +9,22 @@
   "use strict";
 
   var root = document.documentElement;
-  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var reduceMotion = motionQuery.matches;
+  var staticMode = /(^|[?&])static(=|&|$)/.test(window.location.search.slice(1));
   // "?static" shows every page in its final state with no animation (useful for printing and screenshots).
-  if (/(^|[?&])static(=|&|$)/.test(window.location.search.slice(1))) {
+  if (staticMode) {
     reduceMotion = true;
     root.classList.add("is-static");
+  }
+  var motionListeners = [];
+  if (motionQuery.addEventListener) {
+    motionQuery.addEventListener("change", function (e) {
+      reduceMotion = staticMode || e.matches;
+      motionListeners.forEach(function (fn) {
+        fn();
+      });
+    });
   }
 
   function ready(fn) {
@@ -23,6 +34,10 @@
 
   function cssVar(name) {
     return getComputedStyle(root).getPropertyValue(name).trim();
+  }
+
+  function each(list, fn) {
+    Array.prototype.forEach.call(list, fn);
   }
 
   /* ---------- 1. Entrance and reveals ---------- */
@@ -71,56 +86,66 @@
     update();
   }
 
-  /* ---------- 2. Counting figures ---------- */
+  /* ---------- 2. Counting figures ----------
+     The figure counts up once when it scrolls into view. Screen readers get the final
+     value only: the moving digits sit in an aria-hidden span next to a hidden copy. */
   function initCounters() {
     var els = Array.prototype.slice.call(document.querySelectorAll("[data-count]"));
-    if (!els.length) return;
+    if (!els.length || reduceMotion || !("IntersectionObserver" in window)) return;
 
-    function run(el) {
+    function prepare(el) {
       var raw = (el.getAttribute("data-count") || "").trim();
       var m = raw.match(/^([^\d]*)([\d,]*\.?\d+)(.*)$/);
-      if (!m) return;
-      var prefix = m[1];
+      if (!m) return null;
       var numText = m[2];
-      var suffix = m[3];
       var target = parseFloat(numText.replace(/,/g, ""));
+      if (!isFinite(target)) return null;
       var decimals = (numText.split(".")[1] || "").length;
-      var grouped = numText.indexOf(",") !== -1 || target >= 1000;
-      var fmt = function (v) {
-        var s = v.toFixed(decimals);
-        if (grouped) {
-          var parts = s.split(".");
-          parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-          s = parts.join(".");
-        }
-        return prefix + s + suffix;
+      var grouped = numText.indexOf(",") !== -1;
+      var finalText = el.textContent;
+      var live = document.createElement("span");
+      live.setAttribute("aria-hidden", "true");
+      live.textContent = finalText;
+      var fixed = document.createElement("span");
+      fixed.className = "sr-only";
+      fixed.textContent = finalText;
+      el.textContent = "";
+      el.appendChild(live);
+      el.appendChild(fixed);
+      return {
+        live: live,
+        target: target,
+        finalText: finalText,
+        format: function (v) {
+          var s = v.toFixed(decimals);
+          if (grouped) {
+            var parts = s.split(".");
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            s = parts.join(".");
+          }
+          return m[1] + s + m[3];
+        },
       };
-      if (reduceMotion || !isFinite(target)) {
-        el.textContent = fmt(target);
-        return;
-      }
+    }
+
+    function run(c) {
       var start = null;
       var duration = 1500;
       function frame(t) {
         if (start === null) start = t;
         var p = Math.min((t - start) / duration, 1);
-        var eased = 1 - Math.pow(1 - p, 4);
-        el.textContent = fmt(target * eased);
+        c.live.textContent = p < 1 ? c.format(c.target * (1 - Math.pow(1 - p, 4))) : c.finalText;
         if (p < 1) requestAnimationFrame(frame);
-        else el.textContent = fmt(target);
       }
       requestAnimationFrame(frame);
     }
 
-    if (!("IntersectionObserver" in window)) {
-      els.forEach(run);
-      return;
-    }
+    var counters = new Map();
     var io = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (e) {
           if (e.isIntersecting) {
-            run(e.target);
+            run(counters.get(e.target));
             io.unobserve(e.target);
           }
         });
@@ -128,7 +153,11 @@
       { threshold: 0.4 },
     );
     els.forEach(function (el) {
-      io.observe(el);
+      var c = prepare(el);
+      if (c) {
+        counters.set(el, c);
+        io.observe(el);
+      }
     });
   }
 
@@ -149,11 +178,12 @@
     var running = false;
     var visible = true;
     var rafId = null;
+    var lastFrame = 0;
 
     function readColors() {
       colors.dot = cssVar("--faint") || "#a8a7a0";
       colors.line = cssVar("--accent") || "#2f5d54";
-      colors.text = cssVar("--muted") || "#6f727a";
+      colors.text = cssVar("--muted") || "#686b73";
       colors.axis = cssVar("--line-strong") || "rgba(43,45,51,.24)";
     }
 
@@ -175,6 +205,7 @@
       var narrow = w < 760;
       return {
         s: s,
+        narrow: narrow,
         b1: [s * Math.cos(a), s * Math.sin(a)],
         b2: [s * k, -s * (0.92 + 0.035 * Math.cos(time * 0.00009))],
         ox: narrow ? w * 0.5 : w * 0.74,
@@ -210,14 +241,14 @@
         ty = pointer.y;
       } else {
         tx = g.ox + Math.cos(time * 0.00021) * g.s * 3.4;
-        ty = g.oy + Math.sin(time * 0.00033) * g.s * (w < 760 ? 1.1 : 2.6);
+        ty = g.oy + Math.sin(time * 0.00033) * g.s * (g.narrow ? 1.1 : 2.6);
       }
       if (cur.x === null) {
         cur.x = tx;
         cur.y = ty;
       }
-      cur.x += (tx - cur.x) * 0.07;
-      cur.y += (ty - cur.y) * 0.07;
+      cur.x += (tx - cur.x) * 0.12;
+      cur.y += (ty - cur.y) * 0.12;
 
       // lattice coordinates of the target, then the nearest point among the neighbours
       var u = ((cur.x - g.ox) * b2[1] - (cur.y - g.oy) * b2[0]) / det;
@@ -268,8 +299,8 @@
       ctx.font = '10px "IBM Plex Mono", ui-monospace, monospace';
       ctx.fillStyle = colors.text;
       ctx.globalAlpha = 0.85;
-      ctx.fillText("b₁", g.ox + b1[0] + 6, g.oy + b1[1] + 12);
-      ctx.fillText("b₂", g.ox + b2[0] + 7, g.oy + b2[1] - 4);
+      ctx.fillText("b\u2081", g.ox + b1[0] + 6, g.oy + b1[1] + 12);
+      ctx.fillText("b\u2082", g.ox + b2[0] + 7, g.oy + b2[1] - 4);
 
       // target, closest lattice point and the vector between them
       if (best) {
@@ -297,17 +328,23 @@
       ctx.globalAlpha = 1;
     }
 
+    // about 30 frames a second is plenty for something this slow, and keeps the page quiet for the machine too
     function loop(time) {
-      draw(time);
-      rafId = running ? requestAnimationFrame(loop) : null;
+      if (!running) return;
+      if (time - lastFrame >= 32) {
+        lastFrame = time;
+        draw(time);
+      }
+      rafId = requestAnimationFrame(loop);
     }
 
-    function setRunning(on) {
-      on = on && !reduceMotion && visible && !document.hidden;
+    function refresh() {
+      var on = !reduceMotion && visible && !document.hidden;
       if (on === running) return;
       running = on;
       if (running) rafId = requestAnimationFrame(loop);
       else if (rafId) cancelAnimationFrame(rafId);
+      if (!running) draw(0);
     }
 
     host.addEventListener("pointermove", function (e) {
@@ -316,7 +353,11 @@
       pointer.x = e.clientX - r.left;
       pointer.y = e.clientY - r.top;
       pointer.active = true;
-      if (reduceMotion) draw(0);
+      if (!running) {
+        cur.x = pointer.x;
+        cur.y = pointer.y;
+        draw(0);
+      }
     });
     host.addEventListener("pointerleave", function () {
       pointer.active = false;
@@ -325,12 +366,11 @@
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entries) {
         visible = entries[0].isIntersecting;
-        setRunning(true);
+        refresh();
       }).observe(canvas);
     }
-    document.addEventListener("visibilitychange", function () {
-      setRunning(true);
-    });
+    document.addEventListener("visibilitychange", refresh);
+    motionListeners.push(refresh);
     window.addEventListener("resize", resize);
     new MutationObserver(function () {
       readColors();
@@ -339,7 +379,7 @@
 
     readColors();
     resize();
-    setRunning(true);
+    refresh();
   }
 
   /* ---------- 4. Publication tools ---------- */
@@ -350,12 +390,11 @@
       var pub = btn.closest(".pub");
       if (!pub) return;
       var name = btn.getAttribute("data-panel");
-      Array.prototype.forEach.call(pub.querySelectorAll(".pub__panel"), function (panel) {
+      each(pub.querySelectorAll(".pub__panel"), function (panel) {
         var isTarget = panel.getAttribute("data-panel-body") === name;
-        var open = isTarget ? !panel.classList.contains("is-open") : false;
-        panel.classList.toggle("is-open", open);
+        panel.classList.toggle("is-open", isTarget ? !panel.classList.contains("is-open") : false);
       });
-      Array.prototype.forEach.call(pub.querySelectorAll(".pub__toggle"), function (b) {
+      each(pub.querySelectorAll(".pub__toggle"), function (b) {
         var panel = pub.querySelector('.pub__panel[data-panel-body="' + b.getAttribute("data-panel") + '"]');
         b.setAttribute("aria-expanded", panel && panel.classList.contains("is-open") ? "true" : "false");
       });
@@ -367,6 +406,11 @@
     var list = document.querySelector("[data-publications]");
     if (!tools || !list) return;
 
+    function textOf(node, selector) {
+      var el = node.querySelector(selector);
+      return el ? el.textContent : "";
+    }
+
     var items = Array.prototype.map.call(list.querySelectorAll("ol.bibliography > li"), function (li) {
       var pub = li.querySelector(".pub");
       return {
@@ -374,25 +418,40 @@
         type: pub ? pub.getAttribute("data-type") : "",
         area: pub ? pub.getAttribute("data-area") : "",
         year: pub ? parseInt(pub.getAttribute("data-year"), 10) : NaN,
-        text: (li.textContent || "").toLowerCase(),
+        // search what the reader can see: title, authors, venue line and the venue label
+        text: [textOf(li, ".pub__title"), textOf(li, ".pub__authors"), textOf(li, ".pub__meta"), textOf(li, ".pub__abbr")]
+          .join(" ")
+          .replace(/\s+/g, " ")
+          .toLowerCase(),
       };
     });
     if (!items.length) return;
     var headings = Array.prototype.slice.call(list.querySelectorAll("h2.bibliography"));
+    var count = tools.querySelector("[data-pubcount]");
+    var search = tools.querySelector("[data-pubsearch]");
+    var empty = document.querySelector("[data-pubempty]");
 
+    // filters can arrive as ?area=pqc or as #area=pqc; the fragment is the current state and wins
     var state = { type: "all", area: "all", q: "" };
-    // filters can arrive as ?area=pqc or as #area=pqc
-    var params = new URLSearchParams(window.location.search);
-    if (window.location.hash.indexOf("=") !== -1) {
-      new URLSearchParams(window.location.hash.slice(1)).forEach(function (value, key) {
-        if (!params.get(key)) params.set(key, value);
-      });
+    function known(kind, value) {
+      return !!tools.querySelector("[data-filter-" + kind + '="' + String(value).replace(/["\\]/g, "") + '"]');
     }
-    if (params.get("type")) state.type = params.get("type");
-    if (params.get("area")) state.area = params.get("area");
-    if (params.get("q")) state.q = params.get("q").toLowerCase();
+    function readState() {
+      var params = new URLSearchParams(window.location.search);
+      if (window.location.hash.indexOf("=") !== -1) {
+        new URLSearchParams(window.location.hash.slice(1)).forEach(function (value, key) {
+          params.set(key, value);
+        });
+      }
+      var type = params.get("type");
+      var area = params.get("area");
+      state.type = type && known("type", type) ? type : "all";
+      state.area = area && known("area", area) ? area : "all";
+      state.q = (params.get("q") || "").trim().toLowerCase();
+      if (search) search.value = state.q;
+    }
 
-    // chart
+    // chart: one bar per year between the first and the last paper
     var chart = tools.querySelector("[data-pubchart]");
     var years = items
       .map(function (it) {
@@ -421,17 +480,16 @@
         bar.className = "pubchart__bar";
         bar.style.setProperty("--i", idx);
         bar.setAttribute("data-year", y);
-        bar.setAttribute("aria-label", y + ": " + (totals[y] || 0) + " papers");
         bar.innerHTML =
-          '<span class="pubchart__value"></span><span class="pubchart__fill"></span><span class="pubchart__label">' +
-          (maxY - minY > 12 ? "’" + String(y).slice(2) : y) +
+          '<span class="pubchart__value" aria-hidden="true"></span><span class="pubchart__fill"></span><span class="pubchart__label" aria-hidden="true">' +
+          (maxY - minY > 12 ? "\u2019" + String(y).slice(2) : y) +
           "</span>";
         chart.appendChild(bar);
         bars[y] = bar;
       }
       chart.addEventListener("click", function (e) {
         var b = e.target.closest ? e.target.closest(".pubchart__bar") : null;
-        if (!b) return;
+        if (!b || b.disabled) return;
         var yr = b.getAttribute("data-year");
         var target = headings.filter(function (hd) {
           return hd.textContent.trim() === yr && !hd.classList.contains("is-hidden");
@@ -443,10 +501,7 @@
       });
     }
 
-    var count = tools.querySelector("[data-pubcount]");
-    var search = tools.querySelector("[data-pubsearch]");
-
-    function apply(pushUrl) {
+    function apply(updateUrl) {
       var shown = 0;
       var perYear = {};
       items.forEach(function (it) {
@@ -468,28 +523,33 @@
       });
       Object.keys(bars).forEach(function (yr) {
         var n = perYear[yr] || 0;
-        bars[yr].querySelector(".pubchart__fill").style.setProperty("--h", (n / peak).toFixed(4));
-        bars[yr].querySelector(".pubchart__value").textContent = n ? n : "";
-        bars[yr].setAttribute("aria-label", yr + ": " + n + " papers");
+        var b = bars[yr];
+        b.querySelector(".pubchart__fill").style.setProperty("--h", (n / peak).toFixed(4));
+        b.querySelector(".pubchart__value").textContent = n ? n : "";
+        b.disabled = n === 0;
+        b.setAttribute("aria-label", n ? yr + ": " + n + (n === 1 ? " paper" : " papers") + ", jump to the list" : yr + ": no papers");
       });
       if (count) {
         count.textContent = shown === items.length ? items.length + " papers" : shown + " of " + items.length + " papers";
       }
-      Array.prototype.forEach.call(tools.querySelectorAll("[data-filter-type]"), function (b) {
-        b.classList.toggle("is-active", b.getAttribute("data-filter-type") === state.type);
-        b.setAttribute("aria-pressed", b.getAttribute("data-filter-type") === state.type ? "true" : "false");
+      if (empty) empty.hidden = shown !== 0;
+      each(tools.querySelectorAll("[data-filter-type]"), function (b) {
+        var on = b.getAttribute("data-filter-type") === state.type;
+        b.classList.toggle("is-active", on);
+        b.setAttribute("aria-pressed", on ? "true" : "false");
       });
-      Array.prototype.forEach.call(tools.querySelectorAll("[data-filter-area]"), function (b) {
-        b.classList.toggle("is-active", b.getAttribute("data-filter-area") === state.area);
-        b.setAttribute("aria-pressed", b.getAttribute("data-filter-area") === state.area ? "true" : "false");
+      each(tools.querySelectorAll("[data-filter-area]"), function (b) {
+        var on = b.getAttribute("data-filter-area") === state.area;
+        b.classList.toggle("is-active", on);
+        b.setAttribute("aria-pressed", on ? "true" : "false");
       });
-      if (pushUrl && window.history && history.replaceState) {
+      if (updateUrl && window.history && history.replaceState) {
         var p = new URLSearchParams();
         if (state.type !== "all") p.set("type", state.type);
         if (state.area !== "all") p.set("area", state.area);
         if (state.q) p.set("q", state.q);
         var qs = p.toString();
-        history.replaceState(null, "", window.location.pathname + (qs ? "#" + qs : ""));
+        history.replaceState(null, "", window.location.pathname + window.location.search + (qs ? "#" + qs : ""));
       }
     }
 
@@ -501,14 +561,19 @@
       apply(true);
     });
     if (search) {
-      search.value = state.q;
       search.addEventListener("input", function () {
         state.q = search.value.trim().toLowerCase();
         apply(true);
       });
     }
+    window.addEventListener("hashchange", function () {
+      if (window.location.hash.indexOf("=") === -1) return;
+      readState();
+      apply(false);
+    });
 
     tools.hidden = false;
+    readState();
     apply(false);
   }
 
