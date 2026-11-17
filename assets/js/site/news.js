@@ -112,6 +112,12 @@
         var nr = (node || it).getBoundingClientRect();
         marks.push({ el: it, y: nr.top + nr.height / 2 + sy });
       });
+      // the ring of each year on the line darkens too once it is passed
+      groups.forEach(function (g) {
+        if (g.head.hidden) return;
+        var hr = g.head.getBoundingClientRect();
+        marks.push({ el: g.head, y: hr.bottom - hr.height * 0.2 + sy });
+      });
     }
     function update() {
       var line = window.scrollY + window.innerHeight * READ;

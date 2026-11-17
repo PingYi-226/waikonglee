@@ -20,7 +20,7 @@
     <figure class="nprint" data-kit="reveal" data-reveal="clip"{% if include.delay != '' %} data-delay="{{ include.delay | plus: 140 }}"{% endif %}>
       <div class="nprint__mount" data-kit="tilt" data-max="5" data-shine>
         <a class="nprint__link" href="{{ src }}" data-kit="lightbox" data-caption="{{ alt }}" data-cursor="View" aria-label="View larger: {{ alt }}">
-          <img class="nprint__img" src="{{ src }}" alt="{{ alt }}" loading="lazy" decoding="async">
+          <img class="nprint__img" src="{{ src }}" alt="{{ alt }}" decoding="async">
         </a>
       </div>
       <figcaption class="nprint__cap">{{ alt }}</figcaption>
