@@ -12,7 +12,8 @@
      .dg-g   a bar grows from its foot                    .dg-f   fades in
    Timing: style="--t: 0..1" on a shape or group places it in the sequence; "--k: n" adds n small steps.
    States (classes the kit sets on the svg): none = blank (only while html.js is present and the kit runs,
-   so without JavaScript the finished drawing shows), .is-drawn = drawing / drawn, .dg-done = finished.
+   so without JavaScript the finished drawing shows), .is-drawn = drawing / drawn, .dg-done = finished,
+   .is-live = the loop runs. .dg-small: drawn at less than 1.3 times its size (larger labels). html.dg-js: the kit is loaded.
    ========================================================================== */
 
 .diagram {
@@ -91,6 +92,19 @@
   font-size: 7.5px;
   font-variant-numeric: tabular-nums;
   fill: var(--muted);
+}
+
+/* drawn at less than 1.3 times its size (the kit measures it), the labels grow so they stay readable */
+.diagram.dg-small .dg-sym {
+  font-size: 13.5px;
+}
+
+.diagram.dg-small .dg-sub {
+  font-size: 9px;
+}
+
+.diagram.dg-small .dg-num {
+  font-size: 9.5px;
 }
 
 /* the closing bracket of a ket, |0>, drawn: the serif has no glyph for it */
@@ -173,6 +187,11 @@ html.js.is-reduced.dg-js .diagram:not(.is-drawn) {
 
 html.js.is-reduced .diagram {
   transition: opacity var(--t-reveal);
+}
+
+/* ---------- live (.is-live, while the loop runs): the loop alone moves things, nothing transitions under it ---------- */
+.diagram.is-live :is(.dg-d, .dg-p, .dg-g, .dg-f) {
+  transition: none;
 }
 
 /* ---------- shapes only the live loop shows (hidden at rest; the loop sets their opacity) ---------- */

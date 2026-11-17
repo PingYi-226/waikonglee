@@ -197,7 +197,7 @@
   /* accel: ShiftRows, once per beat. Row r slides left by r cells (rows set off one after another); bytes leaving on the
      left come back on the right (each row is clipped and drawn three times over). Its arrow nudges as it goes. */
   SCENES.accel = function (svg) {
-    var C = 28;
+    var C = 30; // the cell, as in accel.liquid
     var rows = [];
     var arrows = [];
     all(svg, "row").forEach(function (g) {
@@ -632,6 +632,12 @@
       var r = svg.getBoundingClientRect();
       var s = Math.max(r.width, svg.clientWidth || 0) / VIEW.w;
       svg.style.setProperty("--dg-len", String(util.round(Math.max(1, s) * 1.03, 3)));
+      // drawn small (a phone), the labels grow a little so they stay readable
+      if (s > 0) svg.classList.toggle("dg-small", s < 1.3);
+    }
+    if (opts.detail === "full") {
+      measure();
+      cleanup.push(Site.on("resize", measure));
     }
 
     function rest() {
