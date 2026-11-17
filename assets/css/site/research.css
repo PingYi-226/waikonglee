@@ -85,7 +85,7 @@
   border-radius: 2px;
   background-color: var(--line-strong);
   transition:
-    transform 900ms var(--ease-out) calc(380ms + var(--i) * 60ms),
+    transform var(--t-arrive) calc(380ms + var(--i) * 60ms),
     background-color var(--t-color);
 }
 
@@ -110,7 +110,7 @@ html.js .pagehead__aside:not(.is-in) .rmix__bar {
   .rmix__row:hover .rmix__bar {
     background-color: var(--accent);
     transition:
-      transform 900ms var(--ease-out),
+      transform var(--t-arrive),
       background-color var(--t-color);
   }
 }
@@ -898,13 +898,13 @@ html.js .rproj__fig:not(.is-in) .rproj__who {
 
 .rproj__fig.is-in .rproj__bar {
   transition:
-    clip-path 1000ms var(--ease-out) calc(150ms + var(--i) * 110ms),
+    clip-path var(--t-arrive) calc(150ms + var(--i) * 90ms),
     background-color var(--t-color);
 }
 
 .rproj__fig.is-in .rproj__who {
   transition:
-    opacity var(--t-reveal) calc(450ms + var(--i) * 110ms),
+    opacity var(--t-reveal) calc(400ms + var(--i) * 90ms),
     color var(--t-color);
 }
 
@@ -1032,7 +1032,7 @@ html.js.is-reduced .rproj__fig:not(.is-in) .rproj__bar {
 
 html.is-reduced .rproj__fig.is-in .rproj__bar {
   transition:
-    opacity var(--t-reveal) calc(var(--i) * 110ms),
+    opacity var(--t-reveal) calc(var(--i) * 90ms),
     background-color var(--t-color);
 }
 
