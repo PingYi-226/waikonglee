@@ -1,4 +1,495 @@
+{%- comment -%}
+  Demos of the pointer and surface components (group P). Test markup only: the styles in the <style> block
+  below lay the demos out and are not part of the kit; the kit's own styles are in assets/css/site/kit-pointer.css.
+{%- endcomment -%}
 <section class="kitdemo" id="kit-pointer">
   <h2 class="t-d2">pointer</h2>
-  <p class="t-muted">Demos for this group go here.</p>
+
+  <style>
+    #kit-pointer .pd-stack > * + * { margin-top: 2rem; }
+    #kit-pointer .pd-note { margin: 0 0 0.6rem; font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--muted); }
+    #kit-pointer .pd-nav { display: inline-flex; gap: 0.25rem; }
+    #kit-pointer .pd-nav a { padding: 0.5rem 0.9rem; font-size: 0.95rem; color: var(--ink-2); border-radius: var(--r-pill); transition: color var(--t-color); }
+    #kit-pointer .pd-nav a:hover, #kit-pointer .pd-nav a:focus-visible { color: var(--ink); }
+    #kit-pointer .pd-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; max-width: 34rem; }
+    #kit-pointer .pd-chips .chip[aria-pressed="true"] { color: var(--ink); border-color: var(--line-strong); }
+    #kit-pointer .pd-rows { margin: 0; padding: 0; list-style: none; max-width: 44rem; --k-highlight-inset: 0 -0.9rem; }
+    #kit-pointer .pd-rows li + li { border-top: 1px solid var(--line); }
+    #kit-pointer .pd-rows a { display: flex; align-items: baseline; justify-content: space-between; gap: 2rem; padding: 0.85rem 0; }
+    #kit-pointer .pd-rows .t-label { flex: none; }
+    #kit-pointer .pd-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; max-width: 44rem; --k-highlight-bg: var(--accent-soft); }
+    #kit-pointer .pd-card { display: block; padding: 1rem 1.1rem 1.2rem; border: 1px solid var(--line); border-radius: var(--r-3); }
+    #kit-pointer .pd-card p { margin: 0.3rem 0 0; font-size: var(--fs-xs); line-height: 1.5; color: var(--muted); }
+    #kit-pointer .pd-side { display: inline-flex; flex-direction: column; min-width: 13rem; --k-highlight-selection-bg: var(--accent-soft); }
+    #kit-pointer .pd-side a { padding: 0.5rem 0.8rem; font-size: 0.92rem; color: var(--muted); border-radius: var(--r-2); transition: color var(--t-color); }
+    #kit-pointer .pd-side a[aria-current] { color: var(--accent); }
+    @media (max-width: 560px) { #kit-pointer .pd-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    /* tabs */
+    #kit-pointer .pd-panel { padding-top: 1.25rem; max-width: 40rem; }
+    #kit-pointer .pd-panel ul { margin: 0.6rem 0 0; padding-left: 1.1rem; color: var(--ink-2); }
+    #kit-pointer .pd-after { margin-top: 1.25rem; padding-top: 0.9rem; border-top: 1px solid var(--line); font-size: var(--fs-xs); color: var(--muted); }
+    #kit-pointer .pd-vtabs { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1.5rem; align-items: start; max-width: 44rem; }
+    #kit-pointer .pd-vtabs .pd-panel { padding-top: 0.35rem; }
+    @media (max-width: 560px) { #kit-pointer .pd-vtabs { grid-template-columns: 1fr; } }
+    /* disclosure */
+    #kit-pointer .pd-pubs { margin: 0; padding: 0; list-style: none; max-width: 44rem; }
+    #kit-pointer .pd-pubs > li { border-top: 1px solid var(--line); }
+    #kit-pointer .pd-pubs > li:last-child { border-bottom: 1px solid var(--line); }
+    #kit-pointer .pd-pub { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 0.8rem 0; }
+    #kit-pointer .pd-abs { padding: 0 0 1.1rem; font-size: var(--fs-small); line-height: 1.6; color: var(--ink-2); max-width: 38rem; }
+    #kit-pointer .pd-abs .btn { margin-top: 0.8rem; }
+    #kit-pointer .pd-chev { width: 0.9rem; height: 0.9rem; }
+    #kit-pointer .pd-col { display: flex; flex-direction: column; gap: 1rem; max-width: 30rem; }
+    #kit-pointer .pd-col .card { padding: 0.9rem 1.1rem; font-size: var(--fs-small); }
+    /* flip */
+    #kit-pointer .pd-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+    #kit-pointer .pd-tools .pd-gap { flex: 1 1 1rem; }
+    #kit-pointer .pd-list { margin: 0; padding: 0; list-style: none; max-width: 44rem; display: flex; flex-direction: column; }
+    #kit-pointer .pd-list > li { display: flex; align-items: baseline; justify-content: space-between; gap: 2rem; padding: 0.7rem 0; border-top: 1px solid var(--line); background: var(--paper); }
+    #kit-pointer .pd-list > li[hidden] { display: none; }
+    #kit-pointer .pd-list--long > li { padding: 0.45rem 0; font-size: var(--fs-small); }
+    #kit-pointer .pd-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; max-width: 44rem; }
+    #kit-pointer .pd-cards > .card { padding: 0.9rem 1rem 1rem; }
+    #kit-pointer .pd-cards > .card[hidden] { display: none; }
+    #kit-pointer .pd-cards .t-label { display: block; margin-bottom: 0.25rem; }
+    @media (max-width: 560px) { #kit-pointer .pd-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    /* tooltip, copy, lightbox */
+    #kit-pointer .pd-ico { width: 1.25rem; height: 1.25rem; }
+    #kit-pointer .pd-bib { display: flex; align-items: flex-start; gap: 0.5rem; max-width: 40rem; padding: 0.75rem 0.75rem 0.75rem 1rem; border: 1px solid var(--line); border-radius: var(--r-3); }
+    #kit-pointer .pd-bib pre { flex: 1; min-width: 0; margin: 0; padding: 0.25rem 0; overflow-x: auto; font-family: var(--font-mono); font-size: 0.76rem; line-height: 1.6; color: var(--ink-2); background: none; border: 0; }
+    #kit-pointer .pd-shots { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1.25rem; }
+    #kit-pointer .pd-portrait { width: 9rem; height: auto; border-radius: var(--r-2); }
+    #kit-pointer .pd-avatar { width: 5.5rem; height: 5.5rem; padding: 0; overflow: hidden; background: none; border: 0; border-radius: 50%; }
+    #kit-pointer .pd-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
+    #kit-pointer .pd-thumb { display: block; width: 11rem; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--r-2); }
+    #kit-pointer .pd-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  </style>
+
+  <article class="kitdemo__item" id="demo-highlight">
+    <header>
+      <h3>highlight</h3>
+      <p>Move the pointer across each group, then use Tab. Click a chip or a section link to move the selection.</p>
+    </header>
+    <div class="kitdemo__stage pd-stack">
+      <div>
+        <p class="pd-note">hover, a row</p>
+        <nav class="pd-nav" id="pd-nav" data-kit="highlight" aria-label="Demo: sections">
+          <a href="#demo-highlight" data-highlight-item>Research</a>
+          <a href="#demo-highlight" data-highlight-item>Publications</a>
+          <a href="#demo-highlight" data-highlight-item>Group</a>
+          <a href="#demo-highlight" data-highlight-item>Teaching</a>
+          <a href="#demo-highlight" data-highlight-item>Contact</a>
+        </nav>
+      </div>
+      <div>
+        <p class="pd-note">both, a wrapped row of chips (with press)</p>
+        <div class="pd-chips" id="pd-chips" data-kit="highlight" data-mode="both" role="group" aria-label="Demo: filter by topic">
+          <button type="button" class="chip" data-kit="press" data-highlight-item aria-pressed="true">All <span class="t-num">90</span></button>
+          <button type="button" class="chip" data-kit="press" data-highlight-item aria-pressed="false">Post-quantum cryptography</button>
+          <button type="button" class="chip" data-kit="press" data-highlight-item aria-pressed="false">GPU</button>
+          <button type="button" class="chip" data-kit="press" data-highlight-item aria-pressed="false">FPGA</button>
+          <button type="button" class="chip" data-kit="press" data-highlight-item aria-pressed="false">Homomorphic encryption</button>
+          <button type="button" class="chip" data-kit="press" data-highlight-item aria-pressed="false">IoT</button>
+          <button type="button" class="chip" data-kit="press" data-highlight-item aria-pressed="false">Neural networks</button>
+          <button type="button" class="chip" data-kit="press" data-highlight-item aria-pressed="false" disabled>Archived</button>
+        </div>
+      </div>
+      <div>
+        <p class="pd-note">hover, a column of rows (the surface is wider than the row: --k-highlight-inset)</p>
+        <ul class="pd-rows" id="pd-rows" data-kit="highlight" data-items="a">
+          <li><a href="#demo-highlight"><span>High Throughput Lattice-Based Signatures on GPUs: Comparing Falcon and Mitaka</span><span class="t-label">2024</span></a></li>
+          <li><a href="#demo-highlight"><span>Speed Record of AES-CTR and AES-ECB Bit-Sliced Implementation on GPUs</span><span class="t-label">2024</span></a></li>
+          <li><a href="#demo-highlight"><span>cuFE: High Performance Privacy Preserving Support Vector Machine With Inner-Product Functional Encryption</span><span class="t-label">2024</span></a></li>
+          <li><a href="#demo-highlight"><span>QuripfeNet: Quantum-Resistant IPFE-Based Neural Network</span><span class="t-label">2025</span></a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="pd-note">hover, a grid</p>
+        <div class="pd-grid" id="pd-grid" data-kit="highlight" data-items=".pd-card">
+          <a class="pd-card" href="#demo-highlight"><span class="t-d4">Lattice signatures</span><p>Falcon, Mitaka and Dilithium at high throughput.</p></a>
+          <a class="pd-card" href="#demo-highlight"><span class="t-d4">Key encapsulation</span><p>Kyber, Saber and Scabbard on tensor cores.</p></a>
+          <a class="pd-card" href="#demo-highlight"><span class="t-d4">Functional encryption</span><p>Inner products for private inference.</p></a>
+          <a class="pd-card" href="#demo-highlight"><span class="t-d4">Symmetric ciphers</span><p>Bit-sliced AES and lightweight AEAD.</p></a>
+          <a class="pd-card" href="#demo-highlight"><span class="t-d4">Accelerators</span><p>Co-processors shared by CNNs and polynomials.</p></a>
+          <a class="pd-card" href="#demo-highlight"><span class="t-d4">Embedded</span><p>ARMv8 and RISC-V for the IoT edge.</p></a>
+        </div>
+      </div>
+      <div>
+        <p class="pd-note">both, a column (aria-current)</p>
+        <nav class="pd-side" id="pd-side" data-kit="highlight" data-mode="both" data-items="a" aria-label="Demo: on this page">
+          <a href="#demo-highlight" aria-current="true">Overview</a>
+          <a href="#demo-highlight">Selected results</a>
+          <a href="#demo-highlight">Funding</a>
+          <a href="#demo-highlight">Open positions</a>
+        </nav>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-press">
+    <header>
+      <h3>press</h3>
+      <p>Press and hold a button, or the whole row; hold Space on a focused button.</p>
+    </header>
+    <div class="kitdemo__stage pd-stack">
+      <div class="cluster">
+        <button type="button" class="btn" data-kit="press" id="pd-press">Read the paper</button>
+        <button type="button" class="btn btn--ghost" data-kit="press">Download CV</button>
+        <a class="btn btn--ghost btn--small" href="#demo-press" data-kit="press">Scholar profile</a>
+      </div>
+      <a class="card" href="#demo-press" data-kit="press" data-press="choice" id="pd-choice" style="display:block;max-width:26rem;padding:1.1rem 1.25rem">
+        <span class="t-label">Selected result</span>
+        <span class="t-d4" style="display:block;margin-top:0.3rem">20.03× faster Falcon verification on an A100 GPU</span>
+      </a>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-tabs">
+    <header>
+      <h3>tabs</h3>
+      <p>Click a tab or use the arrow keys, Home and End. The panels have different heights: the line under them glides. The second set advances by itself and pauses under the pointer.</p>
+    </header>
+    <div class="kitdemo__stage pd-stack">
+      <div data-kit="tabs" data-highlight="both" id="pd-tabs">
+        <div class="k-seg" role="tablist" aria-label="Demo: research areas">
+          <button class="k-seg__item" role="tab" data-kit="press" aria-selected="true">Post-quantum</button>
+          <button class="k-seg__item" role="tab" data-kit="press">Homomorphic encryption</button>
+          <button class="k-seg__item" role="tab" data-kit="press">Accelerators</button>
+          <button class="k-seg__item" role="tab" data-kit="press" disabled>Archive</button>
+        </div>
+        <div>
+          <div class="pd-panel" role="tabpanel">
+            <p>Lattice-based signatures and key encapsulation at high throughput: Falcon, Mitaka, Dilithium, Kyber and Saber on GPUs.</p>
+          </div>
+          <div class="pd-panel" role="tabpanel">
+            <p>Computing on encrypted data without decrypting it. The group works on the number-theoretic transforms and the bootstrapping that make it practical.</p>
+            <ul>
+              <li>Batched NTT kernels shared by CKKS and BFV</li>
+              <li>Key switching on tensor cores</li>
+              <li>Functional encryption for private inference</li>
+            </ul>
+          </div>
+          <div class="pd-panel" role="tabpanel">
+            <p>Co-processors on FPGA that share their multipliers between neural networks and polynomial arithmetic. <a class="link" href="#demo-tabs">See Cryptensor</a>.</p>
+          </div>
+          <div class="pd-panel" role="tabpanel"><p>Older work.</p></div>
+        </div>
+        <p class="pd-after">This line sits under the panels: it must glide, never jump.</p>
+      </div>
+
+      <div class="pd-vtabs" data-kit="tabs" data-autoplay="3200" id="pd-tabs-auto">
+        <div class="k-seg" role="tablist" aria-orientation="vertical" aria-label="Demo: platforms">
+          <button class="k-seg__item" role="tab" aria-selected="true">GPUs</button>
+          <button class="k-seg__item" role="tab">FPGAs</button>
+          <button class="k-seg__item" role="tab">Embedded</button>
+        </div>
+        <div>
+          <div class="pd-panel" role="tabpanel"><p class="t-d4">20.03× faster Falcon verification</p><p class="t-muted t-small">On an A100, against the reference implementation.</p></div>
+          <div class="pd-panel" role="tabpanel"><p class="t-d4">One multiplier, two workloads</p><p class="t-muted t-small">A resource-shared co-processor for CNNs and polynomial convolution.</p></div>
+          <div class="pd-panel" role="tabpanel"><p class="t-d4">Rainbow on ARMv8</p><p class="t-muted t-small">Table-based signatures for 64-bit processors.</p></div>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-disclosure">
+    <header>
+      <h3>disclosure</h3>
+      <p>Open an abstract: only one stays open (a group). Click twice quickly: it turns round. Close it from the button inside: focus returns to the trigger. The card below starts open.</p>
+    </header>
+    <div class="kitdemo__stage pd-stack">
+      <ul class="pd-pubs">
+        <li>
+          <div class="pd-pub">
+            <span>High Throughput Lattice-Based Signatures on GPUs: Comparing Falcon and Mitaka</span>
+            <button class="chip" data-kit="disclosure press" data-group="pd-abstracts" aria-controls="pd-abs-1" aria-expanded="false" id="pd-dis-1">Abstract <svg class="pd-chev" data-disclosure-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          </div>
+          <div id="pd-abs-1" data-disclosure-panel>
+            <div class="pd-abs">The US National Institute of Standards and Technology initiated a standardization process for post-quantum cryptography. Falcon was selected for its compact signatures; Mitaka is a simpler variant that is easier to parallelize. This work implements both on GPUs and compares their throughput for signing and verification.
+              <br><button type="button" class="btn btn--ghost btn--small" data-pd-close="pd-dis-1">Close</button>
+            </div>
+          </div>
+        </li>
+        <li>
+          <div class="pd-pub">
+            <span>Speed Record of AES-CTR and AES-ECB Bit-Sliced Implementation on GPUs</span>
+            <button class="chip" data-kit="disclosure press" data-group="pd-abstracts" aria-controls="pd-abs-2" aria-expanded="false" id="pd-dis-2">Abstract <svg class="pd-chev" data-disclosure-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          </div>
+          <div id="pd-abs-2" data-disclosure-panel>
+            <div class="pd-abs">Bit-slicing packs many AES states into machine words so that one logical operation processes all of them. On GPUs the technique reaches a new speed record for the counter and electronic-codebook modes while staying constant-time.</div>
+          </div>
+        </li>
+        <li>
+          <div class="pd-pub">
+            <span>QuripfeNet: Quantum-Resistant IPFE-Based Neural Network</span>
+            <button class="chip" data-kit="disclosure press" data-group="pd-abstracts" aria-controls="pd-abs-3" aria-expanded="false" id="pd-dis-3">Abstract <svg class="pd-chev" data-disclosure-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          </div>
+          <div id="pd-abs-3" data-disclosure-panel>
+            <div class="pd-abs">Inner-product functional encryption lets a server evaluate the first layer of a network on encrypted inputs. QuripfeNet builds it from lattice assumptions, so that it stays secure against quantum adversaries, and accelerates it on GPUs.</div>
+          </div>
+        </li>
+      </ul>
+
+      <div class="pd-col">
+        <button class="btn btn--ghost btn--small" style="align-self:flex-start" data-kit="disclosure press" aria-controls="pd-note-1" aria-expanded="true" id="pd-dis-open">Funding note <svg class="pd-chev" data-disclosure-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div id="pd-note-1" data-disclosure-panel data-open>
+          <div class="card">Open at load, inside a column with a gap: the gap closes with the panel.</div>
+        </div>
+        <p class="t-xs t-muted" style="margin:0">The paragraph after the panel.</p>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-flip">
+    <header>
+      <h3>flip</h3>
+      <p>Filter, shuffle, add and remove: rows that stay glide, new ones grow in, removed ones fade where they were. Click two filters quickly. The long list has 90 rows.</p>
+    </header>
+    <div class="kitdemo__stage pd-stack">
+      <div>
+        <div class="pd-tools">
+          <div class="k-seg" id="pd-flip-filter" data-kit="highlight" data-mode="both" data-items="button" role="group" aria-label="Demo: filter the list">
+            <button type="button" class="k-seg__item" data-kit="press" data-pd-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="k-seg__item" data-kit="press" data-pd-filter="gpu" aria-pressed="false">GPU</button>
+            <button type="button" class="k-seg__item" data-kit="press" data-pd-filter="fpga" aria-pressed="false">FPGA</button>
+            <button type="button" class="k-seg__item" data-kit="press" data-pd-filter="pqc" aria-pressed="false">Post-quantum</button>
+          </div>
+          <span class="pd-gap"></span>
+          <button type="button" class="btn btn--ghost btn--small" data-kit="press" id="pd-flip-shuffle">Shuffle</button>
+          <button type="button" class="btn btn--ghost btn--small" data-kit="press" id="pd-flip-add">Add</button>
+          <button type="button" class="btn btn--ghost btn--small" data-kit="press" id="pd-flip-remove">Remove first</button>
+        </div>
+        <ul class="pd-list" id="pd-flip-list">
+          <li data-tags="gpu pqc"><span>High Throughput Lattice-Based Signatures on GPUs</span><span class="t-label">2024</span></li>
+          <li data-tags="gpu"><span>Speed Record of AES-CTR and AES-ECB Bit-Sliced Implementation on GPUs</span><span class="t-label">2024</span></li>
+          <li data-tags="fpga"><span>RISC32-A: A Low-Power Asynchronous IoT Processor on FPGA</span><span class="t-label">2025</span></li>
+          <li data-tags="gpu pqc"><span>Efficient TMVP-Based Polynomial Convolution on GPU</span><span class="t-label">2023</span></li>
+          <li data-tags="fpga"><span>A Compact and Flexible FPGA Accelerator for Octave Convolutional Neural Networks</span><span class="t-label">2023</span></li>
+          <li data-tags="pqc"><span>Look-up the Rainbow: Table-Based Implementation on 64-bit ARMv8</span><span class="t-label">2022</span></li>
+          <li data-tags="fpga pqc"><span>Cryptensor: A Resource-Shared Co-Processor for CNNs and Polynomial Convolution</span><span class="t-label">2022</span></li>
+          <li data-tags="gpu"><span>TC-GVF: Tensor Core GPU-Based Vector Fitting</span><span class="t-label">2024</span></li>
+        </ul>
+        <p class="pd-after">What follows the list glides with its height.</p>
+      </div>
+
+      <div>
+        <div class="pd-tools">
+          <button type="button" class="btn btn--ghost btn--small" data-kit="press" id="pd-cards-sort">Sort by year</button>
+          <button type="button" class="btn btn--ghost btn--small" data-kit="press" id="pd-cards-filter">Journals only</button>
+        </div>
+        <div class="pd-cards" id="pd-flip-cards">
+          <div class="card" data-year="2024" data-kind="journal"><span class="t-label">2024 · Journal</span>Falcon and Mitaka on GPUs</div>
+          <div class="card" data-year="2022" data-kind="conference"><span class="t-label">2022 · Conference</span>Rainbow on ARMv8</div>
+          <div class="card" data-year="2025" data-kind="journal"><span class="t-label">2025 · Journal</span>QuripfeNet</div>
+          <div class="card" data-year="2023" data-kind="conference"><span class="t-label">2023 · Conference</span>Octave CNN accelerator</div>
+          <div class="card" data-year="2021" data-kind="journal"><span class="t-label">2021 · Journal</span>Scabbard on tensor cores</div>
+          <div class="card" data-year="2024" data-kind="journal"><span class="t-label">2024 · Journal</span>cuFE</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="pd-tools">
+          <div class="k-seg" id="pd-long-filter" data-kit="highlight" data-mode="both" data-items="button" role="group" aria-label="Demo: filter the long list">
+            <button type="button" class="k-seg__item" data-kit="press" data-pd-long="all" aria-pressed="true">All 90</button>
+            <button type="button" class="k-seg__item" data-kit="press" data-pd-long="3" aria-pressed="false">Every third</button>
+            <button type="button" class="k-seg__item" data-kit="press" data-pd-long="7" aria-pressed="false">Every seventh</button>
+            <button type="button" class="k-seg__item" data-kit="press" data-pd-long="late" aria-pressed="false">Last 20</button>
+          </div>
+        </div>
+        <ul class="pd-list pd-list--long" id="pd-flip-long">
+          {%- assign pd_topics = "Lattice signatures on GPUs|Bit-sliced AES in counter mode|NTT kernels for CKKS|A co-processor for polynomial convolution|Functional encryption for inference|Lightweight AEAD at high throughput|Key encapsulation on tensor cores" | split: "|" -%}
+          {%- for i in (1..90) -%}
+            {%- assign t = i | modulo: 7 -%}
+            <li data-n="{{ i }}"><span>{{ pd_topics[t] }}, part {{ i }}</span><span class="t-label">{{ 2025 | minus: i | plus: 60 | divided_by: 1 | modulo: 12 | plus: 2014 }}</span></li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    </div>
+  </article>
+
+  {%- capture pd_copy -%}<svg class="pd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>{%- endcapture -%}
+  {%- capture pd_check -%}<svg class="pd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>{%- endcapture -%}
+
+  <article class="kitdemo__item" id="demo-tooltip">
+    <header>
+      <h3>tooltip</h3>
+      <p>Sweep the pointer along the row: one popup glides from button to button and its label changes inside it. Tab through it too. The two buttons below are single tooltips: the second one is warm.</p>
+    </header>
+    <div class="kitdemo__stage pd-stack">
+      <div class="cluster" data-kit="tooltip-group" id="pd-tips" style="--cluster:0.25rem">
+        <a class="icon-btn" href="#demo-tooltip" data-tip="Google Scholar"><svg class="pd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9.5 12 4l10 5.5-10 5.5z"/><path d="M6 12v4.2c0 1 2.7 2.3 6 2.3s6-1.3 6-2.3V12"/></svg></a>
+        <a class="icon-btn" href="#demo-tooltip" data-tip="ORCID"><svg class="pd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 9.5v6.5M8.5 7.2v.1M12 16V8h2.200a4 4 0 0 1 0 8z"/></svg></a>
+        <a class="icon-btn" href="#demo-tooltip" data-tip="Source code on GitHub"><svg class="pd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></svg></a>
+        <a class="icon-btn" href="#demo-tooltip" data-tip="Email"><svg class="pd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7.5 8.5 6 8.5-6"/></svg></a>
+        <a class="icon-btn" href="#demo-tooltip" data-tip="Curriculum vitae, PDF, 2 pages" data-tip-side="bottom"><svg class="pd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 19h14"/></svg></a>
+      </div>
+      <div class="cluster" style="--cluster:3rem">
+        <button type="button" class="chip" data-kit="tooltip" data-tip="Cited 2,801 times" id="pd-tip-a">h-index 27</button>
+        <button type="button" class="chip" data-kit="tooltip" data-tip="Since 2019" id="pd-tip-b">Associate Professor</button>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-copy">
+    <header>
+      <h3>copy</h3>
+      <p>Click: the icon swaps for a check and comes back after two seconds. The second button also swaps its label and raises a toast; the third copies the text of the block beside it.</p>
+    </header>
+    <div class="kitdemo__stage pd-stack">
+      <div class="cluster">
+        <button type="button" class="icon-btn" data-kit="copy press tooltip" data-copy="waikong.lee@example.edu" data-tip="Copy email address" id="pd-copy-icon">{{ pd_copy }}{{ pd_check }}</button>
+        <button type="button" class="btn btn--ghost btn--small" data-kit="copy press" data-copy="@article{lee2024falcon, title={High Throughput Lattice-Based Signatures on GPUs}, year={2024}}" data-copied="Copied" data-toast="Copied BibTeX" id="pd-copy-label"><span class="k-swap">{{ pd_copy }}{{ pd_check }}</span><span data-copy-label>Copy BibTeX</span></button>
+      </div>
+      <div class="pd-bib">
+        <pre id="pd-bib-1">@article{lee2024aes,
+  title   = {Speed Record of AES-CTR and AES-ECB Bit-Sliced Implementation on GPUs},
+  year    = {2024}
+}</pre>
+        <button type="button" class="icon-btn" data-kit="copy press" data-copy-from="#pd-bib-1" aria-label="Copy this BibTeX entry" id="pd-copy-from">{{ pd_copy }}{{ pd_check }}</button>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-ripple">
+    <header>
+      <h3>ripple</h3>
+      <p>Click anywhere on a button: the ripple starts under the pointer and is clipped by the button. With Enter it starts from the middle.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <div class="cluster">
+        <button type="button" class="btn" data-kit="ripple press" id="pd-ripple">Get in touch</button>
+        <button type="button" class="btn btn--ghost" data-kit="ripple press" id="pd-ripple-ghost">Prospective students</button>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-toast">
+    <header>
+      <h3>toast</h3>
+      <p>Raise one, then several: the newest is in front and the stack unfolds under the pointer. Click a toast to dismiss it.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <div class="cluster">
+        <button type="button" class="btn btn--ghost btn--small" data-kit="press" id="pd-toast-one">Show a toast</button>
+        <button type="button" class="btn btn--ghost btn--small" data-kit="press" id="pd-toast-three">Three in a row</button>
+        <button type="button" class="btn btn--ghost btn--small" data-kit="press" id="pd-toast-long">A longer message</button>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-lightbox">
+    <header>
+      <h3>lightbox</h3>
+      <p>Click a picture: it travels to the centre and back. Escape, a click, or the mouse wheel close it. The round one is cropped in the page and opens whole; the photographs are cropped thumbnails.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <div class="pd-shots">
+        <img class="pd-portrait" src="{{ '/assets/img/prof_pic.jpg' | relative_url }}" alt="Portrait of Wai-Kong Lee" data-kit="lightbox" id="pd-lb-portrait" width="339" height="418">
+        <button type="button" class="pd-avatar" data-kit="lightbox" data-caption="Wai-Kong Lee, Associate Professor" id="pd-lb-avatar"><img src="{{ '/assets/img/prof_pic.jpg' | relative_url }}" alt="Portrait of Wai-Kong Lee"></button>
+        <a class="pd-thumb" href="{{ '/assets/img/news/2024-03-11-viva-lunch.jpg' | relative_url }}" data-kit="lightbox" data-caption="Lunch after a PhD viva, March 2024" id="pd-lb-news"><img src="{{ '/assets/img/news/2024-03-11-viva-lunch.jpg' | relative_url }}" alt="The group at lunch after a viva"></a>
+        <a class="pd-thumb" href="{{ '/assets/img/news/2022-04-29-lunch-meeting.jpg' | relative_url }}" data-kit="lightbox" id="pd-lb-news2"><img src="{{ '/assets/img/news/2022-04-29-lunch-meeting.jpg' | relative_url }}" alt="A lunch meeting of the group, April 2022"></a>
+      </div>
+    </div>
+  </article>
+
+  <script>
+    // Demo wiring only: what a page script would do with the kit.
+    document.addEventListener("DOMContentLoaded", function () {
+      var root = document.getElementById("kit-pointer");
+      if (!root) return;
+      function pick(group, attr, item) {
+        Array.prototype.forEach.call(group.querySelectorAll("[" + attr + "]"), function (other) {
+          if (attr === "aria-current") other.removeAttribute(attr);
+          else other.setAttribute(attr, "false");
+        });
+        item.setAttribute(attr, "true");
+      }
+      root.addEventListener("click", function (e) {
+        var chip = e.target.closest("#pd-chips .chip");
+        if (chip) pick(chip.parentNode, "aria-pressed", chip);
+        var side = e.target.closest("#pd-side a");
+        if (side) pick(side.parentNode, "aria-current", side);
+        // the demo links go nowhere
+        var link = e.target.closest('a[href^="#demo-"]');
+        if (link) e.preventDefault();
+
+        // disclosure: a control inside the panel closes it
+        var closer = e.target.closest("[data-pd-close]");
+        if (closer) Site.get(document.getElementById(closer.getAttribute("data-pd-close")), "disclosure").close();
+
+        // toast
+        if (e.target.closest("#pd-toast-one")) Site.toast("Copied BibTeX");
+        if (e.target.closest("#pd-toast-three"))
+          ["Abstract copied", "Link copied", "Citation copied"].forEach(function (text, i) {
+            setTimeout(function () { Site.toast(text); }, i * 350);
+          });
+        if (e.target.closest("#pd-toast-long")) Site.toast("The preprint was added to your reading list. It will appear in the publications page after the next update.", { duration: 8000 });
+
+        // flip: the short list
+        var list = document.getElementById("pd-flip-list");
+        var filter = e.target.closest("[data-pd-filter]");
+        if (filter) {
+          pick(filter.parentNode, "aria-pressed", filter);
+          var tag = filter.getAttribute("data-pd-filter");
+          Site.flip(list, function () {
+            Array.prototype.forEach.call(list.children, function (row) {
+              if (row.hasAttribute("data-tags")) row.hidden = tag !== "all" && row.getAttribute("data-tags").split(" ").indexOf(tag) < 0;
+            });
+          });
+        }
+        if (e.target.closest("#pd-flip-shuffle"))
+          Site.flip(list, function () {
+            var rows = Array.prototype.filter.call(list.children, function (row) { return row.hasAttribute("data-tags"); });
+            rows.sort(function () { return Math.random() - 0.5; }).forEach(function (row) { list.appendChild(row); });
+          });
+        if (e.target.closest("#pd-flip-add"))
+          Site.flip(list, function () {
+            var row = document.createElement("li");
+            row.setAttribute("data-tags", "gpu fpga pqc");
+            row.innerHTML = '<span>A new preprint, added ' + new Date().toLocaleTimeString() + '</span><span class="t-label">2026</span>';
+            list.insertBefore(row, list.children[1] || null);
+          });
+        if (e.target.closest("#pd-flip-remove"))
+          Site.flip(list, function () {
+            var first = Array.prototype.filter.call(list.children, function (row) { return row.hasAttribute("data-tags") && !row.hidden; })[0];
+            if (first) first.remove();
+          });
+
+        // flip: the grid
+        var cards = document.getElementById("pd-flip-cards");
+        var sort = e.target.closest("#pd-cards-sort");
+        if (sort) {
+          var up = sort.getAttribute("data-up") !== "true";
+          sort.setAttribute("data-up", String(up));
+          Site.flip(cards, function () {
+            Array.prototype.slice.call(cards.children)
+              .sort(function (a, b) { return (a.getAttribute("data-year") - b.getAttribute("data-year")) * (up ? 1 : -1); })
+              .forEach(function (card) { cards.appendChild(card); });
+          });
+        }
+        var only = e.target.closest("#pd-cards-filter");
+        if (only) {
+          var on = only.getAttribute("aria-pressed") !== "true";
+          only.setAttribute("aria-pressed", String(on));
+          Site.flip(cards, function () {
+            Array.prototype.forEach.call(cards.children, function (card) { card.hidden = on && card.getAttribute("data-kind") !== "journal"; });
+          });
+        }
+
+        // flip: the long list
+        var long = document.getElementById("pd-flip-long");
+        var longFilter = e.target.closest("[data-pd-long]");
+        if (longFilter) {
+          pick(longFilter.parentNode, "aria-pressed", longFilter);
+          var rule = longFilter.getAttribute("data-pd-long");
+          Site.flip(long, function () {
+            Array.prototype.forEach.call(long.children, function (row) {
+              var n = Number(row.getAttribute("data-n"));
+              if (n) row.hidden = rule === "late" ? n <= 70 : rule !== "all" && n % Number(rule) !== 0;
+            });
+          });
+        }
+      });
+    });
+  </script>
 </section>
