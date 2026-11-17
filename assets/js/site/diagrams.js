@@ -703,8 +703,7 @@
       }
       scene.frame(n, t, dt);
     }
-    function start() {
-      finishing = false;
+    function resume() {
       if (on) return;
       on = true;
       svg.classList.add("is-live");
@@ -721,11 +720,21 @@
       svg.classList.remove("is-live");
     }
     function update() {
-      var can = scene && state === "drawn" && visible && !env.reduce;
-      if (wanted() && can) return start();
-      if (!on) return;
-      if (!can) return pause(); // off screen or hidden: hold where it is, go on from there
-      finishing = true; // let go: finish the cycle, then rest
+      if (!scene || state !== "drawn") return;
+      if (env.reduce) {
+        // no loops: back to the start of the beat it was in (a state the drawing can rest in)
+        if (on || t > 0) {
+          stop();
+          t = 0;
+          scene.rest(n);
+        }
+        return;
+      }
+      if (!visible) return pause(); // off screen or hidden: hold where it is, go on from there
+      if (wanted()) finishing = false;
+      else if (on || t > 0 || n % cycle !== 0) finishing = true; // let go (even while it was away): finish the cycle, then rest
+      else return; // at rest
+      resume();
     }
 
     /* triggers */
