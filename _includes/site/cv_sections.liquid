@@ -1,0 +1,108 @@
+{%- comment -%}
+  The ledgers of the CV page, one per section of _data/cv.yml (cv.sections, in the file's order), then a line on the publications.
+  Rail + content: a sticky index of the sections (scrollspy + gliding mark) on the left, the ledgers on the right.
+  Entry shapes understood: position/company (appointments), studyType/institution (degrees), name/summary (projects, awards),
+  name/keywords (interests). Rows of appointments and degrees carry the id their bar in Fig. 1 points to.
+{%- endcomment -%}
+{%- assign cv = site.data.cv.cv -%}
+{%- assign pub_count = 0 -%}
+{%- capture pub_count %}{% bibliography_count %}{% endcapture -%}
+{%- assign metrics = site.data.profile.metrics -%}
+<div class="cvbody wrap">
+  <nav class="cvrail" aria-label="Sections of the CV">
+    <ul class="cvrail__list" data-kit="scrollspy highlight" data-mode="selection" data-items="a" data-offset="160">
+      {%- for section in cv.sections %}
+      <li><a href="#{{ section[0] | slugify }}">{{ section[0] }}</a></li>
+      {%- endfor %}
+      <li><a href="#publications">Publications</a></li>
+    </ul>
+  </nav>
+
+  <div class="cvmain">
+    {%- for section in cv.sections %}
+    {%- assign key = section[0] -%}
+    {%- assign entries = section[1] -%}
+    {%- assign first_entry = entries | first %}
+    <section class="cvsec" id="{{ key | slugify }}" aria-labelledby="{{ key | slugify }}-h">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title" id="{{ key | slugify }}-h">{{ key }}</h2>
+        {%- if first_entry.summary and key == 'Projects' %}
+        <a class="link" href="{{ '/research/' | relative_url }}#projects">Funded projects on the research page</a>
+        {%- endif %}
+      </header>
+
+      {%- if first_entry.keywords %}
+        {%- for group in entries %}
+        <div class="cvkeys">
+          {%- if entries.size > 1 %}<h3 class="cvkeys__name">{{ group.name }}</h3>{% else %}<h3 class="sr-only">{{ group.name }}</h3>{% endif %}
+          <ul class="cvkeys__list" data-kit="reveal-group">
+            {%- for k in group.keywords %}
+            <li>{{ k }}</li>
+            {%- endfor %}
+          </ul>
+        </div>
+        {%- endfor %}
+      {%- else %}
+      <ol class="cvledger" data-kit="highlight reveal-group" data-items=".cvrow" data-ledger>
+        {%- for it in entries %}
+          {%- assign from_label = it.start_date | append: '-01' | date: '%b %Y' -%}
+          {%- if it.end_date == 'present' -%}
+            {%- assign to_label = 'present' -%}
+          {%- elsif it.end_date -%}
+            {%- assign to_label = it.end_date | append: '-01' | date: '%b %Y' -%}
+          {%- else -%}
+            {%- assign to_label = '' -%}
+          {%- endif -%}
+          {%- assign row_id = '' -%}
+          {%- if it.position -%}
+            {%- assign row_id = 'cv-exp-' | append: it.start_date -%}
+          {%- elsif it.institution -%}
+            {%- assign row_id = 'cv-edu-' | append: it.start_date -%}
+          {%- endif %}
+        <li class="cvrow" data-reveal-item{% if row_id != '' %} id="{{ row_id }}" data-bar="{{ row_id }}"{% endif %}>
+          <p class="cvrow__when t-data">
+            {%- if it.start_date -%}
+            <time datetime="{{ it.start_date }}">{{ from_label }}</time>{% if to_label != '' %}<span class="cvrow__dash"> – </span>{% if it.end_date == 'present' %}<span>present</span>{% else %}<time datetime="{{ it.end_date }}">{{ to_label }}</time>{% endif %}{% endif %}
+            {%- elsif it.date -%}
+            <time datetime="{{ it.date }}">{{ it.date }}</time>
+            {%- endif -%}
+          </p>
+          <div class="cvrow__what">
+            {%- if it.position %}
+              {%- assign parts = it.position | split: ', ' %}
+            <h3 class="cvrow__title">{{ parts | first }}</h3>
+              {%- if parts.size > 1 %}
+            <p class="cvrow__sub">{% for p in parts offset: 1 %}{{ p }}{% unless forloop.last %}, {% endunless %}{% endfor %}</p>
+              {%- endif %}
+            <p class="cvrow__place">{{ it.company }}{% if it.location %}, {{ it.location }}{% endif %}</p>
+            {%- elsif it.institution %}
+            <h3 class="cvrow__title">{{ it.studyType }}{% if it.area and it.area != '' %}, {{ it.area }}{% endif %}</h3>
+            <p class="cvrow__place">{{ it.institution }}{% if it.location %}, {{ it.location }}{% endif %}</p>
+            {%- else %}
+            <h3 class="cvrow__title cvrow__title--long">{{ it.name }}</h3>
+              {%- if it.summary %}
+            <p class="cvrow__sub">{{ it.summary }}</p>
+              {%- endif %}
+            {%- endif %}
+          </div>
+        </li>
+        {%- endfor %}
+      </ol>
+      {%- endif %}
+    </section>
+    {%- endfor %}
+
+    <section class="cvsec cvpubs" id="publications" aria-labelledby="publications-h">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title" id="publications-h">Publications</h2>
+      </header>
+      <div class="cvpubs__line" data-kit="reveal-group">
+        <p class="cvpubs__count"><span data-kit="sliding-number" data-value="{{ pub_count | strip }}">{{ pub_count | strip }}</span><span class="cvpubs__print" aria-hidden="true">{{ pub_count | strip }}</span></p>
+        <div class="cvpubs__text">
+          <p>Papers in journals and conference proceedings{% if metrics %}, cited {{ metrics.citations }} times, h-index {{ metrics.h_index }} ({{ metrics.source }}, {{ metrics.as_of }}){% endif %}.</p>
+          <a class="btn btn--ghost btn--small cvpubs__link" href="{{ '/publications/' | relative_url }}" data-kit="press"><span data-kit="sliding-text">The full list</span>{% include site/icon.liquid name="arrow-right" size="16" %}</a>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

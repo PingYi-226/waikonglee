@@ -1,0 +1,83 @@
+{%- comment -%}
+  Fig. 1 of the CV page: education and appointments from _data/cv.yml as bars on one time axis, from the start of the first degree
+  (or job, if earlier) to this month, in two lanes. Positions are percentages computed here from the dates (like the career strip
+  on the home page). Each bar is a button: it names itself in the caption, lights its row in the ledger below, and a click goes there.
+  cv.js adds the reading line that follows the pointer along the axis.
+{%- endcomment -%}
+{%- assign cv = site.data.cv.cv -%}
+{%- assign year_now = site.time | date: '%Y' | plus: 0 -%}
+{%- assign month_now = site.time | date: '%m' | plus: 0 -%}
+{%- assign edu = cv.sections.Education | sort: 'start_date' -%}
+{%- assign work = cv.sections.Experience | sort: 'start_date' -%}
+{%- assign first_edu = edu | first -%}
+{%- assign first_work = work | first -%}
+{%- assign start0 = first_edu.start_date -%}
+{%- if first_work.start_date < start0 -%}{%- assign start0 = first_work.start_date -%}{%- endif -%}
+{%- assign y0 = start0 | slice: 0, 4 | plus: 0 -%}
+{%- assign t0 = y0 | times: 12 -%}
+{%- assign t1 = year_now | times: 12 | plus: month_now -%}
+{%- assign span = t1 | minus: t0 -%}
+{%- capture lanes -%}education,work{%- endcapture -%}
+<figure class="cvaxis wrap" data-inview="0.3" data-cv-axis aria-labelledby="cvaxis-cap">
+  <div class="cvaxis__body">
+    <span class="cvaxis__name cvaxis__name--1" aria-hidden="true">Education</span>
+    <span class="cvaxis__name cvaxis__name--2" aria-hidden="true">Work</span>
+    <div class="cvaxis__plot" data-t0="{{ t0 }}" data-span="{{ span }}" data-cv-plot>
+      <span class="cvaxis__now" aria-hidden="true"><span class="cvaxis__now-label t-data">now</span></span>
+      {%- for lane in (1..2) %}
+        {%- if lane == 1 -%}{%- assign items = edu -%}{%- assign lane_name = 'Education' -%}{%- assign prefix = 'cv-edu-' -%}
+        {%- else -%}{%- assign items = work -%}{%- assign lane_name = 'Work' -%}{%- assign prefix = 'cv-exp-' -%}{%- endif %}
+      <ol class="cvaxis__track cvaxis__track--{{ lane }}" role="group" aria-label="{{ lane_name }}">
+          {%- for it in items -%}
+            {%- assign sy = it.start_date | slice: 0, 4 | plus: 0 -%}
+            {%- assign sm = it.start_date | slice: 5, 2 | plus: 0 -%}
+            {%- assign from_label = it.start_date | append: '-01' | date: '%b %Y' -%}
+            {%- if it.end_date == 'present' -%}
+              {%- assign e = span -%}
+              {%- assign to_label = 'present' -%}
+            {%- else -%}
+              {%- assign ey = it.end_date | slice: 0, 4 | plus: 0 -%}
+              {%- assign em = it.end_date | slice: 5, 2 | plus: 0 -%}
+              {%- assign e = ey | times: 12 | plus: em | minus: t0 -%}
+              {%- assign to_label = it.end_date | append: '-01' | date: '%b %Y' -%}
+            {%- endif -%}
+            {%- assign s = sy | times: 12 | plus: sm | minus: 1 | minus: t0 -%}
+            {%- assign left = s | times: 100.0 | divided_by: span -%}
+            {%- assign width = e | minus: s | times: 100.0 | divided_by: span -%}
+            {%- if it.position -%}
+              {%- assign what = it.position | split: ',' | first -%}
+              {%- assign where = it.company -%}
+            {%- else -%}
+              {%- assign what = it.studyType -%}
+              {%- assign where = it.institution -%}
+            {%- endif %}
+        <li class="cvaxis__seg" style="--l: {{ left | round: 3 }}; --w: {{ width | round: 3 }}">
+          <button
+            type="button"
+            class="cvaxis__bar"
+            data-row="{{ prefix }}{{ it.start_date }}"
+            data-from="{{ s }}"
+            data-to="{{ e }}"
+            data-name="{{ what | escape }}, {{ where | escape }}"
+            data-when="{{ from_label }} to {{ to_label }}"
+            aria-label="{{ what | escape }}, {{ where | escape }}, {{ from_label }} to {{ to_label }}"
+          ></button>
+        </li>
+          {%- endfor %}
+      </ol>
+      {%- endfor %}
+      <ol class="cvaxis__years t-data" aria-hidden="true">
+        {%- for y in (y0..year_now) -%}
+          {%- assign yl = y | times: 12 | minus: t0 | times: 100.0 | divided_by: span -%}
+          {%- assign mod = y | modulo: 5 -%}
+          <li class="cvaxis__tick{% if mod == 0 %} cvaxis__tick--label{% endif %}" style="--l: {{ yl | round: 3 }}">{% if mod == 0 %}<span>{{ y }}</span>{% endif %}</li>
+        {%- endfor -%}
+      </ol>
+      <div class="cvaxis__cursor" aria-hidden="true" data-cv-cursor><span class="cvaxis__cursor-label t-data" data-cv-cursor-label></span></div>
+    </div>
+    <figcaption class="figcap cvaxis__cap" id="cvaxis-cap">
+      <span class="figcap__no">Fig. 1</span>
+      <span class="cvaxis__read" data-cv-read data-default="Education and work, {{ y0 }} to today.">Education and work, {{ y0 }} to today.</span>
+    </figcaption>
+  </div>
+</figure>

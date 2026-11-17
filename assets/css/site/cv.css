@@ -1,0 +1,730 @@
+/* ==========================================================================
+   CV page (_pages/cv.md, _includes/site/cv_*.liquid, assets/js/site/cv.js).
+   The set piece is Fig. 1: education and work on one time axis, read with a line that follows the pointer.
+   Below it the ledgers, with a sticky index. Ends with the print stylesheet (a plain one- or two-page CV).
+   ========================================================================== */
+
+html.js .cvpage .sechead[data-inview]:not(.is-in)::before,
+html.js .cvbody .sechead[data-inview]:not(.is-in)::before {
+  transform: scaleX(0);
+}
+
+/* ---------- page head: the letterhead beside the title, the print button and the profile links under the rule ---------- */
+.cvcard {
+  justify-self: end;
+  min-width: 15rem;
+  padding-bottom: 0.3rem;
+}
+
+.cvcard p {
+  margin: 0;
+}
+
+.cvcard__name {
+  font-family: var(--font-display);
+  font-size: var(--fs-d4);
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.cvcard__label {
+  margin-bottom: 0.7rem !important;
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
+
+.cvcard__line {
+  font-size: var(--fs-small);
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.cvcard__line .link {
+  color: var(--ink-2);
+}
+
+.cvprint .icon {
+  margin-left: -0.15rem;
+}
+
+.cvsocials {
+  margin-left: auto;
+  margin-right: -0.6rem;
+}
+
+/* ---------- Fig. 1: two lanes on one axis ---------- */
+.cvaxis {
+  --lane-h: 1.15rem;
+  --lane-gap: 0.85rem;
+  --top: 2rem; /* room for the reading line's date */
+  --years-h: 1.7rem;
+  margin: 0 auto;
+  padding-top: var(--s-6);
+}
+
+.cvaxis__body {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: var(--top) var(--lane-h) calc(var(--lane-h) + var(--lane-gap)) var(--years-h) auto;
+  column-gap: clamp(1rem, 2.2vw, 2rem);
+  row-gap: 0;
+}
+
+.cvaxis__name {
+  grid-column: 1 / span 3;
+  align-self: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--ink-2);
+}
+
+.cvaxis__name--1 {
+  grid-row: 2;
+}
+
+.cvaxis__name--2 {
+  grid-row: 3;
+  transform: translateY(calc(var(--lane-gap) / 2));
+}
+
+.cvaxis__plot {
+  position: relative;
+  grid-column: 4 / -1;
+  grid-row: 1 / 5;
+  padding-top: var(--top);
+}
+
+.cvaxis__track {
+  position: relative;
+  height: var(--lane-h);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cvaxis__track--2 {
+  margin-top: var(--lane-gap);
+}
+
+/* each lane has a hairline through its middle, drawn from the left when the figure is seen */
+.cvaxis__track::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--line);
+  transform-origin: 0 50%;
+  transition: transform 1100ms var(--ease-out);
+}
+
+html.js .cvaxis:not(.is-in) .cvaxis__track::before {
+  transform: scaleX(0);
+}
+
+.cvaxis__seg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--l) * 1%);
+  width: calc(var(--w) * 1%);
+  min-width: 6px;
+  padding: 0 1.5px;
+}
+
+.cvaxis__bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background-color: color-mix(in srgb, var(--ink) 13%, var(--paper));
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  clip-path: inset(0 0 0 0 round var(--r-pill));
+  transition: background-color var(--t-color);
+}
+
+.cvaxis__track--2 .cvaxis__bar {
+  background-color: color-mix(in srgb, var(--ink) 24%, var(--paper));
+}
+
+/* under the reading line: a step toward the accent; named (hovered, focused, its row being read): the accent */
+.cvaxis .cvaxis__bar.is-under {
+  background-color: color-mix(in srgb, var(--accent) 42%, var(--paper));
+}
+
+.cvaxis .cvaxis__bar.is-lit,
+.cvaxis .cvaxis__bar.is-current,
+.cvaxis .cvaxis__bar:focus-visible {
+  background-color: var(--accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cvaxis .cvaxis__bar:hover {
+    background-color: var(--accent);
+  }
+}
+
+.cvaxis__bar:focus-visible {
+  outline-offset: 2px;
+  border-radius: var(--r-pill);
+}
+
+/* drawn in as time passes: each bar opens from its start, in the order of its start date */
+html.js .cvaxis:not(.is-in) .cvaxis__bar {
+  clip-path: inset(0 100% 0 0 round var(--r-pill));
+}
+
+.cvaxis.is-in .cvaxis__bar {
+  transition:
+    clip-path 900ms var(--ease-out) calc(250ms + var(--l) * 13ms),
+    background-color var(--t-color);
+}
+
+html.is-reduced.js .cvaxis:not(.is-in) .cvaxis__bar {
+  clip-path: inset(0 0 0 0 round var(--r-pill));
+  opacity: 0;
+}
+
+html.is-reduced .cvaxis.is-in .cvaxis__bar {
+  transition:
+    opacity var(--t-reveal) 200ms,
+    background-color var(--t-color);
+}
+
+/* today: a hairline at the end of the axis */
+.cvaxis__now {
+  position: absolute;
+  right: 0;
+  top: calc(var(--top) - 0.5rem);
+  bottom: 0;
+  width: 1px;
+  background: var(--line-strong);
+  transition: opacity var(--t-reveal) 1500ms;
+}
+
+.cvaxis__now-label {
+  position: absolute;
+  right: 0.4rem;
+  top: -0.35rem;
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
+html.js .cvaxis:not(.is-in) .cvaxis__now {
+  opacity: 0;
+}
+
+.cvaxis__years {
+  position: relative;
+  height: var(--years-h);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cvaxis__tick {
+  position: absolute;
+  left: calc(var(--l) * 1%);
+  top: 0.55rem;
+  width: 1px;
+  height: 4px;
+  background: var(--line-strong);
+}
+
+.cvaxis__tick--label {
+  height: 7px;
+}
+
+.cvaxis__tick span {
+  position: absolute;
+  top: 0.55rem;
+  left: 0;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+/* the reading line: follows the pointer along the axis, says the month it is on */
+.cvaxis__cursor {
+  position: absolute;
+  top: 0.35rem;
+  bottom: var(--years-h);
+  left: 0;
+  width: 1px;
+  background: var(--ink-2);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-fade);
+}
+
+.cvaxis__cursor.is-on {
+  opacity: 1;
+}
+
+.cvaxis__cursor-label {
+  position: absolute;
+  top: -0.35rem;
+  left: 0;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+  transform: translateX(var(--k, -50%));
+}
+
+.cvaxis__cap {
+  grid-column: 4 / -1;
+  grid-row: 5;
+  margin-top: 0.4rem;
+  min-height: 2.6em;
+}
+
+.cvaxis__read {
+  display: grid;
+}
+
+.cvaxis__read > span {
+  grid-area: 1 / 1;
+}
+
+/* ---------- the ledgers, beside a sticky index ---------- */
+.cvbody {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: clamp(1rem, 2.2vw, 2rem);
+  padding-block: var(--s-9) var(--s-10);
+}
+
+.cvrail {
+  grid-column: 1 / span 3;
+}
+
+.cvrail__list {
+  --k-highlight-radius: var(--r-pill);
+  position: sticky;
+  top: calc(var(--nav-h) + 2.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-small);
+}
+
+.cvrail__list a {
+  display: inline-block;
+  margin-left: -0.75rem;
+  padding: 0.35rem 0.75rem;
+  color: var(--muted);
+  border-radius: var(--r-pill);
+  transition: color var(--t-color);
+}
+
+.cvrail__list a[aria-current="true"] {
+  color: var(--ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cvrail__list a:hover {
+    color: var(--ink);
+  }
+}
+
+.cvmain {
+  grid-column: 4 / -1;
+  min-width: 0;
+}
+
+.cvsec {
+  scroll-margin-top: calc(var(--nav-h) + 1rem);
+}
+
+.cvsec + .cvsec {
+  margin-top: var(--s-9);
+}
+
+.cvledger {
+  --k-highlight-inset: 0 -0.8rem;
+  --k-highlight-radius: var(--r-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-bottom: 1px solid var(--line);
+}
+
+.cvrow {
+  display: grid;
+  grid-template-columns: minmax(0, 2.3fr) minmax(0, 6.7fr);
+  column-gap: clamp(1rem, 2.2vw, 2rem);
+  padding: 1.15rem 0 1.3rem;
+  border-top: 1px solid var(--line);
+  scroll-margin-top: calc(var(--nav-h) + 8rem);
+}
+
+.cvrow__when {
+  margin: 0.38rem 0 0;
+  font-size: 0.76rem;
+  transition: color var(--t-color);
+}
+
+.cvrow__when time,
+.cvrow__when span {
+  color: inherit;
+}
+
+.cvrow__dash {
+  color: var(--faint);
+}
+
+.cvrow__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.cvrow__title--long {
+  font-size: 1.3rem;
+  line-height: 1.2;
+  max-width: 40ch;
+}
+
+.cvrow__sub {
+  margin: 0;
+  max-width: var(--measure);
+  font-size: var(--fs-small);
+  color: var(--ink-2);
+}
+
+.cvrow__place {
+  margin: 0.1rem 0 0;
+  font-size: var(--fs-small);
+  color: var(--muted);
+}
+
+/* the row whose bar is named, or that was just arrived at from the figure */
+.cvrow.is-lit .cvrow__when,
+.cvrow.is-landed .cvrow__when {
+  color: var(--accent);
+}
+
+/* interests: plain words in the display face */
+.cvkeys + .cvkeys {
+  margin-top: 2rem;
+}
+
+.cvkeys__name {
+  margin: 0 0 0.8rem;
+  font-size: var(--fs-small);
+  font-family: var(--font-body);
+  color: var(--muted);
+}
+
+.cvkeys__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-display);
+  font-size: var(--fs-d3);
+  line-height: 1.3;
+  color: var(--ink);
+}
+
+.cvkeys__list li:not(:last-child)::after {
+  content: ",";
+  margin-right: 0.42em;
+  color: var(--muted);
+}
+
+/* publications: one figure and a line */
+.cvpubs__print {
+  display: none;
+}
+
+.cvpubs__line {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: end;
+}
+
+.cvpubs__count {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-d1);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ink);
+}
+
+.cvpubs__text p {
+  max-width: 46ch;
+  margin: 0 0 1rem;
+  color: var(--ink-2);
+}
+
+/* ---------- narrower screens ---------- */
+@media (max-width: 860px) {
+  .cvcard {
+    justify-self: start;
+  }
+
+  .cvaxis__name {
+    display: none;
+  }
+
+  .cvaxis {
+    --top: 2.4rem;
+    --lane-gap: 1.6rem;
+  }
+
+  .cvaxis__plot,
+  .cvaxis__cap {
+    grid-column: 1 / -1;
+  }
+
+  .cvaxis__track::after {
+    content: attr(aria-label);
+    position: absolute;
+    left: 0;
+    bottom: calc(100% + 0.3rem);
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 0.95rem;
+    line-height: 1;
+    color: var(--ink-2);
+  }
+
+  .cvbody {
+    padding-top: var(--s-8);
+  }
+
+  .cvrail {
+    grid-column: 1 / -1;
+    margin: 0 calc(-1 * var(--gutter)) 2.5rem;
+    padding: 0 var(--gutter);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .cvrail__list {
+    position: relative;
+    top: 0;
+    flex-direction: row;
+    gap: 0.25rem;
+    width: max-content;
+  }
+
+  .cvrail__list a {
+    margin-left: 0;
+    padding: 0.7rem 0.85rem;
+  }
+
+  .cvrail__list li:first-child a {
+    margin-left: -0.85rem;
+  }
+
+  .cvmain {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .cvrow {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0.4rem;
+  }
+
+  .cvrow__when {
+    margin-top: 0;
+  }
+
+  .cvrow__title {
+    font-size: 1.32rem;
+  }
+
+  .cvpubs__line {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 1rem;
+  }
+
+  .cvsocials {
+    margin-left: -0.6rem;
+  }
+}
+
+/* ---------- print: a plain CV on paper ---------- */
+@page {
+  margin: 16mm 15mm 16mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  .nav,
+  .navsheet,
+  .foot,
+  .totop,
+  .skip-link,
+  .cvrail,
+  .cvprint,
+  .cvsocials,
+  .cvaxis__cursor,
+  .cvaxis__now,
+  .k-toasts,
+  .k-cursor,
+  .k-preview,
+  #k-tip,
+  .k-highlight__surface {
+    display: none !important;
+  }
+
+  /* nothing waits to be seen on paper (entrances use opacity, filter, clip-path and the translate / scale properties) */
+  main *,
+  main *::before,
+  main *::after {
+    opacity: 1 !important;
+    filter: none !important;
+    clip-path: none !important;
+    translate: none !important;
+    scale: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
+  main#main,
+  .has-foot-reveal main#main {
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* the rolling figure prints as plain text */
+  .cvpubs__count [data-kit~="sliding-number"] {
+    display: none !important;
+  }
+
+  .cvpubs__print {
+    display: inline !important;
+  }
+
+  .wrap {
+    width: 100%;
+  }
+
+  .pagehead {
+    padding: 0 0 6mm;
+    row-gap: 4mm;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .pagehead__title {
+    font-size: 30pt;
+  }
+
+  .pagehead__lede {
+    max-width: 70ch;
+    margin-top: 3mm;
+    font-size: 12pt;
+  }
+
+  .pagehead__meta {
+    display: none;
+  }
+
+  .cvcard {
+    font-size: 9.5pt;
+  }
+
+  .cvcard .link {
+    background: none;
+  }
+
+  .cvaxis {
+    padding-top: 2mm;
+    break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .cvaxis__cap {
+    min-height: 0;
+  }
+
+  .cvbody {
+    display: block;
+    padding: 6mm 0 0;
+  }
+
+  .cvsec + .cvsec {
+    margin-top: 8mm;
+  }
+
+  .sechead {
+    margin-bottom: 3mm;
+    padding-top: 2mm;
+    break-after: avoid;
+  }
+
+  .sechead .link {
+    display: none;
+  }
+
+  .cvrow {
+    padding: 2.4mm 0 2.8mm;
+    break-inside: avoid;
+    grid-template-columns: 38mm minmax(0, 1fr);
+  }
+
+  .cvrow__title {
+    font-size: 12.5pt;
+  }
+
+  .cvrow__title--long {
+    font-size: 11.5pt;
+  }
+
+  .cvrow__sub,
+  .cvrow__place,
+  .cvpubs__text p {
+    font-size: 9.5pt;
+  }
+
+  .cvrow__when {
+    margin-top: 1mm;
+    font-size: 8.5pt;
+  }
+
+  .cvkeys__list {
+    font-size: 13pt;
+  }
+
+  .cvpubs__count {
+    font-size: 26pt;
+  }
+
+  .cvpubs__link {
+    display: none;
+  }
+}
