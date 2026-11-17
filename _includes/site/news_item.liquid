@@ -1,0 +1,35 @@
+{%- comment -%}
+  One news item of the timeline. Parameters: item (a document of _news/), cat (its filter category), delay (ms, optional:
+  the first rows follow the page head on load), words (length of its text: short texts beside a print are set large).
+{%- endcomment -%}
+{%- assign item = include.item -%}
+{%- capture meta -%}
+  <div class="nitem__meta"{% if item.image %} data-reveal-item{% if include.delay != '' %} data-delay="{{ include.delay }}"{% endif %}{% endif %}>
+    <time class="nitem__date" datetime="{{ item.date | date_to_xmlschema }}">{{ item.date | date: '%-d %b %Y' }}</time>
+    {%- if item.label %}<span class="nitem__label">{{ item.label }}</span>{% endif -%}
+    {%- if item.date_label %}<span class="nitem__note">{{ item.date_label }}</span>{% endif -%}
+  </div>
+{%- endcapture -%}
+{%- if item.image -%}
+  {%- assign src = item.image | prepend: '/assets/img/' | relative_url -%}
+  {%- assign alt = item.image_alt | default: 'News photograph' -%}
+  <li class="nitem nitem--print" data-cat="{{ include.cat }}">
+    <span class="nitem__node" aria-hidden="true"></span>
+    {{ meta }}
+    <div class="nitem__text prose{% if include.words < 110 %} nitem__text--large{% endif %}" data-reveal-item{% if include.delay != '' %} data-delay="{{ include.delay | plus: 60 }}"{% endif %}>{{ item.content }}</div>
+    <figure class="nprint" data-kit="reveal" data-reveal="clip"{% if include.delay != '' %} data-delay="{{ include.delay | plus: 140 }}"{% endif %}>
+      <div class="nprint__mount" data-kit="tilt" data-max="5" data-shine>
+        <a class="nprint__link" href="{{ src }}" data-kit="lightbox" data-caption="{{ alt }}" data-cursor="View" aria-label="View larger: {{ alt }}">
+          <img class="nprint__img" src="{{ src }}" alt="{{ alt }}" loading="lazy" decoding="async">
+        </a>
+      </div>
+      <figcaption class="nprint__cap">{{ alt }}</figcaption>
+    </figure>
+  </li>
+{%- else -%}
+  <li class="nitem nitem--row" data-cat="{{ include.cat }}" data-reveal-item{% if include.delay != '' %} data-delay="{{ include.delay }}"{% endif %}>
+    <span class="nitem__node" aria-hidden="true"></span>
+    {{ meta }}
+    <div class="nitem__text prose">{{ item.content }}</div>
+  </li>
+{%- endif -%}
