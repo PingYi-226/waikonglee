@@ -93,7 +93,15 @@
   fill: var(--muted);
 }
 
-/* pops and growth turn about their own box */
+.diagram .dg-gate {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  stroke: none;
+  fill: currentColor;
+}
+
+/* pops and growth turn about their own box (and so does any circle the loop scales) */
+.diagram circle,
 .diagram .dg-p,
 .diagram .dg-g {
   transform-box: fill-box;

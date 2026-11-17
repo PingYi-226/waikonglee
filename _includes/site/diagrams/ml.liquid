@@ -1,5 +1,94 @@
-{%- comment -%} Placeholder figure for the "ml" research area (to be replaced by the real animated diagram; same file name, same viewBox). {%- endcomment -%}
-<svg class="diagram diagram--ml" viewBox="0 0 320 180" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true">
-  <g opacity="0.55"><path d="M40 150h240M40 100h240M40 50h240M80 30v140M160 30v140M240 30v140"/></g>
-  <circle cx="160" cy="100" r="34" stroke="var(--accent)"/><circle cx="160" cy="100" r="3" fill="var(--accent)" stroke="none"/>
+{%- comment -%}
+  Deep-learning hardware: a 3 x 3 convolution window over a 6 x 6 feature map (dots sized by activation, a diagonal
+  band), writing a 4 x 4 output map; the cell being written carries the accent, the cells already written show their
+  response (the kernel answers the diagonal). At rest the window is at step 5 of 16.
+  Live: the window steps across the map, one output per beat (diagrams.js, SCENES.ml).
+  Parameters: live (hover | always | off), trigger (view | manual), detail ("full" shows the labels), class.
+{%- endcomment -%}
+<svg class="diagram diagram--ml{% if include.class %} {{ include.class }}{% endif %}" viewBox="0 0 320 180" data-kit="diagram" data-live="{{ include.live | default: 'hover' }}" data-trigger="{{ include.trigger | default: 'view' }}"{% if include.detail == 'full' %} data-detail="full"{% endif %} role="img" aria-label="A three by three kernel window slides over a feature map, and each position writes one cell of the output map." fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+  {%- comment -%} the two maps {%- endcomment %}
+  <g class="dg-h" style="--t: 0">
+    <rect class="dg-d" pathLength="1" x="44" y="42" width="96" height="96"/>
+    <rect class="dg-d" style="--k: 4" pathLength="1" x="212" y="58" width="64" height="64"/>
+  </g>
+  <g class="dg-h" stroke-opacity="0.22" style="--t: 0.1">
+    <path class="dg-d" pathLength="1" d="M60 42V138M44 58H140M76 42V138M44 74H140M92 42V138M44 90H140M108 42V138M44 106H140M124 42V138M44 122H140"/>
+    <path class="dg-d" style="--k: 4" pathLength="1" d="M228 58V122M212 74H276M244 58V122M212 90H276M260 58V122M212 106H276"/>
+  </g>
+  {%- comment -%} the feature map: one dot per value {%- endcomment %}
+  <g style="--t: 0.22">
+    <circle class="dg-s dg-p" cx="52" cy="50" r="2.33" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 1" cx="68" cy="50" r="2.64" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 2" cx="84" cy="50" r="1.48" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 3" cx="100" cy="50" r="0.94" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 4" cx="116" cy="50" r="0.71" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 5" cx="132" cy="50" r="0.6" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 1" cx="52" cy="66" r="1.33" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 2" cx="68" cy="66" r="2.33" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 3" cx="84" cy="66" r="2.64" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 4" cx="100" cy="66" r="1.48" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 5" cx="116" cy="66" r="0.94" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 6" cx="132" cy="66" r="0.71" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 2" cx="52" cy="82" r="0.89" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 3" cx="68" cy="82" r="1.33" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 4" cx="84" cy="82" r="2.33" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 5" cx="100" cy="82" r="2.64" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 6" cx="116" cy="82" r="1.48" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 7" cx="132" cy="82" r="0.94" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 3" cx="52" cy="98" r="0.65" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 4" cx="68" cy="98" r="0.89" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 5" cx="84" cy="98" r="1.33" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 6" cx="100" cy="98" r="2.33" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 7" cx="116" cy="98" r="2.64" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 8" cx="132" cy="98" r="1.48" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 4" cx="52" cy="114" r="0.74" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 5" cx="68" cy="114" r="0.65" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 6" cx="84" cy="114" r="0.89" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 7" cx="100" cy="114" r="1.33" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 8" cx="116" cy="114" r="2.33" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 9" cx="132" cy="114" r="2.64" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 5" cx="52" cy="130" r="0.6" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 6" cx="68" cy="130" r="0.74" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 7" cx="84" cy="130" r="0.65" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 8" cx="100" cy="130" r="0.89" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 9" cx="116" cy="130" r="1.33" fill="currentColor"/>
+    <circle class="dg-s dg-p" style="--k: 10" cx="132" cy="130" r="2.33" fill="currentColor"/>
+  </g>
+  {%- comment -%} the output map: cells written so far (the rest wait, hidden) {%- endcomment %}
+  <g style="--t: 0.5">
+    <circle class="dg-s dg-p" data-dg="o" cx="220" cy="66" r="3.21" fill="currentColor"/>
+    <circle class="dg-s dg-p" data-dg="o" style="--k: 1" cx="236" cy="66" r="3.7" fill="currentColor"/>
+    <circle class="dg-s dg-p" data-dg="o" style="--k: 2" cx="252" cy="66" r="1.77" fill="currentColor"/>
+    <circle class="dg-s dg-p" data-dg="o" style="--k: 3" cx="268" cy="66" r="0.9" fill="currentColor"/>
+    <circle class="dg-s dg-p" data-dg="o" style="--k: 4" cx="220" cy="82" r="1.48" fill="currentColor"/>
+    <circle class="dg-s dg-p" data-dg="o" cx="236" cy="82" r="3.21" fill="currentColor" opacity="0"/>
+    <circle class="dg-s dg-p" data-dg="o" cx="252" cy="82" r="3.7" fill="currentColor" opacity="0"/>
+    <circle class="dg-s dg-p" data-dg="o" cx="268" cy="82" r="1.77" fill="currentColor" opacity="0"/>
+    <circle class="dg-s dg-p" data-dg="o" cx="220" cy="98" r="0.86" fill="currentColor" opacity="0"/>
+    <circle class="dg-s dg-p" data-dg="o" cx="236" cy="98" r="1.48" fill="currentColor" opacity="0"/>
+    <circle class="dg-s dg-p" data-dg="o" cx="252" cy="98" r="3.21" fill="currentColor" opacity="0"/>
+    <circle class="dg-s dg-p" data-dg="o" cx="268" cy="98" r="3.7" fill="currentColor" opacity="0"/>
+    <circle class="dg-s dg-p" data-dg="o" cx="220" cy="114" r="0.8" fill="currentColor" opacity="0"/>
+    <circle class="dg-s dg-p" data-dg="o" cx="236" cy="114" r="0.86" fill="currentColor" opacity="0"/>
+    <circle class="dg-s dg-p" data-dg="o" cx="252" cy="114" r="1.48" fill="currentColor" opacity="0"/>
+    <circle class="dg-s dg-p" data-dg="o" cx="268" cy="114" r="3.21" fill="currentColor" opacity="0"/>
+  </g>
+  {%- comment -%} the window, its projection, and the output cell being written {%- endcomment %}
+  <g data-dg="win" data-x="60" data-y="58">
+    <rect class="dg-w dg-f" style="--t: 0.6" x="60" y="58" width="48" height="48"/>
+    <rect class="dg-k dg-d" style="--t: 0.56" pathLength="1" x="60" y="58" width="48" height="48"/>
+  </g>
+  <g class="dg-h" style="--t: 0.74">
+    <line class="dg-d" data-dg="ray" pathLength="1" x1="108" y1="58" x2="228" y2="74"/>
+    <line class="dg-d" data-dg="ray" style="--k: 3" pathLength="1" x1="108" y1="106" x2="228" y2="90"/>
+  </g>
+  <g data-dg="cell" data-x="228" data-y="74">
+    <rect class="dg-sa dg-p" style="--t: 0.92" x="232" y="78" width="8" height="8" fill="currentColor"/>
+  </g>
+  {%- if include.detail == 'full' %}
+  <g class="dg-f" style="--t: 1">
+    <text class="dg-sym" x="92" y="153" text-anchor="middle">x</text>
+    <text class="dg-sym" x="244" y="137" text-anchor="middle">k ∗ x</text>
+  </g>
+  {%- endif %}
 </svg>

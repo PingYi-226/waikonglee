@@ -1,5 +1,111 @@
-{%- comment -%} Placeholder figure for the "accel" research area (to be replaced by the real animated diagram; same file name, same viewBox). {%- endcomment -%}
-<svg class="diagram diagram--accel" viewBox="0 0 320 180" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" aria-hidden="true">
-  <g opacity="0.55"><path d="M40 150h240M40 100h240M40 50h240M80 30v140M160 30v140M240 30v140"/></g>
-  <circle cx="160" cy="100" r="34" stroke="var(--accent)"/><circle cx="160" cy="100" r="3" fill="var(--accent)" stroke="none"/>
+{%- comment -%}
+  High-speed symmetric cryptography: the AES state, 4 x 4 bytes, and ShiftRows.
+  Row r rotates left by r bytes (the arrows on the right are r cells long). The bytes that start in column 0 are solid;
+  the one in row 1 carries the accent, so its wrap-around can be followed. Each row is clipped by its own nested <svg>,
+  and holds its four bytes three times over, so the loop can slide it without a seam.
+  Live: one ShiftRows per beat (diagrams.js, SCENES.accel).
+  Parameters: live (hover | always | off), trigger (view | manual), detail ("full" shows the labels), class.
+{%- endcomment -%}
+<svg class="diagram diagram--accel{% if include.class %} {{ include.class }}{% endif %}" viewBox="0 0 320 180" data-kit="diagram" data-live="{{ include.live | default: 'hover' }}" data-trigger="{{ include.trigger | default: 'view' }}"{% if include.detail == 'full' %} data-detail="full"{% endif %} role="img" aria-label="The AES state as a four by four grid of bytes; in ShiftRows each row r rotates left by r bytes, so the first column spreads onto a diagonal." fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+  {%- comment -%} the state {%- endcomment %}
+  <rect class="dg-h dg-d" style="--t: 0" pathLength="1" x="54" y="34" width="112" height="112"/>
+  <g class="dg-h" style="--t: 0.1">
+    <path class="dg-d" style="--k: 2" pathLength="1" d="M82 34V146"/>
+    <path class="dg-d" style="--k: 4" pathLength="1" d="M110 34V146"/>
+    <path class="dg-d" style="--k: 6" pathLength="1" d="M138 34V146"/>
+    <path class="dg-d" style="--k: 3" pathLength="1" d="M54 62H166"/>
+    <path class="dg-d" style="--k: 5" pathLength="1" d="M54 90H166"/>
+    <path class="dg-d" style="--k: 7" pathLength="1" d="M54 118H166"/>
+  </g>
+  {%- comment -%} the bytes, row by row: column 0 solid, the rest faint; three copies of each row for the wrap {%- endcomment %}
+  <g style="--t: 0.3">
+    <svg x="54" y="34" width="112" height="28" viewBox="54 34 112 28">
+      <g data-dg="row" data-r="0">
+        <circle class="dg-s dg-p" cx="68" cy="48" r="3" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 1" cx="96" cy="48" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 2" cx="124" cy="48" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 3" cx="152" cy="48" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" cx="180" cy="48" r="3" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 1" cx="208" cy="48" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 2" cx="236" cy="48" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 3" cx="264" cy="48" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" cx="292" cy="48" r="3" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 1" cx="320" cy="48" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 2" cx="348" cy="48" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 3" cx="376" cy="48" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+      </g>
+    </svg>
+    <svg x="54" y="62" width="112" height="28" viewBox="54 62 112 28">
+      <g data-dg="row" data-r="1">
+        <circle class="dg-sa dg-p" style="--k: 1" cx="68" cy="76" r="3.2" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 2" cx="96" cy="76" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 3" cx="124" cy="76" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 4" cx="152" cy="76" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-sa dg-p" style="--k: 1" cx="180" cy="76" r="3.2" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 2" cx="208" cy="76" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 3" cx="236" cy="76" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 4" cx="264" cy="76" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-sa dg-p" style="--k: 1" cx="292" cy="76" r="3.2" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 2" cx="320" cy="76" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 3" cx="348" cy="76" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 4" cx="376" cy="76" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+      </g>
+    </svg>
+    <svg x="54" y="90" width="112" height="28" viewBox="54 90 112 28">
+      <g data-dg="row" data-r="2">
+        <circle class="dg-s dg-p" style="--k: 2" cx="68" cy="104" r="3" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 3" cx="96" cy="104" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 4" cx="124" cy="104" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 5" cx="152" cy="104" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 2" cx="180" cy="104" r="3" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 3" cx="208" cy="104" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 4" cx="236" cy="104" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 5" cx="264" cy="104" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 2" cx="292" cy="104" r="3" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 3" cx="320" cy="104" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 4" cx="348" cy="104" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 5" cx="376" cy="104" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+      </g>
+    </svg>
+    <svg x="54" y="118" width="112" height="28" viewBox="54 118 112 28">
+      <g data-dg="row" data-r="3">
+        <circle class="dg-s dg-p" style="--k: 3" cx="68" cy="132" r="3" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 4" cx="96" cy="132" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 5" cx="124" cy="132" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 6" cx="152" cy="132" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 3" cx="180" cy="132" r="3" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 4" cx="208" cy="132" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 5" cx="236" cy="132" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 6" cx="264" cy="132" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 3" cx="292" cy="132" r="3" fill="currentColor"/>
+        <circle class="dg-s dg-p" style="--k: 4" cx="320" cy="132" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 5" cx="348" cy="132" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+        <circle class="dg-s dg-p" style="--k: 6" cx="376" cy="132" r="1.6" fill="currentColor" fill-opacity="0.4"/>
+      </g>
+    </svg>
+  </g>
+  {%- comment -%} the shift of each row, as arrows r cells long {%- endcomment %}
+  <g data-dg="arrow" data-r="0">
+    <circle class="dg-s dg-p" style="--t: 0.6" cx="182" cy="48" r="1.8" fill="currentColor"/>
+  </g>
+  <g data-dg="arrow" data-r="1">
+    <path class="dg-k dg-d" style="--t: 0.58; --k: 3" pathLength="1" d="M210 76H182.6"/>
+    <path class="dg-k dg-d" style="--t: 0.82; --k: 3" pathLength="1" d="M187.6 72.4L182 76L187.6 79.6"/>
+  </g>
+  <g data-dg="arrow" data-r="2">
+    <path class="dg-k dg-d" style="--t: 0.58; --k: 6" pathLength="1" d="M238 104H182.6"/>
+    <path class="dg-k dg-d" style="--t: 0.82; --k: 6" pathLength="1" d="M187.6 100.4L182 104L187.6 107.6"/>
+  </g>
+  <g data-dg="arrow" data-r="3">
+    <path class="dg-k dg-d" style="--t: 0.58; --k: 9" pathLength="1" d="M266 132H182.6"/>
+    <path class="dg-k dg-d" style="--t: 0.82; --k: 9" pathLength="1" d="M187.6 128.4L182 132L187.6 135.6"/>
+  </g>
+  {%- if include.detail == 'full' %}
+  <g class="dg-f" style="--t: 1">
+    <text class="dg-num" x="189" y="50.6">0</text>
+    <text class="dg-num" x="217" y="78.6">1</text>
+    <text class="dg-num" x="245" y="106.6">2</text>
+    <text class="dg-num" x="273" y="134.6">3</text>
+  </g>
+  {%- endif %}
 </svg>
