@@ -312,7 +312,8 @@ layout: default
 
   {%- comment -%} ------------------------------------------------------------- news {%- endcomment -%}
   {% if page.announcements and page.announcements.enabled %}
-    {%- assign news = site.news | sort: 'date' | reverse -%}
+    {%- comment -%} Items written by hand only: the ones derived from the publication list (derived: true) stay on the news page. {%- endcomment -%}
+    {%- assign news = site.news | where_exp: 'item', 'item.derived != true' | sort: 'date' | reverse -%}
     <section class="hnews section" id="news">
       <div class="wrap">
         <header class="sechead" data-inview>
