@@ -1,0 +1,28 @@
+{%- comment -%}
+  A person's mark: their photograph (in colour) when _data/people.yml gives one, otherwise a lattice glyph computed
+  from their name by assets/js/site/group.js (kit "glyph"). Without JavaScript the glyph shows the initials.
+
+    {% include site/people_glyph.liquid name=p.name photo=p.photo kind="tile" %}
+
+  Parameters: name (required), photo (file name in assets/img/people/), kind (tile | row | big; default tile),
+  trigger (reveal | view | load | manual; default: with its row's entrance, else when seen), delay (ms).
+  ("kind", not "size": include.size answers the number of parameters when none is given.)
+{%- endcomment -%}
+{%- assign g_kind = include.kind | default: 'tile' -%}
+{%- assign g_words = include.name | replace: '-', ' ' | split: ' ' -%}
+{%- assign g_first = g_words | first | slice: 0 -%}
+{%- assign g_last = g_words | last | slice: 0 -%}
+{%- if include.photo and include.photo != '' -%}
+  {%- if include.photo contains '/' -%}{%- assign g_src = include.photo -%}{%- else -%}{%- assign g_src = include.photo | prepend: '/assets/img/people/' -%}{%- endif -%}
+  <span class="glyph glyph--{{ g_kind }} glyph--photo"><img src="{{ g_src | relative_url }}" alt="" loading="lazy" decoding="async"></span>
+{%- else -%}
+  <span
+    class="glyph glyph--{{ g_kind }}"
+    data-kit="glyph"
+    data-name="{{ include.name | escape }}"
+    data-kind="{{ g_kind }}"
+    {%- if include.trigger %} data-trigger="{{ include.trigger }}"{% endif -%}
+    {%- if include.delay %} data-delay="{{ include.delay }}"{% endif %}
+    aria-hidden="true"
+  ><span class="glyph__mono">{{ g_first }}{{ g_last }}</span></span>
+{%- endif -%}
