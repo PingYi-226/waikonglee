@@ -602,7 +602,7 @@
       target = util.clamp((window.innerHeight - r.top) / Math.max(1, r.height), 0, 1);
     }
     function scale() {
-      var s = Math.min(1, root.clientWidth / ORBIT.stage.w, (window.innerHeight - 40) / ORBIT.stage.h);
+      var s = Math.min(1.25, root.clientWidth / ORBIT.stage.w, (window.innerHeight - 40) / ORBIT.stage.h);
       scene.style.setProperty("--orbit-scale", s.toFixed(4));
     }
     function title(el, range) {
