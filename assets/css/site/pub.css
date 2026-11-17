@@ -21,7 +21,6 @@
 .pub {
   position: relative;
   padding-block: clamp(1.25rem, 2.1vw, 1.7rem);
-  scroll-margin-top: calc(var(--nav-h) + var(--pubbar-h, 0px) + 1.5rem);
 }
 
 .pub__title {
@@ -212,7 +211,6 @@ html.is-reduced .pub__hit {
   font-size: var(--fs-small);
   line-height: 1.7;
   color: var(--ink-2);
-  hyphens: auto;
 }
 
 .pub__bib {
@@ -478,6 +476,11 @@ a.pubchart__bar:focus-visible .pubchart__fill {
 }
 
 /* ---------- tool bar: search, kind, count, areas. Sticks under the header while the list is on screen ---------- */
+/* what the keyboard or a link brings into view stays clear of the bar (--pubbar-h is set by pub.js) */
+html:has([data-pubs]) {
+  scroll-padding-top: calc(var(--nav-h) + var(--pubbar-h, 0px) + 1rem);
+}
+
 .pubbar {
   position: sticky;
   top: var(--nav-h);
@@ -704,10 +707,6 @@ html.is-reduced .pubbar__end > * {
   border-bottom: 1px solid var(--line);
 }
 
-.pubyear {
-  scroll-margin-top: calc(var(--nav-h) + var(--pubbar-h, 0px) + 1.5rem);
-}
-
 /* the first row of a year opens on a stronger rule */
 .publist--all ol.bibliography > li:nth-child(1 of :not([hidden])) {
   border-top-color: var(--line-strong);
@@ -792,6 +791,14 @@ html.is-reduced .pubbar__end > * {
       "areas areas"
       "types types";
     gap: 0.75rem 1rem;
+  }
+
+  .pubbar__field {
+    padding-right: 2.2rem;
+  }
+
+  .pubbar__key {
+    display: none;
   }
 
   .pubbar__areas {

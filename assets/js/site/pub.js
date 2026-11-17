@@ -440,20 +440,20 @@
     }
 
     /* ---------- the tool bar sticks under the header, and takes its place when the header leaves ---------- */
-    function measureBar() {
-      page.style.setProperty("--pubbar-h", bar.offsetHeight + "px");
-      watchYears();
-    }
-    if (window.ResizeObserver) new ResizeObserver(S.util.debounce(measureBar, 80)).observe(bar);
-    S.on("resize", measureBar);
-    measureBar();
-
     var stuck = false;
     var sentinel = page.querySelector("[data-pubbar-sentinel]");
     var narrow = window.matchMedia("(max-width: 860px)");
     var sticky = function () {
       return !narrow.matches;
     };
+    // the bar's height: the rail and the anchors keep clear of it (html, so scroll-padding sees it too)
+    function measureBar() {
+      root.style.setProperty("--pubbar-h", (sticky() ? bar.offsetHeight : 0) + "px");
+      watchYears();
+    }
+    if (window.ResizeObserver) new ResizeObserver(S.util.debounce(measureBar, 80)).observe(bar);
+    S.on("resize", measureBar);
+    measureBar();
     var onScroll = S.util.throttle(function () {
       var next = sticky() && !!sentinel && sentinel.getBoundingClientRect().top < navH() && body.getBoundingClientRect().bottom > navH();
       if (next !== stuck) {
