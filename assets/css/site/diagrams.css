@@ -1,0 +1,167 @@
+/* ==========================================================================
+   Diagrams: seven small drawings, one per research area (_includes/site/diagrams/<key>.liquid),
+   driven by the "diagram" kit in assets/js/site/diagrams.js. Load this file and that script together.
+
+   Looks (classes on the shapes):
+     .dg-h   hairline: structure, grids, wires            .dg-k   key line (the default stroke)
+     .dg-a   the accent mark (one per drawing)            .dg-s   small solid in ink
+     .dg-sa  small solid in the accent                    .dg-w   a very faint wash
+     .dg-sym italic serif label (symbols)                 .dg-num mono label (data)
+   Motion (how a shape arrives when the drawing draws itself):
+     .dg-d   the stroke draws (dash offset)               .dg-p   a solid pops (scale + opacity)
+     .dg-g   a bar grows from its foot                    .dg-f   fades in
+   Timing: style="--t: 0..1" on a shape or group places it in the sequence; "--k: n" adds n small steps.
+   States (classes the kit sets on the svg): none = blank (only while html.js is present and the kit runs,
+   so without JavaScript the finished drawing shows), .is-drawn = drawing / drawn, .dg-done = finished.
+   ========================================================================== */
+
+.diagram {
+  --dg-span: 700ms; /* the sequence spreads over this (the kit sets these from its own constants and Site.tempo) */
+  --dg-dur: 500ms; /* one stroke drawing itself: 1.2 s in all */
+  --dg-sub: 22ms; /* one small step inside a group */
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+  color: inherit;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.diagram :is(path, line, polyline, polygon, rect, circle, ellipse) {
+  vector-effect: non-scaling-stroke;
+}
+
+.diagram * {
+  --dg-delay: calc(var(--t, 0) * var(--dg-span) + var(--k, 0) * var(--dg-sub));
+}
+
+/* ---------- looks ---------- */
+.diagram .dg-h {
+  stroke-width: 1;
+  stroke-opacity: 0.42;
+}
+
+.diagram .dg-m {
+  stroke-width: 1;
+  stroke-opacity: 0.7;
+}
+
+.diagram .dg-a {
+  stroke: var(--accent);
+}
+
+.diagram .dg-s {
+  fill: currentColor;
+  stroke: none;
+}
+
+.diagram .dg-sa {
+  fill: var(--accent);
+  stroke: none;
+}
+
+.diagram .dg-w {
+  fill: var(--accent-wash);
+  stroke: none;
+}
+
+.diagram .dg-sym,
+.diagram .dg-num {
+  stroke: none;
+  fill: currentColor;
+}
+
+.diagram .dg-sym {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 12px;
+}
+
+.diagram .dg-sub {
+  font-style: normal;
+  font-size: 8px;
+}
+
+.diagram .dg-num {
+  font-family: var(--font-mono);
+  font-size: 7.5px;
+  font-variant-numeric: tabular-nums;
+  fill: var(--muted);
+}
+
+/* pops and growth turn about their own box */
+.diagram .dg-p,
+.diagram .dg-g {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.diagram .dg-g {
+  transform-origin: 50% 100%;
+}
+
+/* ---------- blank: before the kit has run, and until play() ---------- */
+html.js:not(.is-reduced):not(.is-ready) .diagram:not(.is-drawn) .dg-d,
+html.js.dg-js:not(.is-reduced) .diagram:not(.is-drawn) .dg-d {
+  opacity: 0;
+  stroke-dasharray: var(--dg-len, 1) 8;
+  stroke-dashoffset: var(--dg-len, 1);
+}
+
+html.js:not(.is-reduced):not(.is-ready) .diagram:not(.is-drawn) .dg-p,
+html.js.dg-js:not(.is-reduced) .diagram:not(.is-drawn) .dg-p {
+  opacity: 0;
+  scale: 0.25;
+}
+
+html.js:not(.is-reduced):not(.is-ready) .diagram:not(.is-drawn) .dg-g,
+html.js.dg-js:not(.is-reduced) .diagram:not(.is-drawn) .dg-g {
+  scale: 1 0;
+}
+
+html.js:not(.is-reduced):not(.is-ready) .diagram:not(.is-drawn) .dg-f,
+html.js.dg-js:not(.is-reduced) .diagram:not(.is-drawn) .dg-f {
+  opacity: 0;
+}
+
+/* ---------- drawn: the strokes draw in sequence (about 1.2 s), then .dg-done drops the dashes ---------- */
+html.js.dg-js:not(.is-reduced) .diagram.is-drawn:not(.dg-done) .dg-d {
+  stroke-dasharray: var(--dg-len, 1) 8;
+  stroke-dashoffset: 0;
+  transition:
+    stroke-dashoffset var(--dg-dur) var(--ease-draw) var(--dg-delay),
+    opacity var(--t-fade) var(--dg-delay);
+}
+
+html.js.dg-js:not(.is-reduced) .diagram.is-drawn:not(.dg-done) .dg-p {
+  transition:
+    scale var(--spring-pop) var(--dg-delay),
+    opacity var(--t-fade) var(--dg-delay);
+}
+
+html.js.dg-js:not(.is-reduced) .diagram.is-drawn:not(.dg-done) .dg-g {
+  transition: scale var(--spring-entrance) var(--dg-delay);
+}
+
+html.js.dg-js:not(.is-reduced) .diagram.is-drawn:not(.dg-done) .dg-f {
+  transition: opacity var(--t-reveal) var(--dg-delay);
+}
+
+/* ---------- reduced motion (and ?static): no drawing, the finished figure fades in ---------- */
+html.js.is-reduced:not(.is-ready) .diagram:not(.is-drawn),
+html.js.is-reduced.dg-js .diagram:not(.is-drawn) {
+  opacity: 0;
+}
+
+html.js.is-reduced .diagram {
+  transition: opacity var(--t-reveal);
+}
+
+/* ---------- shapes only the live loop shows (hidden at rest; the loop sets their opacity) ---------- */
+.diagram .dg-x {
+  opacity: 0;
+}
