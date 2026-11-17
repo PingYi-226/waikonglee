@@ -1,0 +1,138 @@
+{%- comment -%}
+  The publications page (/publications/): page head with Fig. 1 (papers per year), the tool bar (search, areas, type, count),
+  and the list: a sticky rail with the year in view, then one section per year. Every entry is _layouts/bib.liquid.
+  Data: _bibliography/papers.bib (entries, counts), _data/research.yml (areas), _data/profile.yml (metrics).
+  Behaviour: assets/js/site/pub.js. Looks: assets/css/site/pub.css.
+{%- endcomment -%}
+{%- assign profile = site.data.profile -%}
+{%- assign year_now = site.time | date: '%Y' | plus: 0 -%}
+{%- capture total -%}{% bibliography_count %}{%- endcapture -%}
+{%- assign total = total | strip | plus: 0 -%}
+
+{%- comment -%} papers per year, from the first year with a paper to this year {%- endcomment -%}
+{%- capture year_counts -%}
+  {%- for y in (1990..year_now) -%}{% bibliography_count --query @*[year={{ y }}] %}{% unless forloop.last %},{% endunless %}{%- endfor -%}
+{%- endcapture -%}
+{%- assign year_counts = year_counts | strip | split: ',' -%}
+{%- assign first_year = year_now -%}
+{%- assign peak = 1 -%}
+{%- for c in year_counts -%}
+  {%- assign n = c | plus: 0 -%}
+  {%- if n > 0 and first_year == year_now -%}{%- assign first_year = 1990 | plus: forloop.index0 -%}{%- endif -%}
+  {%- if n > peak -%}{%- assign peak = n -%}{%- endif -%}
+{%- endfor -%}
+{%- assign first_index = first_year | minus: 1990 -%}
+
+{%- capture head_aside -%}
+<figure class="pubchart" data-pubchart>
+  <div class="pubchart__plot" data-kit="tooltip-group" role="group" aria-label="Papers per year, {{ first_year }} to {{ year_now }}">
+    {%- for y in (first_year..year_now) -%}
+      {%- assign i = y | minus: 1990 -%}
+      {%- assign n = year_counts[i] | plus: 0 -%}
+      {%- assign h = n | times: 1.0 | divided_by: peak | round: 4 -%}
+      {%- if n > 0 -%}
+        <a class="pubchart__bar" href="#y{{ y }}" data-year="{{ y }}" data-n="{{ n }}" data-tip="{{ y }}, {{ n }} paper{% if n != 1 %}s{% endif %}" aria-label="{{ y }}: {{ n }} paper{% if n != 1 %}s{% endif %}" style="--h: {{ h }}; --i: {{ forloop.index0 }}">
+          <span class="pubchart__all"></span><span class="pubchart__fill"></span>
+        </a>
+      {%- else -%}
+        <span class="pubchart__bar is-empty" data-year="{{ y }}" data-n="0" data-tip="{{ y }}, no papers" style="--h: 0; --i: {{ forloop.index0 }}">
+          <span class="pubchart__all"></span><span class="pubchart__fill"></span>
+        </span>
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+  <div class="pubchart__axis t-data" aria-hidden="true">
+    {%- for y in (first_year..year_now) -%}
+      {%- assign m = y | modulo: 5 -%}
+      {%- assign from_first = y | minus: first_year -%}
+      {%- assign to_last = year_now | minus: y -%}
+      <span>{% if forloop.first or forloop.last %}{{ y }}{% elsif m == 0 and from_first > 2 and to_last > 2 %}{{ y }}{% endif %}</span>
+    {%- endfor -%}
+  </div>
+  <figcaption class="figcap"><span class="figcap__no">Fig. 1</span><span>Papers per year</span></figcaption>
+</figure>
+{%- endcapture -%}
+
+{%- capture head_meta -%}
+<dl class="pubhead__stats">
+  <div class="stat">
+    <dt class="stat__label">papers</dt>
+    <dd class="stat__value"><span data-kit="sliding-number" data-value="{{ total }}" data-delay="700">{{ total }}</span></dd>
+  </div>
+  <div class="stat">
+    <dt class="stat__label">citations</dt>
+    <dd class="stat__value"><span data-kit="sliding-number" data-value="{{ profile.metrics.citations | remove: ',' }}" data-delay="760">{{ profile.metrics.citations }}</span></dd>
+  </div>
+  <div class="stat">
+    <dt class="stat__label">h-index</dt>
+    <dd class="stat__value"><span data-kit="sliding-number" data-value="{{ profile.metrics.h_index }}" data-delay="820">{{ profile.metrics.h_index }}</span></dd>
+  </div>
+</dl>
+<p class="pubhead__note t-label">Citation figures from <a class="link" href="{{ profile.metrics.source_url }}">{{ profile.metrics.source }}</a>, {{ profile.metrics.as_of }}.</p>
+{%- endcapture -%}
+
+<div class="pubs" data-pubs data-total="{{ total }}">
+{% include site/pagehead.liquid aside=head_aside meta=head_meta %}
+
+<div class="pubbar__sentinel" aria-hidden="true" data-pubbar-sentinel></div>
+<div class="pubbar js-only" data-pubbar>
+  <div class="pubbar__inner wrap">
+    <div class="pubbar__search">
+      <label class="pubbar__label" for="pubq">
+        <span class="sr-only">Search the publications</span>
+        {% include site/icon.liquid name="search" size="18" class="pubbar__lens" %}
+      </label>
+      <input class="field pubbar__field" id="pubq" type="search" placeholder="Search titles, authors, venues" autocomplete="off" spellcheck="false" enterkeyhint="search" data-pubq>
+      <span class="pubbar__end">
+        <kbd class="kbd pubbar__key" aria-hidden="true" data-pubkey>/</kbd>
+        <button type="button" class="icon-btn pubbar__clear" data-kit="press" data-pubclear aria-label="Clear the search" tabindex="-1">{% include site/icon.liquid name="close" size="16" %}</button>
+      </span>
+    </div>
+
+    <div class="pubbar__types k-seg" data-kit="highlight" data-mode="both" role="group" aria-label="Kind of paper" data-pubtypes>
+      <button type="button" class="k-seg__item" data-highlight-item data-kit="press" data-type="" aria-pressed="true">All</button>
+      <button type="button" class="k-seg__item" data-highlight-item data-kit="press" data-type="journal" aria-pressed="false">Journals <span class="pubbar__n t-data"><span data-kit="sliding-number" data-trigger="manual" data-from="{% bibliography_count --query @*[pubtype=journal] %}" data-value="{% bibliography_count --query @*[pubtype=journal] %}">{% bibliography_count --query @*[pubtype=journal] %}</span></span></button>
+      <button type="button" class="k-seg__item" data-highlight-item data-kit="press" data-type="conference" aria-pressed="false">Conferences <span class="pubbar__n t-data"><span data-kit="sliding-number" data-trigger="manual" data-from="{% bibliography_count --query @*[pubtype=conference] %}" data-value="{% bibliography_count --query @*[pubtype=conference] %}">{% bibliography_count --query @*[pubtype=conference] %}</span></span></button>
+    </div>
+
+    <p class="pubbar__count" data-pubcount>
+      <span class="pubbar__count-n"><span data-kit="sliding-number" data-trigger="manual" data-from="{{ total }}" data-value="{{ total }}">{{ total }}</span></span>
+      <span data-kit="swap-text" data-texts='["papers","paper"]'>papers</span>
+    </p>
+
+    <div class="pubbar__areas" data-kit="highlight tooltip-group" data-mode="both" data-items=".chip" role="group" aria-label="Research area" data-pubareas>
+      <button type="button" class="chip" data-kit="press" data-area="" aria-pressed="true">All areas</button>
+      {%- for a in site.data.research -%}
+        {%- capture n -%}{% bibliography_count --query @*[theme={{ a.key }}] %}{%- endcapture -%}
+        <button type="button" class="chip" data-kit="press" data-area="{{ a.key }}" aria-pressed="false" data-tip="{{ a.title }}">
+          {{- a.short | default: a.title }} <span class="pubbar__n t-data"><span data-kit="sliding-number" data-trigger="manual" data-from="{{ n | strip }}" data-value="{{ n | strip }}">{{ n | strip }}</span></span>
+        </button>
+      {%- endfor -%}
+    </div>
+  </div>
+</div>
+
+<div class="publist publist--all wrap" data-publist>
+  <div class="pubrail js-only" aria-hidden="true" data-pubrail>
+    <p class="pubrail__year"><span data-kit="sliding-number" data-trigger="manual" data-from="{{ year_now }}" data-value="{{ year_now }}">{{ year_now }}</span></p>
+    <p class="pubrail__count t-label"><span data-kit="sliding-number" data-trigger="manual" data-from="0" data-value="0">0</span> <span data-kit="swap-text" data-texts='["papers","paper"]'>papers</span></p>
+  </div>
+
+  <div class="publist__body" data-kit="highlight reveal-group tooltip-group" data-mode="hover" data-items=".pub" data-reveal="rise" data-publist-body>
+    {%- for y in (first_year..year_now) reversed -%}
+      {%- assign i = y | minus: 1990 -%}
+      {%- assign n = year_counts[i] | plus: 0 -%}
+      {%- if n > 0 %}
+    <section class="pubyear" id="y{{ y }}" data-pubyear="{{ y }}" aria-labelledby="y{{ y }}-h">
+      <h2 class="pubyear__head" id="y{{ y }}-h" tabindex="-1"><span class="pubyear__y">{{ y }}</span> <span class="pubyear__n t-label">{{ n }} paper{% if n != 1 %}s{% endif %}</span></h2>
+      {% bibliography --group_by none --query @*[year={{ y }}] %}
+    </section>
+      {%- endif -%}
+    {%- endfor %}
+    <div class="pubempty" data-pubempty hidden>
+      <p class="pubempty__text" data-pubempty-text>No papers match these filters.</p>
+      <button type="button" class="btn btn--ghost btn--small" data-kit="press" data-pubreset>Clear filters</button>
+    </div>
+  </div>
+</div>
+</div>

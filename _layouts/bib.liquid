@@ -1,59 +1,85 @@
 ---
 ---
 {%- comment -%}
-  Local override of the al_folio_core publication entry. One entry of _bibliography/papers.bib.
-  Extra BibTeX fields used here: abbr, theme, pubtype, code, pdf, html, slides, poster, google_scholar_id, abstract, bibtex_show.
+  One publication: local override of al_folio_core's entry template, used by every {% bibliography %} on the site
+  (the publications page and the home page's "Selected publications"). jekyll-scholar wraps it in <li>.
+  Looks: assets/css/site/pub.css. Behaviour (hover surface, filter, search marks): assets/js/site/pub.js.
+  Extra BibTeX fields read here: abbr, theme (key from _data/research.yml), pubtype (journal | conference),
+  selected, code, pdf, html, google_scholar_id (count from _data/citations.yml), abstract, bibtex_show.
 {%- endcomment -%}
 {%- assign venue = entry.journal | default: entry.booktitle -%}
 {%- assign pubtype = entry.pubtype -%}
 {%- unless pubtype -%}
   {%- if entry.type == 'article' -%}{%- assign pubtype = 'journal' -%}{%- else -%}{%- assign pubtype = 'conference' -%}{%- endif -%}
 {%- endunless -%}
-<div class="pub" id="{{ entry.key }}" data-type="{{ pubtype }}" data-area="{{ entry.theme }}" data-year="{{ entry.year }}">
-  <div class="pub__side">
-    {%- if entry.abbr -%}
-      {%- assign v = site.data.venues[entry.abbr] -%}
-      {%- if v.url -%}<a class="pub__abbr" href="{{ v.url }}">{{ entry.abbr }}</a>{%- else -%}<span class="pub__abbr">{{ entry.abbr }}</span>{%- endif -%}
+{%- assign gs = nil -%}
+{%- if entry.google_scholar_id and site.enable_publication_badges.google_scholar -%}
+  {%- assign gs_key = site.data.socials.scholar_userid | append: ':' | append: entry.google_scholar_id -%}
+  {%- assign gs = site.data.citations.papers[gs_key] -%}
+{%- endif -%}
+{%- assign k = entry.key -%}
+<article class="pub{% if entry.selected == 'true' %} pub--selected{% endif %}" id="{{ k }}" data-pub data-reveal-item data-year="{{ entry.year }}" data-area="{{ entry.theme }}" data-type="{{ pubtype }}">
+  <h3 class="pub__title">
+    {%- if entry.selected == 'true' -%}<span class="pub__mark" data-tip="Selected paper"><span class="sr-only">Selected paper: </span></span>{%- endif -%}
+    <span class="pub__t">{{ entry.title }}</span>
+  </h3>
+  <p class="pub__authors">
+    {%- for author in entry.author_array -%}
+      {%- assign is_me = false -%}
+      {%- if site.scholar.last_name contains author.last and site.scholar.first_name contains author.first -%}{%- assign is_me = true -%}{%- endif -%}
+      {%- if is_me -%}<span class="pub__me">{{ author.first }} {{ author.last }}</span>{%- else -%}{{ author.first }} {{ author.last }}{%- endif -%}
+      {%- unless forloop.last -%}, {% endunless -%}
+    {%- endfor -%}
+  </p>
+  <p class="pub__venue">
+    {%- if entry.abbr -%}<span class="pub__abbr t-data">{{ entry.abbr }}</span> {% endif -%}
+    <span class="pub__in">{{ venue }}</span>
+    {%- if entry.volume %}, vol. {{ entry.volume }}{% endif -%}
+    {%- if entry.number %}, no. {{ entry.number }}{% endif -%}
+    {%- if entry.pages %}, pp. {{ entry.pages | replace: '--', '–' }}{% endif -%}
+    <span class="pub__year">, {{ entry.year }}</span>
+  </p>
+  <div class="pub__acts">
+    {%- if entry.abstract -%}
+      <button type="button" class="pub__act" data-kit="disclosure press" data-group="{{ k }}" aria-expanded="false" aria-controls="{{ k }}-abs">
+        Abstract<span class="pub__chev" data-disclosure-icon>{% include site/icon.liquid name="chevron-down" size="14" %}</span>
+      </button>
+    {%- endif -%}
+    {%- if entry.bibtex_show -%}
+      <button type="button" class="pub__act pub__act--bib" data-kit="disclosure press" data-group="{{ k }}" aria-expanded="false" aria-controls="{{ k }}-bib">
+        BibTeX<span class="pub__chev" data-disclosure-icon>{% include site/icon.liquid name="chevron-down" size="14" %}</span>
+      </button>
+    {%- endif -%}
+    {%- if entry.doi -%}
+      <a class="pub__act" href="https://doi.org/{{ entry.doi }}" data-tip="doi.org/{{ entry.doi }}">DOI{% include site/icon.liquid name="arrow-up-right" size="14" %}</a>
+    {%- elsif entry.html -%}
+      <a class="pub__act" href="{{ entry.html }}">Link{% include site/icon.liquid name="arrow-up-right" size="14" %}</a>
+    {%- endif -%}
+    {%- if entry.code -%}
+      <a class="pub__act" href="{{ entry.code }}" data-tip="{{ entry.code | remove: 'https://' }}">Code{% include site/icon.liquid name="arrow-up-right" size="14" %}</a>
+    {%- endif -%}
+    {%- if entry.pdf -%}
+      <a class="pub__act" href="{% if entry.pdf contains '://' %}{{ entry.pdf }}{% else %}{{ entry.pdf | prepend: '/assets/pdf/' | relative_url }}{% endif %}">PDF{% include site/icon.liquid name="arrow-up-right" size="14" %}</a>
+    {%- endif -%}
+    {%- if gs and gs.citations > 0 -%}
+      <a class="pub__cites" href="https://scholar.google.com/citations?view_op=view_citation&amp;hl=en&amp;user={{ site.data.socials.scholar_userid }}&amp;citation_for_view={{ gs_key }}" data-tip="Citations on Google Scholar">
+        <span class="pub__n">{{ gs.citations }}</span> citation{% if gs.citations != 1 %}s{% endif %}
+      </a>
     {%- endif -%}
   </div>
-  <div class="pub__main">
-    <div class="pub__title">{{ entry.title }}</div>
-    <div class="pub__authors">
-      {%- for author in entry.author_array -%}
-        {%- assign is_me = false -%}
-        {%- if site.scholar.last_name contains author.last and site.scholar.first_name contains author.first -%}{%- assign is_me = true -%}{%- endif -%}
-        {%- if is_me -%}<span class="me">{{ author.first }} {{ author.last }}</span>{%- else -%}{{ author.first }} {{ author.last }}{%- endif -%}
-        {%- unless forloop.last -%}, {% endunless -%}
-      {%- endfor -%}
+  {%- if entry.abstract %}
+    <div class="pub__panel" id="{{ k }}-abs" data-disclosure-panel>
+      <div class="pub__abs"><p>{{ entry.abstract }}</p></div>
     </div>
-    <div class="pub__meta">
-      <span class="pub__venue">{{ venue }}</span>
-      {%- if entry.volume %}, vol. {{ entry.volume }}{% endif -%}
-      {%- if entry.number %}, no. {{ entry.number }}{% endif -%}
-      {%- if entry.pages %}, pp. {{ entry.pages | replace: '--', '–' }}{% endif -%}
-      , {{ entry.year }}
+  {%- endif %}
+  {%- if entry.bibtex_show %}
+    <div class="pub__panel pub__panel--bib" id="{{ k }}-bib" data-disclosure-panel>
+      <div class="pub__bib">
+        <div class="pub__code" id="{{ k }}-bibsrc">{% highlight bibtex %}{{- entry.bibtex | hideCustomBibtex -}}{% endhighlight %}</div>
+        <button type="button" class="icon-btn pub__copy" data-kit="copy press" data-copy-from="#{{ k }}-bibsrc" data-toast="BibTeX copied" data-tip="Copy BibTeX" aria-label="Copy BibTeX">
+          {%- include site/icon.liquid name="copy" size="16" -%}{%- include site/icon.liquid name="check" size="16" -%}
+        </button>
+      </div>
     </div>
-    <div class="pub__links">
-      {%- if entry.abstract %}<button type="button" class="pub__toggle" data-panel="abstract" aria-expanded="false" aria-controls="{{ entry.key }}-abstract">Abstract</button>{% endif -%}
-      {%- if entry.bibtex_show %}<button type="button" class="pub__toggle" data-panel="bibtex" aria-expanded="false" aria-controls="{{ entry.key }}-bibtex">BibTeX</button>{% endif -%}
-      {%- if entry.doi %}<a href="https://doi.org/{{ entry.doi }}">DOI</a>{% elsif entry.html %}<a href="{{ entry.html }}">Link</a>{% endif -%}
-      {%- if entry.pdf %}<a href="{% if entry.pdf contains '://' %}{{ entry.pdf }}{% else %}{{ entry.pdf | prepend: '/assets/pdf/' | relative_url }}{% endif %}">PDF</a>{% endif -%}
-      {%- if entry.code %}<a href="{{ entry.code }}">Code</a>{% endif -%}
-      {%- if entry.slides %}<a href="{% if entry.slides contains '://' %}{{ entry.slides }}{% else %}{{ entry.slides | prepend: '/assets/pdf/' | relative_url }}{% endif %}">Slides</a>{% endif -%}
-      {%- if entry.poster %}<a href="{% if entry.poster contains '://' %}{{ entry.poster }}{% else %}{{ entry.poster | prepend: '/assets/pdf/' | relative_url }}{% endif %}">Poster</a>{% endif -%}
-      {%- if entry.google_scholar_id and site.enable_publication_badges.google_scholar -%}
-        {%- assign gs_key = site.data.socials.scholar_userid | append: ':' | append: entry.google_scholar_id -%}
-        {%- assign gs = site.data.citations.papers[gs_key] -%}
-        {%- if gs and gs.citations > 0 -%}
-          <a class="pub__cites" href="https://scholar.google.com/citations?view_op=view_citation&hl=en&user={{ site.data.socials.scholar_userid }}&citation_for_view={{ gs_key }}">{{ gs.citations }} citation{% if gs.citations != 1 %}s{% endif %}</a>
-        {%- endif -%}
-      {%- endif -%}
-    </div>
-    {%- if entry.abstract %}
-      <div class="pub__panel" id="{{ entry.key }}-abstract" data-panel-body="abstract"><div><p class="pub__abstract">{{ entry.abstract }}</p></div></div>
-    {%- endif %}
-    {%- if entry.bibtex_show %}
-      <div class="pub__panel" id="{{ entry.key }}-bibtex" data-panel-body="bibtex"><div><div class="pub__bibtex">{% highlight bibtex %}{{- entry.bibtex | hideCustomBibtex -}}{% endhighlight %}</div></div></div>
-    {%- endif %}
-  </div>
-</div>
+  {%- endif %}
+</article>
