@@ -28,6 +28,27 @@
     S.init(list); // safe if the kits attach again at boot
   });
 
+  /*
+   * The controls inside an entry (Abstract, BibTeX, copy) carry their kits as data-pubkit and get them the first time the
+   * pointer or the focus comes near the entry: 90 entries would otherwise attach some 250 components at load.
+   * A click that arrives first (a screen reader's) wakes the entry in the capture phase, before it reaches its control.
+   */
+  function wake(e) {
+    var pub = e.target && e.target.closest ? e.target.closest(".pub[data-pub]") : null;
+    if (!pub || pub.hasAttribute("data-awake")) return;
+    pub.setAttribute("data-awake", "");
+    each(pub.querySelectorAll("[data-pubkit]"), function (el) {
+      el.setAttribute("data-kit", el.getAttribute("data-pubkit"));
+      el.removeAttribute("data-pubkit");
+    });
+    S.init(pub);
+  }
+  each(doc.querySelectorAll("[data-publist]"), function (list) {
+    list.addEventListener("pointerover", wake, { passive: true });
+    list.addEventListener("focusin", wake);
+    list.addEventListener("click", wake, true);
+  });
+
   /* ------------------------------------------------------------ 2. the page */
   var page = doc.querySelector("[data-pubs]");
   if (!page) return;
@@ -124,6 +145,10 @@
       // one stop in the tab order; the arrow keys go from year to year
       barLinks.forEach(function (b, i) {
         b.tabIndex = i === barLinks.length - 1 ? 0 : -1;
+      });
+      // nothing glides off screen: away from the view the bars take their new heights at once
+      S.util.visible(chart, function (seen) {
+        chart.classList.toggle("is-away", !seen);
       });
       // the bars grow once the page head has arrived (and are simply there under ?static)
       if (S.env.static) chart.classList.add("is-grown");

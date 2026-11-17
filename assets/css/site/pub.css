@@ -417,6 +417,10 @@ html.js .pubchart:not(.is-grown) .pubchart__fill {
     background-color var(--t-color);
 }
 
+.pubchart.is-live.is-away .pubchart__fill {
+  transition: none;
+}
+
 html.is-reduced .pubchart .pubchart__fill {
   translate: 0 calc((1 - var(--f)) * 100%);
   transition:

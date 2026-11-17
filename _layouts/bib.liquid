@@ -41,12 +41,12 @@
   </p>
   <div class="pub__acts">
     {%- if entry.abstract -%}
-      <button type="button" class="pub__act" data-kit="disclosure press" data-group="{{ k }}" aria-expanded="false" aria-controls="{{ k }}-abs">
+      <button type="button" class="pub__act" data-pubkit="disclosure press" data-group="{{ k }}" aria-expanded="false" aria-controls="{{ k }}-abs">
         Abstract<span class="pub__chev" data-disclosure-icon>{% include site/icon.liquid name="chevron-down" size="14" %}</span>
       </button>
     {%- endif -%}
     {%- if entry.bibtex_show -%}
-      <button type="button" class="pub__act pub__act--bib" data-kit="disclosure press" data-group="{{ k }}" aria-expanded="false" aria-controls="{{ k }}-bib">
+      <button type="button" class="pub__act pub__act--bib" data-pubkit="disclosure press" data-group="{{ k }}" aria-expanded="false" aria-controls="{{ k }}-bib">
         BibTeX<span class="pub__chev" data-disclosure-icon>{% include site/icon.liquid name="chevron-down" size="14" %}</span>
       </button>
     {%- endif -%}
@@ -76,7 +76,7 @@
     <div class="pub__panel pub__panel--bib" id="{{ k }}-bib" data-disclosure-panel>
       <div class="pub__bib">
         <div class="pub__code" id="{{ k }}-bibsrc">{% highlight bibtex %}{{- entry.bibtex | hideCustomBibtex -}}{% endhighlight %}</div>
-        <button type="button" class="icon-btn pub__copy" data-kit="copy press" data-copy-from="#{{ k }}-bibsrc" data-toast="BibTeX copied" data-tip="Copy BibTeX" aria-label="Copy BibTeX">
+        <button type="button" class="icon-btn pub__copy" data-pubkit="copy press" data-copy-from="#{{ k }}-bibsrc" data-toast="BibTeX copied" data-tip="Copy BibTeX" aria-label="Copy BibTeX">
           {%- include site/icon.liquid name="copy" size="16" -%}{%- include site/icon.liquid name="check" size="16" -%}
         </button>
       </div>
