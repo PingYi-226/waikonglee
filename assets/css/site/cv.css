@@ -182,7 +182,7 @@ html.js .cvaxis:not(.is-in) .cvaxis__bar {
 
 .cvaxis.is-in .cvaxis__bar {
   transition:
-    clip-path 900ms var(--ease-out) calc(250ms + var(--l) * 13ms),
+    clip-path var(--t-arrive) calc(250ms + var(--l) * 13ms),
     background-color var(--t-color);
 }
 
