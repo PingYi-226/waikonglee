@@ -464,6 +464,15 @@ html.js .rplate__tag:not(.is-current) {
   }
 }
 
+/* a narrower plate: the index in one column, so no name wraps */
+@media (max-width: 1199.98px) {
+  .rindex__list {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-flow: row;
+  }
+}
+
 /* short screens: a flatter plate so the index still fits beside the text */
 @media (min-width: 900px) and (max-height: 760px) {
   .rplate__frame {
