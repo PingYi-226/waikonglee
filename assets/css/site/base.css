@@ -26,6 +26,12 @@ body {
   overflow-x: clip;
 }
 
+/* The template's main.css gives p, div, span, li, em, strong and the headings an explicit colour, so colour stops
+   inheriting. Undone here at the same, lowest specificity: any class still wins. */
+:where(.v2) :is(p, h1, h2, h3, h4, h5, h6, em, div, li, span, strong) {
+  color: inherit;
+}
+
 body > .container[role="main"],
 body > main.container {
   max-width: none;
@@ -51,9 +57,16 @@ html[data-theme="dark"] body::before {
   mix-blend-mode: soft-light;
 }
 
+/* the parts of the page the browser draws: selection, caret, scrollbars, form accents */
 ::selection {
-  background: var(--accent-soft);
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
   color: var(--ink);
+}
+
+html {
+  caret-color: var(--accent);
+  accent-color: var(--accent);
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 *,
@@ -129,13 +142,24 @@ p:last-child {
   font-size: var(--fs-xs);
 }
 
+/* meta text: section names, captions, short supporting lines. Sentence case, no tracking tricks. */
 .t-label {
-  font-family: var(--font-mono);
-  font-size: var(--fs-label);
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
   font-weight: 400;
-  letter-spacing: var(--track-label);
-  text-transform: uppercase;
-  line-height: 1.6;
+  letter-spacing: 0;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* data: dates, counts, coordinates, identifiers, venue abbreviations, code. The one place for the mono face. */
+.t-data {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
   color: var(--muted);
 }
 
@@ -413,11 +437,8 @@ a.btn:visited {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.18rem 0.55rem;
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  padding: 0.14rem 0.6rem;
+  font-size: 0.76rem;
   line-height: 1.5;
   color: var(--muted);
   border: 1px solid var(--line);
@@ -458,7 +479,7 @@ a.btn:visited {
 }
 
 .field::placeholder {
-  color: var(--faint-text);
+  color: var(--muted);
 }
 
 .field:focus {

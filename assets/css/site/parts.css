@@ -1,0 +1,195 @@
+/* ==========================================================================
+   Parts shared by several pages: the page header, section headers, arrow links,
+   figure-and-label pairs. Looks only; motion comes from the kits named in the markup.
+   ========================================================================== */
+
+/* ---------- page header (every page except the home page) ----------
+   <header class="pagehead wrap">
+     <h1 class="pagehead__title t-d1">Publications</h1>
+     <p class="pagehead__lede">One sentence.</p>
+     <div class="pagehead__meta">...optional figures or controls...</div>
+   </header>                                                                 */
+.pagehead {
+  padding-top: calc(var(--nav-h) + clamp(3.5rem, 10vw, 8rem));
+  padding-bottom: clamp(2.5rem, 6vw, 4.5rem);
+}
+
+.pagehead__title {
+  margin: 0;
+  margin-left: -0.04em;
+}
+
+.pagehead__lede {
+  max-width: 34ch;
+  margin: 1.6rem 0 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-d3);
+  line-height: 1.24;
+  color: var(--ink-2);
+}
+
+.pagehead__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1.25rem clamp(2rem, 5vw, 4.5rem);
+  margin-top: clamp(2rem, 5vw, 3.5rem);
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- section header: a ruled line, the section's name, an optional link ----------
+   <header class="sechead" data-kit="reveal" data-reveal="rule">
+     <h2 class="sechead__title">About</h2>
+     <a class="link" href="...">All news</a>
+   </header>
+   The rule is drawn from the left when the header scrolls into view (the reveal kit adds .is-in). */
+.sechead {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: clamp(2rem, 5vw, 3.75rem);
+  padding-top: 1rem;
+  font-size: var(--fs-small);
+}
+
+.sechead::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: var(--line-strong);
+  transform-origin: 0 50%;
+  transition: transform 1100ms var(--ease-out);
+}
+
+html.js .sechead[data-kit~="reveal"]:not(.is-in)::before {
+  transform: scaleX(0);
+}
+
+/* the header itself does not fade or move: only its rule is drawn */
+html.js .sechead[data-kit~="reveal"] {
+  opacity: 1 !important;
+  transform: none !important;
+  filter: none !important;
+}
+
+.sechead__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.3rem;
+  line-height: 1.2;
+  letter-spacing: 0;
+  color: var(--ink-2);
+}
+
+/* ---------- a figure caption, as in a paper: "Fig. 1" then the caption ---------- */
+.figcap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem 0.7rem;
+  margin: 0;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.figcap__no {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.02rem;
+  line-height: 1.2;
+  color: var(--ink-2);
+}
+
+/* ---------- a link that ends in an arrow (use sparingly: a plain .link is the default) ---------- */
+.link-arrow,
+.link-arrow:visited {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.3rem 0;
+  font-size: var(--fs-small);
+  color: var(--ink);
+  background-image: linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--line-strong), var(--line-strong));
+  background-repeat: no-repeat;
+  background-position:
+    0 100%,
+    100% 100%;
+  background-size:
+    0 1px,
+    100% 1px;
+  transition:
+    background-size 420ms var(--ease-out),
+    color var(--t-color);
+}
+
+.link-arrow .icon {
+  flex: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .link-arrow:hover {
+    color: var(--accent);
+    background-size:
+      100% 1px,
+      0 1px;
+  }
+}
+
+/* ---------- a figure with its label ---------- */
+.stat {
+  display: flex;
+  flex-direction: column-reverse; /* the label is first in the markup (dt before dd), the figure is first on screen */
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.stat__value {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.2rem, 4vw, 3.3rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ink);
+}
+
+.stat__label {
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* ---------- a row list: hairlines between rows, one gliding hover surface (kit: highlight) ---------- */
+.rows {
+  --k-highlight-bg: var(--hover);
+  --k-highlight-radius: var(--r-2);
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rows > li {
+  position: relative;
+  border-top: 1px solid var(--line);
+}
+
+.rows > li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+/* ---------- small helpers ---------- */
+.dot-sep::before {
+  content: "\00b7";
+  margin: 0 0.5em;
+  color: var(--faint);
+}
+
+.nowrap {
+  white-space: nowrap;
+}

@@ -1,1 +1,66 @@
-<header class="siteheader"></header>
+{%- comment -%}
+  Site header: brand, primary navigation (every page with `nav: true`, ordered by `nav_order`), search, theme switch,
+  and the full-screen menu for small screens. The ids search-toggle and light-toggle are the ones the template's own scripts look for.
+{%- endcomment -%}
+{%- assign nav_pages = site.pages | where: 'nav', true | sort: 'nav_order' -%}
+<header class="nav" data-nav>
+  <div class="nav__bar">
+    <a class="nav__brand" href="{{ '/' | relative_url }}" aria-label="{{ site.first_name }} {{ site.last_name }}: home">
+      <span class="nav__brand-name">{{ site.first_name }} {{ site.last_name }}</span>
+    </a>
+
+    <nav class="nav__links" aria-label="Primary">
+      <ul class="nav__list" data-kit="highlight" data-mode="both" data-items=".nav__link">
+        {%- for p in nav_pages -%}
+          {%- unless p.dropdown -%}
+            <li>
+              <a class="nav__link" href="{{ p.url | relative_url }}"{% if page.url == p.url %} aria-current="page"{% endif %}>{{ p.title }}</a>
+            </li>
+          {%- endunless -%}
+        {%- endfor -%}
+      </ul>
+    </nav>
+
+    <div class="nav__tools" data-kit="tooltip-group">
+      {%- if site.search_enabled %}
+        <button id="search-toggle" type="button" class="icon-btn" aria-label="Search the site" data-tip="Search" data-kit="magnetic press">
+          {% include site/icon.liquid name="search" %}
+        </button>
+      {%- endif %}
+      {%- if site.enable_darkmode %}
+        <button id="light-toggle" type="button" class="icon-btn nav__theme" aria-label="Switch between light and dark" data-tip="Theme" data-kit="magnetic press">
+          {% include site/icon.liquid name="sun" %}
+          {% include site/icon.liquid name="moon" %}
+        </button>
+      {%- endif %}
+      <button type="button" class="icon-btn nav__menu" aria-label="Menu" aria-expanded="false" aria-controls="navsheet" data-nav-menu>
+        <span class="nav__burger" aria-hidden="true"><i></i><i></i></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="navsheet" id="navsheet" role="dialog" aria-label="Menu" hidden>
+  <nav class="navsheet__nav" aria-label="Menu">
+    <ol class="navsheet__list">
+      <li>
+        <a class="navsheet__link" href="{{ '/' | relative_url }}"{% if page.url == '/' %} aria-current="page"{% endif %}>
+          <span class="navsheet__label">Home</span>
+        </a>
+      </li>
+      {%- for p in nav_pages -%}
+        {%- unless p.dropdown -%}
+          <li>
+            <a class="navsheet__link" href="{{ p.url | relative_url }}"{% if page.url == p.url %} aria-current="page"{% endif %}>
+              <span class="navsheet__label">{{ p.title }}</span>
+            </a>
+          </li>
+        {%- endunless -%}
+      {%- endfor -%}
+    </ol>
+  </nav>
+  <div class="navsheet__foot">
+    {%- if site.data.socials.email %}<a class="link" href="mailto:{{ site.data.socials.email }}">{{ site.data.socials.email }}</a>{% endif -%}
+    {% include site/socials.liquid %}
+  </div>
+</div>

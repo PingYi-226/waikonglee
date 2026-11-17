@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 {% if page.v2 %}
-  {% assign site_css = 'tokens,base,kit-text,kit-pointer,kit-scroll,icons,shell' | split: ',' %}
+  {% assign site_css = 'tokens,base,kit-text,kit-pointer,kit-scroll,icons,shell,parts' | split: ',' %}
   {% for name in site_css %}
     <link rel="stylesheet" href="{{ '/assets/css/site/' | append: name | append: '.css' | relative_url | bust_file_cache }}">
   {% endfor %}
@@ -21,6 +21,7 @@
 {% else %}
   <link rel="stylesheet" href="{{ '/assets/css/site/legacy.css' | relative_url | bust_file_cache }}">
 {% endif %}
+{% unless page.v2 %}
 <style>
   /* soft cross-fade between pages in browsers that support cross-document view transitions */
   @view-transition { navigation: auto; }
@@ -32,3 +33,4 @@
     ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
   }
 </style>
+{% endunless %}

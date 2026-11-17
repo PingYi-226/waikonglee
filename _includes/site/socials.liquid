@@ -1,0 +1,31 @@
+{%- comment -%}
+  Profile links from _data/socials.yml as icon buttons that share one gliding tooltip.
+  Parameter: class (optional). Keys understood: email, scholar_userid, orcid_id, github_username, scopus_id, linkedin_username, x_username, dblp_url, researchgate_url.
+{%- endcomment -%}
+{%- assign so = site.data.socials -%}
+<ul class="socials{% if include.class %} {{ include.class }}{% endif %}" data-kit="tooltip-group">
+  {%- if so.email %}
+    <li><a class="icon-btn" href="mailto:{{ so.email }}" aria-label="Email" data-tip="Email" data-kit="magnetic press">{% include site/icon.liquid name="mail" %}</a></li>
+  {%- endif %}
+  {%- if so.scholar_userid %}
+    <li><a class="icon-btn" href="https://scholar.google.com/citations?user={{ so.scholar_userid }}" aria-label="Google Scholar" data-tip="Google Scholar" data-kit="magnetic press" rel="noopener">{% include site/icon.liquid name="scholar" %}</a></li>
+  {%- endif %}
+  {%- if so.orcid_id %}
+    <li><a class="icon-btn" href="https://orcid.org/{{ so.orcid_id }}" aria-label="ORCID" data-tip="ORCID" data-kit="magnetic press" rel="noopener">{% include site/icon.liquid name="orcid" %}</a></li>
+  {%- endif %}
+  {%- if so.github_username %}
+    <li><a class="icon-btn" href="https://github.com/{{ so.github_username }}" aria-label="GitHub" data-tip="GitHub" data-kit="magnetic press" rel="noopener">{% include site/icon.liquid name="github" %}</a></li>
+  {%- endif %}
+  {%- if so.scopus_id %}
+    <li><a class="icon-btn" href="https://www.scopus.com/authid/detail.uri?authorId={{ so.scopus_id }}" aria-label="Scopus" data-tip="Scopus" data-kit="magnetic press" rel="noopener">{% include site/icon.liquid name="scopus" %}</a></li>
+  {%- endif %}
+  {%- if so.linkedin_username %}
+    <li><a class="icon-btn" href="https://www.linkedin.com/in/{{ so.linkedin_username }}" aria-label="LinkedIn" data-tip="LinkedIn" data-kit="magnetic press" rel="noopener">{% include site/icon.liquid name="link" %}</a></li>
+  {%- endif %}
+  {%- if so.dblp_url %}
+    <li><a class="icon-btn" href="{{ so.dblp_url }}" aria-label="DBLP" data-tip="DBLP" data-kit="magnetic press" rel="noopener">{% include site/icon.liquid name="link" %}</a></li>
+  {%- endif %}
+  {%- if so.researchgate_url %}
+    <li><a class="icon-btn" href="{{ so.researchgate_url }}" aria-label="ResearchGate" data-tip="ResearchGate" data-kit="magnetic press" rel="noopener">{% include site/icon.liquid name="link" %}</a></li>
+  {%- endif %}
+</ul>

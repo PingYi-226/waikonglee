@@ -6,6 +6,10 @@ faculty: Faculty of Information and Communication Technology
 statement: >-
   I build fast and secure implementations of post-quantum and privacy-preserving cryptography
   on GPUs, FPGAs and embedded processors.
+# the same sentence in two parts: on the home page the last words take turns (GPUs / FPGAs / embedded processors)
+statement_lead: I build fast and secure implementations of post-quantum and privacy-preserving cryptography on
+statement_rotate: [GPUs, FPGAs, embedded processors]
+statement_tail: GPUs, FPGAs and embedded processors
 fields: [Cryptographic engineering, GPU computing, Deep-learning hardware]
 
 # Numbers read from Google Scholar. Update the values and the date together.
@@ -26,3 +30,16 @@ emails: [wklee@utar.edu.my, waikong.lee@gmail.com]
 joining: >-
   Prospective MSc and PhD students interested in cryptographic engineering, GPU computing or
   hardware design are welcome to get in touch by email.
+
+# journals and conferences shown as a moving strip on the home page (all taken from the publication list)
+venues:
+  - IEEE Transactions on Computers
+  - IEEE Transactions on Parallel and Distributed Systems
+  - IEEE Transactions on Circuits and Systems I
+  - IEEE Transactions on Computer-Aided Design
+  - IEEE Transactions on VLSI Systems
+  - IEEE Internet of Things Journal
+  - IEEE Transactions on Emerging Topics in Computing
+  - IEEE Transactions on Services Computing
+  - ACM Transactions on Embedded Computing Systems
+  - IEEE Embedded Systems Letters

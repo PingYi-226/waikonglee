@@ -1,122 +1,386 @@
 ---
 layout: default
 ---
-{% assign profile = site.data.profile %}
+{%- comment -%}
+  The home page. Sections: hero (name, statement, key figures, the lattice figure), about (lede, portrait, career strip),
+  research (the areas circling a lattice and settling into a grid as the page scrolls), selected results, selected publications,
+  venues strip, news, contact. Text comes from _pages/about.md and _data/*.yml; nothing is written here but labels.
+{%- endcomment -%}
+{%- assign profile = site.data.profile -%}
+{%- assign areas = site.data.research -%}
+{%- assign year_now = site.time | date: '%Y' | plus: 0 -%}
+{%- assign month_now = site.time | date: '%m' | plus: 0 -%}
+{%- assign paras = content | split: '</p>' -%}
+{%- assign count_words = 'No,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten,Eleven,Twelve' | split: ',' -%}
 <div class="home">
-  <section class="hero" aria-labelledby="hero-title">
+  {%- comment -%} ------------------------------------------------------------ hero {%- endcomment -%}
+  <section class="hero" data-hero aria-labelledby="hero-name">
     <canvas class="hero__lattice" data-lattice aria-hidden="true"></canvas>
-    <div class="wrap hero__inner">
-      <p class="kicker hero__kicker">{{ profile.role }} <span aria-hidden="true">/</span> {{ profile.affiliation }}</p>
-      <h1 id="hero-title" class="hero__name">
-        <span class="line"><span>{{ site.first_name }}</span></span>
-        <span class="line"><span>{{ site.last_name }}</span></span>
+
+    <div class="hero__main">
+      <h1 class="hero__name t-hero" id="hero-name" data-hero-name aria-label="{{ site.first_name }} {{ site.last_name }}">
+        <span class="hero__line" aria-hidden="true">{{ site.first_name }}</span>
+        <span class="hero__line" aria-hidden="true">{{ site.last_name }}</span>
       </h1>
-      <p class="hero__statement">{{ profile.statement }}</p>
-      <div class="hero__actions">
-        <a class="btn-line" href="{{ '/publications/' | relative_url }}">Publications {% include site/arrow.liquid %}</a>
-        <a class="btn-line" href="{{ '/research/' | relative_url }}">Research {% include site/arrow.liquid %}</a>
+
+      <p class="hero__role" data-hero-item>{{ profile.role }}, {{ profile.affiliation }}</p>
+
+      {%- comment -%} The last words of the statement take turns. Without the script the whole sentence is there. {%- endcomment -%}
+      {%- capture rotate_words -%}
+        {%- for w in profile.statement_rotate -%}{{ w }}.{% unless forloop.last %}|{% endunless %}{%- endfor -%}
+      {%- endcapture -%}
+      {%- assign rotate_words = rotate_words | strip | split: '|' -%}
+      <p class="hero__statement" data-hero-item>
+        {{ profile.statement_lead }}
+        <span class="hero__rotate" data-kit="rotating-text" data-words='{{ rotate_words | jsonify }}' data-duration="2600" data-delay="1800">
+          {{- profile.statement_tail -}}.
+        </span>
+      </p>
+
+      <div class="hero__actions" data-hero-item>
+        <a class="btn" href="{{ '/publications/' | relative_url }}" data-kit="press ripple">
+          <span data-kit="sliding-text">Publications</span>
+          {% include site/icon.liquid name="arrow-right" size=18 %}
+        </a>
+        <a class="btn btn--ghost" href="{{ '/research/' | relative_url }}" data-kit="press">
+          <span data-kit="sliding-text">Research</span>
+          {% include site/icon.liquid name="arrow-right" size=18 %}
+        </a>
       </div>
+    </div>
+
+    <div class="hero__base" data-hero-item>
       <dl class="hero__figures">
-        <div>
-          <dt>peer-reviewed papers</dt>
-          <dd data-count="{% bibliography_count %}">{% bibliography_count %}</dd>
+        <div class="stat">
+          <dt class="stat__label">peer-reviewed papers</dt>
+          <dd class="stat__value"><span data-kit="sliding-number" data-trigger="manual" data-value="{% bibliography_count %}">{% bibliography_count %}</span></dd>
         </div>
-        <div>
-          <dt>citations</dt>
-          <dd data-count="{{ profile.metrics.citations }}">{{ profile.metrics.citations }}</dd>
+        <div class="stat">
+          <dt class="stat__label">citations</dt>
+          <dd class="stat__value"><span data-kit="sliding-number" data-trigger="manual" data-value="{{ profile.metrics.citations | remove: ',' }}">{{ profile.metrics.citations }}</span></dd>
         </div>
-        <div>
-          <dt>h-index</dt>
-          <dd data-count="{{ profile.metrics.h_index }}">{{ profile.metrics.h_index }}</dd>
+        <div class="stat">
+          <dt class="stat__label">h-index</dt>
+          <dd class="stat__value"><span data-kit="sliding-number" data-trigger="manual" data-value="{{ profile.metrics.h_index }}">{{ profile.metrics.h_index }}</span></dd>
         </div>
       </dl>
       <p class="hero__note">
         Citation figures from <a class="link" href="{{ profile.metrics.source_url }}">{{ profile.metrics.source }}</a>, {{ profile.metrics.as_of }}.
       </p>
+      <p class="hero__fig figcap" aria-hidden="true">
+        <span class="figcap__no">Fig. 1</span>
+        <span>The lattice point closest to the pointer</span>
+        <output class="hero__fig-out t-data" data-lattice-out>(0, 0)</output>
+      </p>
+      <a class="hero__scroll t-label" href="#about" aria-label="Scroll to the next section">
+        <span>Scroll</span>
+        <span class="hero__scroll-line" aria-hidden="true"></span>
+      </a>
     </div>
   </section>
 
-  <section id="about" class="band">
+  {%- comment -%} ----------------------------------------------------------- about {%- endcomment -%}
+  <section class="about section" id="about">
     <div class="wrap">
-      <h2 class="band__label">About</h2>
-      <div class="about">
-        <div class="about__text prose reveal">{{ content }}</div>
-        <figure class="about__photo reveal">
-          <img src="{{ '/assets/img/prof_pic.jpg' | relative_url }}" alt="Portrait of {{ site.first_name }} {{ site.last_name }}" width="339" height="418">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title">About</h2>
+      </header>
+
+      <div class="about__grid">
+        <div class="about__lede" data-kit="word-scrub">{{ paras[0] | append: '</p>' }}</div>
+
+        <figure class="about__photo" data-kit="reveal" data-reveal="clip">
+          <div class="about__frame" data-kit="tilt" data-max="5" data-shine="true">
+            <img
+              src="{{ '/assets/img/prof_pic.jpg' | relative_url }}"
+              alt="Portrait of {{ site.first_name }} {{ site.last_name }}"
+              width="339"
+              height="418"
+            >
+          </div>
         </figure>
+
+        <div class="about__body prose" data-kit="reveal-group">
+          {%- for para in paras offset: 1 -%}
+            {%- assign text = para | strip -%}
+            {%- if text != '' -%}{{ text | append: '</p>' }}{%- endif -%}
+          {%- endfor -%}
+        </div>
+      </div>
+
+      {%- comment -%}
+        Career strip: one bar per appointment in _data/cv.yml, placed on a time axis from the first job to today.
+        Hover or focus a bar for the details.
+      {%- endcomment -%}
+      {%- assign jobs = site.data.cv.cv.sections.Experience | reverse -%}
+      {%- assign first_job = jobs | first -%}
+      {%- assign y0 = first_job.start_date | slice: 0, 4 | plus: 0 -%}
+      {%- assign t0 = y0 | times: 12 -%}
+      {%- assign t1 = year_now | times: 12 | plus: month_now -%}
+      {%- assign span = t1 | minus: t0 -%}
+      <div class="career" data-inview>
+        <p class="career__label t-label">Career, {{ y0 }} to today</p>
+        <ol class="career__track" data-kit="tooltip-group">
+          {%- for job in jobs -%}
+            {%- assign sy = job.start_date | slice: 0, 4 | plus: 0 -%}
+            {%- assign sm = job.start_date | slice: 5, 2 | plus: 0 -%}
+            {%- if job.end_date == 'present' -%}
+              {%- assign ey = year_now -%}
+              {%- assign em = month_now -%}
+              {%- assign until = 'now' -%}
+            {%- else -%}
+              {%- assign ey = job.end_date | slice: 0, 4 | plus: 0 -%}
+              {%- assign em = job.end_date | slice: 5, 2 | plus: 0 -%}
+              {%- assign until = ey -%}
+            {%- endif -%}
+            {%- assign s = sy | times: 12 | plus: sm | minus: 1 | minus: t0 -%}
+            {%- assign e = ey | times: 12 | plus: em | minus: t0 -%}
+            {%- assign left = s | times: 100.0 | divided_by: span -%}
+            {%- assign width = e | minus: s | times: 100.0 | divided_by: span -%}
+            {%- assign kind = 'industry' -%}
+            {%- if job.position contains 'Professor' -%}{%- assign kind = 'faculty' -%}{%- endif -%}
+            {%- if job.position contains 'octoral' -%}{%- assign kind = 'postdoc' -%}{%- endif -%}
+            <li class="career__seg career__seg--{{ kind }}" style="--l: {{ left | round: 3 }}%; --w: {{ width | round: 3 }}%; --i: {{ forloop.index0 }}">
+              <button
+                type="button"
+                class="career__bar"
+                data-tip="{{ job.position | split: ',' | first }} · {{ job.company }} · {{ sy }}–{{ until }}"
+                aria-label="{{ job.position }}, {{ job.company }}, {{ sy }} to {{ until }}"
+              ></button>
+            </li>
+          {%- endfor -%}
+        </ol>
+        <ol class="career__years t-data" aria-hidden="true">
+          {%- for y in (y0..year_now) -%}
+            {%- assign mod = y | modulo: 4 -%}
+            {%- if mod == 0 -%}
+              {%- assign yl = y | times: 12 | minus: t0 | times: 100.0 | divided_by: span -%}
+              <li style="--l: {{ yl | round: 3 }}%">{{ y }}</li>
+            {%- endif -%}
+          {%- endfor -%}
+        </ol>
+        <ul class="career__legend t-label" aria-hidden="true">
+          <li class="career__key career__key--industry">Industry</li>
+          <li class="career__key career__key--faculty">Faculty</li>
+          <li class="career__key career__key--postdoc">Postdoctoral</li>
+        </ul>
       </div>
     </div>
   </section>
 
-  <section class="band">
-    <div class="wrap">
-      <h2 class="band__label">Research</h2>
-      <div>
-        <ol class="areas">
-          {% for a in site.data.research %}
-            <li class="reveal">
-              <a href="{{ '/research/' | relative_url }}#{{ a.key }}">
-                <span class="areas__no">{{ forloop.index | prepend: '0' | slice: -2, 2 }}</span>
-                <span>
-                  <span class="areas__title">{{ a.title }}</span>
-                  <span class="areas__tag">{{ a.tagline }}</span>
+  {%- comment -%} -------------------------------------------------------- research
+    Without the script (or on small screens, or with reduced motion) this is a plain grid of cards.
+    home.js turns it into the scroll-driven piece: the cards circle a lattice and settle into the grid.
+  {%- endcomment -%}
+  <section class="orbit" id="research" data-orbit aria-labelledby="orbit-title">
+    <div class="orbit__stage">
+      <div class="orbit__scene" data-orbit-scene>
+        <header class="orbit__head">
+          <h2 class="orbit__title t-d1" id="orbit-title" data-orbit-title="0">Research</h2>
+          <p class="orbit__title orbit__title--alt t-d2" data-orbit-title="1" aria-hidden="true">{{ count_words[areas.size] | default: areas.size }} areas. Pick one.</p>
+        </header>
+
+        <canvas class="orbit__core" data-orbit-core aria-hidden="true"></canvas>
+
+        <ul class="orbit__cards">
+          {%- for a in areas -%}
+            <li class="orbit__card" data-orbit-card>
+              <a class="ocard" href="{{ '/research/' | relative_url }}#{{ a.key }}" data-kit="press" data-press="choice">
+                <span class="ocard__fig">{% include site/diagrams/{{ a.key }}.liquid %}</span>
+                <span class="ocard__foot">
+                  <span class="ocard__title">{{ a.short | default: a.title }}</span>
+                  <span class="ocard__meta t-data">{% bibliography_count --query @*[theme={{ a.key }}] %} papers</span>
                 </span>
-                {% include site/arrow.liquid %}
               </a>
             </li>
-          {% endfor %}
+          {%- endfor -%}
+          <li class="orbit__card" data-orbit-card>
+            <a class="ocard ocard--pubs" href="{{ '/publications/' | relative_url }}" data-kit="press" data-press="choice">
+              <span class="ocard__fig ocard__bars" aria-hidden="true">
+                {%- assign peak = 1 -%}
+                {%- capture counts -%}
+                  {%- for y in (2014..year_now) -%}{% bibliography_count --query @*[year={{ y }}] %}{% unless forloop.last %},{% endunless %}{%- endfor -%}
+                {%- endcapture -%}
+                {%- assign counts = counts | strip | split: ',' -%}
+                {%- for c in counts -%}{%- assign n = c | plus: 0 -%}{%- if n > peak -%}{%- assign peak = n -%}{%- endif -%}{%- endfor -%}
+                {%- for c in counts -%}
+                  {%- assign n = c | plus: 0 -%}
+                  <i style="--h: {{ n | times: 1.0 | divided_by: peak | round: 3 }}; --i: {{ forloop.index0 }}"></i>
+                {%- endfor -%}
+              </span>
+              <span class="ocard__foot">
+                <span class="ocard__title">All publications</span>
+                <span class="ocard__meta t-data">{% bibliography_count %} papers</span>
+              </span>
+            </a>
+          </li>
+          <li class="orbit__card" data-orbit-card>
+            <a class="ocard ocard--code" href="{{ '/research/' | relative_url }}#software" data-kit="press" data-press="choice">
+              <span class="ocard__fig ocard__term" aria-hidden="true">
+                <span class="ocard__prompt">$</span>
+                {%- capture repos -%}
+                  {%- for g in site.data.software -%}{%- for s in g.items -%}git clone {{ s.repo | split: '/' | last }}|{%- endfor -%}{%- endfor -%}
+                {%- endcapture -%}
+                {%- assign repos = repos | strip | split: '|' -%}
+                <span data-kit="typing-text" data-strings='{{ repos | jsonify }}' data-loop="true">{{ repos | first }}</span>
+              </span>
+              <span class="ocard__foot">
+                <span class="ocard__title">Open-source code</span>
+                <span class="ocard__meta t-data">{{ repos | size }} repositories</span>
+              </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  {%- comment -%} --------------------------------------------------------- results {%- endcomment -%}
+  <section class="results section" id="results">
+    <div class="wrap">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title">Selected results</h2>
+        <a class="link" href="{{ '/research/' | relative_url }}#results">All results and code</a>
+      </header>
+
+      <div class="rx" data-kit="tabs" data-autoplay="6500" data-results>
+        <div class="rx__list" role="tablist" aria-label="Selected results" aria-orientation="vertical">
+          {%- for r in site.data.highlights -%}
+            <button
+              type="button"
+              class="rx__tab"
+              role="tab"
+              id="rx-tab-{{ forloop.index }}"
+              aria-controls="rx-panel-{{ forloop.index }}"
+              aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+            >
+              <span class="rx__name">{{ r.name }}</span>
+              <span class="rx__venue t-data">{{ r.venue }} {{ r.year }}</span>
+            </button>
+          {%- endfor -%}
+        </div>
+
+        <div class="rx__panels">
+          {%- for r in site.data.highlights -%}
+            <article
+              class="rx__panel"
+              role="tabpanel"
+              id="rx-panel-{{ forloop.index }}"
+              aria-labelledby="rx-tab-{{ forloop.index }}"
+              {% unless forloop.first %}hidden{% endunless %}
+            >
+              <p class="rx__figure">
+                <span data-kit="sliding-number" data-trigger="manual" data-value="{{ r.value }}"{% if r.suffix %} data-suffix="{{ r.suffix }}"{% endif %}>{{ r.figure }}</span>
+              </p>
+              <p class="rx__unit">{{ r.unit }}</p>
+              <p class="rx__text">{{ r.text }}</p>
+              <p class="rx__src">
+                <a class="link-arrow" href="https://doi.org/{{ r.doi }}">Read the paper in {{ r.venue }}, {{ r.year }} {% include site/icon.liquid name="arrow-up-right" size=16 %}</a>
+              </p>
+            </article>
+          {%- endfor -%}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {%- comment -%} ---------------------------------------------- selected publications {%- endcomment -%}
+  {% if page.selected_papers %}
+    <section class="selpubs section" id="publications">
+      <div class="wrap">
+        <header class="sechead" data-inview>
+          <h2 class="sechead__title">Selected publications</h2>
+          <a class="link" href="{{ '/publications/' | relative_url }}">All {% bibliography_count %} papers</a>
+        </header>
+        <div class="publist publist--selected" data-publist>
+          {% bibliography --group_by none --query @*[selected=true]* %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {%- comment -%} ----------------------------------------------------------- venues {%- endcomment -%}
+  {% if profile.venues %}
+    <section class="venues" aria-label="Journals and conferences">
+      <div class="venues__strip" data-kit="marquee" data-speed="42" data-pause-on-hover="true">
+        {%- for v in profile.venues -%}
+          <span class="venues__item">{{ v }}</span>
+        {%- endfor -%}
+      </div>
+    </section>
+  {% endif %}
+
+  {%- comment -%} ------------------------------------------------------------- news {%- endcomment -%}
+  {% if page.announcements and page.announcements.enabled %}
+    {%- assign news = site.news | sort: 'date' | reverse -%}
+    <section class="hnews section" id="news">
+      <div class="wrap">
+        <header class="sechead" data-inview>
+          <h2 class="sechead__title">News</h2>
+          <a class="link" href="{{ '/news/' | relative_url }}">All news</a>
+        </header>
+        <ol class="hnews__list rows" data-kit="highlight hover-preview reveal-group" data-mode="hover" data-items=".hnews__row">
+          {%- for item in news limit: page.announcements.limit -%}
+            <li
+              class="hnews__row"
+              {% if item.image %}
+                data-preview="{{ item.image | prepend: '/assets/img/' | relative_url }}"
+                data-preview-alt="{{ item.image_alt | default: 'News photo' }}"
+              {% endif %}
+            >
+              <p class="hnews__date t-data">
+                {%- if item.label %}<span class="hnews__tag tag">{{ item.label }}</span>{% endif -%}
+                {%- if item.date_label -%}
+                  <span>{{ item.date_label }}</span>
+                {%- else -%}
+                  <time datetime="{{ item.date | date_to_xmlschema }}">{{ item.date | date: '%-d %b %Y' }}</time>
+                {%- endif -%}
+              </p>
+              <div class="hnews__text">{{ item.content }}</div>
+              {%- if item.image %}
+                <img
+                  class="hnews__thumb"
+                  src="{{ item.image | prepend: '/assets/img/' | relative_url }}"
+                  alt="{{ item.image_alt | default: 'News photo' }}"
+                  loading="lazy"
+                >
+              {%- endif %}
+            </li>
+          {%- endfor -%}
         </ol>
       </div>
-    </div>
-  </section>
-
-  <section class="band">
-    <div class="wrap">
-      <h2 class="band__label">Selected results</h2>
-      <div>
-        {% include site/results.liquid limit=4 %}
-        <p class="band__more reveal"><a class="btn-line" href="{{ '/research/' | relative_url }}#results">All results and open-source code {% include site/arrow.liquid %}</a></p>
-      </div>
-    </div>
-  </section>
-
-  {% if page.selected_papers %}
-    <section class="band">
-      <div class="wrap">
-        <h2 class="band__label">Selected publications</h2>
-        <div>
-          {% include selected_papers.liquid %}
-          <p class="band__more reveal"><a class="btn-line" href="{{ '/publications/' | relative_url }}">All publications {% include site/arrow.liquid %}</a></p>
-        </div>
-      </div>
     </section>
   {% endif %}
 
-  {% if page.announcements and page.announcements.enabled %}
-    <section class="band">
-      <div class="wrap">
-        <h2 class="band__label">News</h2>
-        <div>
-          {% include site/news_list.liquid limit=page.announcements.limit compact=true %}
-          <p class="band__more reveal"><a class="btn-line" href="{{ '/news/' | relative_url }}">All news {% include site/arrow.liquid %}</a></p>
-        </div>
-      </div>
-    </section>
-  {% endif %}
-
-  <section class="band band--contact">
+  {%- comment -%} ---------------------------------------------------------- contact {%- endcomment -%}
+  <section class="contact section" id="contact">
     <div class="wrap">
-      <h2 class="band__label">Contact</h2>
-      <div class="contact reveal">
-        <p class="contact__lede">{{ profile.joining }}</p>
-        <div class="contact__grid">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title">Contact</h2>
+      </header>
+      <p class="contact__lede t-d2" data-kit="split" data-split="lines" data-effect="rise">{{ profile.joining }}</p>
+      <div class="contact__grid" data-kit="reveal-group">
+        <div class="contact__mail">
+          <p class="t-label">Email</p>
+          {%- for e in profile.emails -%}
+            <p class="contact__address">
+              <a class="link" href="mailto:{{ e }}">{{ e }}</a>
+              <button type="button" class="icon-btn contact__copy" data-kit="copy press tooltip" data-copy="{{ e }}" data-tip="Copy" aria-label="Copy {{ e }}">
+                {% include site/icon.liquid name="copy" size=16 %}
+                {% include site/icon.liquid name="check" size=16 %}
+              </button>
+            </p>
+          {%- endfor -%}
+        </div>
+        <div class="contact__post">
+          <p class="t-label">Office</p>
           <address>
-            {% for line in profile.address %}{{ line }}<br>{% endfor %}
+            {%- for line in profile.address -%}{{ line }}<br>{%- endfor -%}
           </address>
-          <div>
-            {% for e in profile.emails %}<a class="link" href="mailto:{{ e }}">{{ e }}</a><br>{% endfor %}
-            <div class="contact__social">{% social_links %}</div>
-          </div>
+        </div>
+        <div class="contact__links">
+          <p class="t-label">Elsewhere</p>
+          {% include site/socials.liquid %}
         </div>
       </div>
     </div>

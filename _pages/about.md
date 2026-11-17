@@ -2,11 +2,14 @@
 layout: home
 title: About
 permalink: /
+v2: true
+site_css: [pub, home]
+site_js: [pub, home]
 
 selected_papers: true # show the papers marked selected = {true} in papers.bib
 announcements:
   enabled: true # show the latest news items
-  limit: 3
+  limit: 4
 ---
 
 I am an Associate Professor at Universiti Tunku Abdul Rahman (UTAR), Malaysia. My main research interests are GPU computing, cryptographic engineering, deep learning hardware architecture, the Internet of Things, electrochemical impedance spectroscopy and energy harvesting.

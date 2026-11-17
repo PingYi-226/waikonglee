@@ -1,1 +1,51 @@
-<footer class="sitefooter"></footer>
+{%- comment -%}
+  Site footer. It sits under the page: the content sheet lifts off it at the end of the scroll.
+  Also holds the page-wide helpers: the back-to-top button and the pointer label.
+{%- endcomment -%}
+{%- assign nav_pages = site.pages | where: 'nav', true | sort: 'nav_order' -%}
+{%- assign profile = site.data.profile -%}
+<footer class="foot" role="contentinfo">
+  <div class="foot__inner">
+    <div class="foot__cols">
+      <div class="foot__id">
+        <p class="foot__name">{{ site.first_name }} {{ site.last_name }}</p>
+        <p class="foot__aff">{{ profile.role }}<br>{{ profile.faculty }}<br>{{ profile.affiliation }}</p>
+      </div>
+      <nav class="foot__nav" aria-label="Footer">
+        <ul>
+          {%- for p in nav_pages -%}
+            {%- unless p.dropdown -%}
+              <li><a class="link" href="{{ p.url | relative_url }}">{{ p.title }}</a></li>
+            {%- endunless -%}
+          {%- endfor -%}
+        </ul>
+      </nav>
+      <div class="foot__reach">
+        {%- if site.data.socials.email %}
+          <p><a class="link" href="mailto:{{ site.data.socials.email }}">{{ site.data.socials.email }}</a></p>
+        {%- endif %}
+        {% include site/socials.liquid %}
+        <p class="foot__time t-label" data-clock data-zone="Asia/Kuala_Lumpur" title="Local time in Kampar, Malaysia">
+          {% include site/icon.liquid name="clock" size=14 %}
+          <span>Kampar</span>
+          <span class="foot__clock t-data" data-clock-out aria-live="off">--:--</span>
+        </p>
+      </div>
+    </div>
+
+    <p class="foot__mark" aria-hidden="true" data-kit="rolling-text" data-trigger="hover">{{ site.first_name }} {{ site.last_name }}</p>
+
+    <div class="foot__base">
+      <span>&copy; {{ site.time | date: '%Y' }} {{ site.first_name }} {{ site.last_name }}</span>
+      <span class="foot__credit">{{ site.footer_text }}{% if site.last_updated %} Last updated {{ 'now' | date: '%B %-d, %Y' }}.{% endif %}</span>
+    </div>
+  </div>
+</footer>
+
+<div class="totop" data-totop hidden>
+  <button type="button" class="totop__btn" aria-label="Back to top" data-kit="magnetic press">
+    <svg class="totop__ring" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" pathLength="1"/></svg>
+    {% include site/icon.liquid name="arrow-up" size=18 %}
+  </button>
+</div>
+<div data-kit="cursor" hidden></div>
