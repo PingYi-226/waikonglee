@@ -18,20 +18,10 @@ module.exports = {
     "font-weight-bold",
     "font-weight-medium",
     "font-weight-lighter",
-    // medium-zoom injects these at runtime, so they never appear in the static
-    // HTML PurgeCSS scans; without them the zoom overlay's z-index rule is purged
-    // and page chrome (scroll-progress bar, ToC) bleeds through a zoomed image.
-    "medium-zoom-overlay",
-    "medium-zoom-image--opened",
-    // classes added at runtime by assets/js/site.js
+    // classes the site's scripts add at run time (the site's own CSS in assets/css/site/ is not purged at all;
+    // these keep the few rules of the template's CSS that depend on them)
     "js",
-    "is-in",
-    "is-open",
-    "is-active",
-    "is-hidden",
-    "is-ready",
-    "is-scrolled",
-    "is-static",
-    /^pubchart/,
+    /^is-/,
+    /^k-/,
   ],
 };

@@ -14,27 +14,11 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-{% if page.v2 %}
-  {% assign site_css = 'tokens,base,kit-text,kit-pointer,kit-scroll,icons,shell,parts' | split: ',' %}
-  {% for name in site_css %}
-    <link rel="stylesheet" href="{{ '/assets/css/site/' | append: name | append: '.css' | relative_url | bust_file_cache }}">
-  {% endfor %}
-  {% for name in page.site_css %}
-    <link rel="stylesheet" href="{{ '/assets/css/site/' | append: name | append: '.css' | relative_url | bust_file_cache }}">
-  {% endfor %}
-{% else %}
-  <link rel="stylesheet" href="{{ '/assets/css/site/legacy.css' | relative_url | bust_file_cache }}">
-{% endif %}
-{% unless page.v2 %}
-<style>
-  /* soft cross-fade between pages in browsers that support cross-document view transitions */
-  @view-transition { navigation: auto; }
-  ::view-transition-old(root) { animation: page-out 0.28s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-  ::view-transition-new(root) { animation: page-in 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-  @keyframes page-out { to { opacity: 0; } }
-  @keyframes page-in { from { opacity: 0; transform: translateY(10px); } }
-  @media (prefers-reduced-motion: reduce) {
-    ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
-  }
-</style>
-{% endunless %}
+{%- comment -%} Shared stylesheets first, then the ones the page asks for in its front matter (site_css: [pub, home]). {%- endcomment -%}
+{% assign site_css = 'tokens,base,kit-text,kit-pointer,kit-scroll,icons,shell,parts' | split: ',' %}
+{% for name in site_css %}
+  <link rel="stylesheet" href="{{ '/assets/css/site/' | append: name | append: '.css' | relative_url | bust_file_cache }}">
+{% endfor %}
+{% for name in page.site_css %}
+  <link rel="stylesheet" href="{{ '/assets/css/site/' | append: name | append: '.css' | relative_url | bust_file_cache }}">
+{% endfor %}

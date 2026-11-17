@@ -1073,9 +1073,3 @@ html.is-reduced .rproj__fig.is-in .rproj__bar {
 .rproj[tabindex="-1"]:focus {
   outline: none;
 }
-
-/* WORKAROUND (request to the lead): the footer's cursor element carries `hidden` and the cursor kit adopts it without
-   taking the attribute off, so the label never shows. Until that is fixed in the kit or the footer, show it here. */
-html.js .k-cursor[hidden] {
-  display: block;
-}

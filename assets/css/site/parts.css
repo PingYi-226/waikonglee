@@ -88,11 +88,11 @@ html.js .pagehead__meta:not(.is-in) > * {
 }
 
 /* ---------- section header: a ruled line, the section's name, an optional link ----------
-   <header class="sechead" data-kit="reveal" data-reveal="rule">
+   <header class="sechead" data-inview>
      <h2 class="sechead__title">About</h2>
      <a class="link" href="...">All news</a>
    </header>
-   The rule is drawn from the left when the header scrolls into view (the reveal kit adds .is-in). */
+   The rule is drawn from the left when the header is first seen (data-inview adds .is-in, see shell.js). */
 .sechead {
   position: relative;
   display: flex;
@@ -114,15 +114,20 @@ html.js .pagehead__meta:not(.is-in) > * {
   transition: transform 1100ms var(--ease-out);
 }
 
-html.js .sechead[data-kit~="reveal"]:not(.is-in)::before {
+html.js .sechead[data-inview]:not(.is-in)::before {
   transform: scaleX(0);
 }
 
-/* the header itself does not fade or move: only its rule is drawn */
-html.js .sechead[data-kit~="reveal"] {
-  opacity: 1 !important;
-  transform: none !important;
-  filter: none !important;
+/* the name and the link arrive as the rule is drawn */
+.sechead[data-inview] > * {
+  transition:
+    opacity var(--t-reveal) 250ms,
+    filter var(--t-reveal) 250ms;
+}
+
+html.js .sechead[data-inview]:not(.is-in) > * {
+  opacity: 0;
+  filter: blur(2px);
 }
 
 .sechead__title {

@@ -6,8 +6,8 @@ description: Cryptographic engineering, GPU computing and efficient hardware, fr
 nav: true
 nav_order: 1
 v2: true
-site_css: [research]
-site_js: [research]
+site_css: [research, diagrams]
+site_js: [research, diagrams]
 ---
 
 {%- comment -%}

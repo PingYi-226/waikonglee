@@ -1,7 +1,8 @@
 # Wai-Kong Lee: personal website
 
 Source of the website of Dr. Wai-Kong Lee (Universiti Tunku Abdul Rahman). It is a static site built with
-[Jekyll](https://jekyllrb.com/) on the [al-folio](https://github.com/alshedivat/al-folio) template (v1.2), with a custom design layer on top.
+[Jekyll](https://jekyllrb.com/) on the [al-folio](https://github.com/alshedivat/al-folio) template (v1.2), with its own design layer and
+motion kit on top (see "How the design layer is organised" at the end).
 
 ## Everyday updates
 
@@ -21,6 +22,9 @@ Edit a file (directly on github.com is fine), commit, and the site rebuilds itse
 | CV                                                | `_data/cv.yml`                         |
 | Profile links (Scholar, ORCID, GitHub, email)     | `_data/socials.yml`                    |
 | Portrait                                          | replace `assets/img/prof_pic.jpg`      |
+| Group photograph (Group page)                     | `group_photo:` in `_data/people.yml`   |
+| A student's photograph                            | `photo: file.jpg` on that person in `_data/people.yml` (file in `assets/img/people/`) |
+| Journals in the moving strip on the home page     | `venues:` in `_data/profile.yml`       |
 
 ### Adding a paper
 
@@ -44,7 +48,8 @@ Paste the BibTeX entry into `_bibliography/papers.bib`, below the comment block 
 }
 ```
 
-Papers are grouped by year and shown in the order they appear in the file. The chart, the filters and the paper count update on their own.
+Papers are grouped by year and shown in the order they appear in the file. The charts, the filters and every paper count on the site
+(home page, research areas, publications) update on their own.
 Journal papers carry the year of the issue they appeared in. `pubtype` decides which filter a paper appears under.
 Write the author's own name as `Lee, Wai-Kong` so that it is emphasised.
 
@@ -60,10 +65,23 @@ inline: true
 related_posts: false
 image: news/2027-03-01-short-name.jpg   # optional, a file under assets/img/
 image_alt: What the photo shows
+label: Paper                            # optional: Paper, Code or Open call (decides the filter on the News page); none = an activity
+date_label: Deadline 22 July 2027       # optional: shown instead of the date
+derived: true                           # optional: keeps the item off the home page's short list
 ---
 
 One or two sentences. Markdown links work.
 ```
+
+The home page shows the four newest items that are not marked `derived: true`; the News page shows everything. The "Paper" and "Code"
+items now in `_news/` were written from the publication list and the code list; add such an item by hand when a new paper or
+repository should appear in the timeline.
+
+### Pictures still to be supplied
+
+- `assets/img/placeholder/group.svg` stands in for a group photograph (set `group_photo:` in `_data/people.yml` to the real file).
+- Students have no photographs: each shows a small mark drawn from their name until `photo:` is set.
+- The portrait `assets/img/prof_pic.jpg` is a small passport photograph; a larger one (about 800 px wide or more) will look better.
 
 ## What runs automatically
 
@@ -92,10 +110,35 @@ The template also ships a Docker setup (`docker compose up`, port 8080); it has 
 
 ## How the design layer is organised
 
-- New files: `_layouts/home.liquid`, `_includes/site/`, `assets/css/site.css`, `assets/js/site.js`.
-- Local overrides of template files (recorded in `.al-folio-overrides.yml`): `_layouts/default.liquid`, `_layouts/bib.liquid`, `_includes/footer.liquid`.
-- Colours and fonts are the custom properties at the top of `assets/css/site.css`; the web fonts are set in `_config.yml` under
-  `third_party_libraries.google_fonts`.
-- Adding `?static` to any address shows the page without animation.
+Everything that is not the template lives in a few places:
 
-The template itself is MIT licensed (see `LICENSE`).
+| Where | What |
+| --- | --- |
+| `assets/css/site/tokens.css` | every colour, type size, radius, duration, curve and spring, for both themes |
+| `assets/css/site/base.css`, `parts.css`, `shell.css` | element defaults and controls; the page head, section header and other shared parts; header, footer, page and theme transitions |
+| `assets/js/site/core.js` | `window.Site`: the same motion tokens for scripts, environment flags, the component registry |
+| `assets/js/site/kit-*.js`, `icons.js` (+ the CSS of the same names) | the motion kit: components attached with `data-kit="..."` (text effects, rolling numbers, gliding highlight, tabs, disclosure, tooltips, copy, toast, lightbox, reveal, scroll-driven pieces, magnetic, tilt, cursor label ...) |
+| `assets/js/site/shell.js` | header, menu, theme switch, back-to-top ring, footer clock, `data-inview` |
+| `assets/css/site/<page>.css`, `assets/js/site/<page>.js` | one pair per page (`home`, `pub`, `research`, `group`, `cv`, `news`, `notfound`, `diagrams`), listed in the page's front matter as `site_css` / `site_js` |
+| `_layouts/home.liquid`, `_includes/site/` | the markup: home page, header, footer, page head, icons, the seven research diagrams, the parts of each page |
+| `assets/js/thirdparty/motion.js` | the Motion animation library (the only one) |
+
+- Pages are plain files in `_pages/` with `layout: default`; `bare: true` drops the header and footer.
+- Demo pages (not linked, not indexed): `/kit/` (every kit component), `/kit/parts/` (shared parts), `/kit/diagrams/` (the diagrams).
+- Local overrides of template files (recorded in `.al-folio-overrides.yml`): `_layouts/default.liquid`, `_layouts/bib.liquid`.
+  After editing either, run `bundle exec al-folio upgrade overrides audit` and commit the manifest.
+- Web fonts are set in `_config.yml` under `third_party_libraries.google_fonts`.
+- Adding `?static` to any address shows the page in its final state without animation. Reduced-motion settings of the visitor are
+  respected (movement is dropped, fades stay), and every page shows its content without JavaScript.
+- Tested in Chromium only (desktop and phone sizes, light and dark). Safari and Firefox have not been tried; older versions fall back to
+  the end states of the animations.
+
+## Credits and licences
+
+- The template is [al-folio](https://github.com/alshedivat/al-folio), MIT licensed (see `LICENSE`).
+- The motion values (springs, curves, durations) and several behaviours are ported from [Animate UI](https://animate-ui.com/)
+  by Elliot Sutton, MIT with the Commons Clause condition (`licenses/animate-ui-LICENSE.md`). The components here are our own
+  re-implementations in plain JavaScript; Animate UI's React components are not redistributed.
+- [Motion](https://motion.dev/) is MIT licensed (`licenses/motion-LICENSE.md`).
+- Fonts: Instrument Serif, IBM Plex Sans and IBM Plex Mono (SIL Open Font License), loaded from Google Fonts.
+

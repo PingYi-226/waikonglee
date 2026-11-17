@@ -32,6 +32,12 @@ body {
   color: inherit;
 }
 
+/* the template shows these two buttons by id, which would beat the hidden attribute */
+#light-toggle[hidden],
+#search-toggle[hidden] {
+  display: none !important;
+}
+
 body > .container[role="main"],
 body > main.container {
   max-width: none;
