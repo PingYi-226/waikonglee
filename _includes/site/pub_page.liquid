@@ -119,6 +119,7 @@
   </div>
 
   <div class="publist__body" data-kit="highlight reveal-group tooltip-group" data-mode="hover" data-items=".pub" data-reveal="rise" data-publist-body>
+    <p class="pubnote t-label" data-pubnote hidden><span data-pubnote-text></span></p>
     {%- for y in (first_year..year_now) reversed -%}
       {%- assign i = y | minus: 1990 -%}
       {%- assign n = year_counts[i] | plus: 0 -%}

@@ -20,7 +20,7 @@
 
 .pub {
   position: relative;
-  padding-block: clamp(1.25rem, 2.1vw, 1.7rem);
+  padding-block: clamp(1.1rem, 1.8vw, 1.45rem);
 }
 
 .pub__title {
@@ -120,7 +120,7 @@ html.is-reduced .pub__hit {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.15rem 1.35rem;
-  margin-top: 0.65rem;
+  margin-top: 0.45rem;
 }
 
 .pub__act,
@@ -755,6 +755,13 @@ html.is-reduced .pubbar__end > * {
   html:not(.js) .publist--all {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* a search answered by the abstracts only says so */
+.pubnote {
+  margin: 0;
+  padding: 0 0 1rem;
+  color: var(--ink-2);
 }
 
 /* empty result */

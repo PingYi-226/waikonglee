@@ -43,6 +43,8 @@
     var countEl = page.querySelector("[data-pubcount]");
     var empty = page.querySelector("[data-pubempty]");
     var emptyText = page.querySelector("[data-pubempty-text]");
+    var note = page.querySelector("[data-pubnote]");
+    var noteText = page.querySelector("[data-pubnote-text]");
     var chart = page.querySelector("[data-pubchart]");
     var rail = page.querySelector("[data-pubrail]");
     if (!body || !bar || !field) return;
@@ -87,6 +89,7 @@
         titleFold: fold(title),
         plain: !!t && t.childNodes.length === 1 && t.firstChild.nodeType === 3,
         hay: fold([title, text(".pub__authors"), text(".pub__venue"), el.getAttribute("data-year")].join(" ").replace(/\s+/g, " ")),
+        abs: fold(text(".pub__abs").replace(/\s+/g, " ")),
         marked: "",
       });
     });
@@ -182,8 +185,8 @@
           return w.length > 0;
         });
     }
-    function matchQ(r, words) {
-      for (var i = 0; i < words.length; i++) if (r.hay.indexOf(words[i]) < 0) return false;
+    function matchQ(r, words, deep) {
+      for (var i = 0; i < words.length; i++) if (r.hay.indexOf(words[i]) < 0 && !(deep && r.abs.indexOf(words[i]) > -1)) return false;
       return true;
     }
 
@@ -239,28 +242,38 @@
     var shownTotal = rows.length;
     function apply(animate, userAction) {
       var words = terms(state.q);
-      var areaCount = {};
-      var typeCount = { journal: 0, conference: 0 };
-      var all = 0;
-      var shown = 0;
-      Object.keys(byYear).forEach(function (y) {
-        byYear[y].shown = 0;
-      });
-      rows.forEach(function (r) {
-        var q = !words.length || matchQ(r, words);
-        var a = !state.area || r.area === state.area;
-        var t = !state.type || r.type === state.type;
-        if (q && t) {
-          areaCount[r.area] = (areaCount[r.area] || 0) + 1;
-          all++;
-        }
-        if (q && a) typeCount[r.type] = (typeCount[r.type] || 0) + 1;
-        r.next = q && a && t;
-        if (r.next) {
-          shown++;
-          if (byYear[r.year]) byYear[r.year].shown++;
-        }
-      });
+      var areaCount, typeCount, all, shown;
+      // titles, authors, venues and years first; when none of them has the words, the abstracts are read too
+      function run(deep) {
+        areaCount = {};
+        typeCount = { journal: 0, conference: 0 };
+        all = 0;
+        shown = 0;
+        Object.keys(byYear).forEach(function (y) {
+          byYear[y].shown = 0;
+        });
+        rows.forEach(function (r) {
+          var q = !words.length || matchQ(r, words, deep);
+          var a = !state.area || r.area === state.area;
+          var t = !state.type || r.type === state.type;
+          if (q && t) {
+            areaCount[r.area] = (areaCount[r.area] || 0) + 1;
+            all++;
+          }
+          if (q && a) typeCount[r.type] = (typeCount[r.type] || 0) + 1;
+          r.next = q && a && t;
+          if (r.next) {
+            shown++;
+            if (byYear[r.year]) byYear[r.year].shown++;
+          }
+        });
+      }
+      run(false);
+      var deep = false;
+      if (words.length && !shown) {
+        run(true);
+        deep = shown > 0;
+      }
       shownTotal = shown;
 
       function mutate() {
@@ -273,6 +286,7 @@
           if (g.head) g.head.hidden = g.shown === 0;
         });
         if (empty) empty.hidden = shown > 0;
+        if (note) note.hidden = !deep;
       }
 
       // the user is reading further down: the filtered list starts under the bar again
@@ -291,7 +305,7 @@
           if (rg) rg.destroy();
           revealOff = true;
         }
-        S.flip(body, mutate, { items: "ol.bibliography > li, .pubyear__head, .pubempty" });
+        S.flip(body, mutate, { items: "ol.bibliography > li, .pubyear__head, .pubempty, .pubnote" });
       } else mutate();
 
       rows.forEach(function (r) {
@@ -325,6 +339,8 @@
       var filtered = !!(state.area || state.type || words.length);
       page.classList.toggle("is-filtered", filtered);
 
+      if (note && noteText && deep)
+        noteText.textContent = "No title, author or venue has \u201c" + state.q.trim() + "\u201d. " + (shown === 1 ? "This paper has it in its abstract." : "These papers have it in their abstracts.");
       if (empty && emptyText && !shown) {
         var kind = state.type === "journal" ? "journal papers" : state.type === "conference" ? "conference papers" : "papers";
         emptyText.textContent =
