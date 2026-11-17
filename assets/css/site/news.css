@@ -6,6 +6,11 @@
    Markup: _includes/site/news_timeline.liquid, news_item.liquid. Behaviour: assets/js/site/news.js.
    ========================================================================== */
 
+/* the filter hides items, years and their links with the hidden attribute: it wins over every display below */
+.ntl [hidden] {
+  display: none !important;
+}
+
 .ntl {
   --ntl-indent: 2.4rem; /* from the hairline to an item's text */
   --ntl-node: 7px;
@@ -397,7 +402,7 @@ html.js .ntl__body:not(.is-in) .ntl__spine {
 .nprint__img {
   width: auto;
   height: auto;
-  max-width: min(19rem, 100%);
+  max-width: 19rem; /* a length, not a percentage: the print's column is sized by it */
   max-height: 19rem;
   border-radius: 3px;
   filter: saturate(0.97) contrast(1.02);
