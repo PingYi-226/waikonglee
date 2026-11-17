@@ -203,13 +203,12 @@ html[data-theme="dark"] .k-tilt__shine--light {
   padding: 0 0.7rem;
   overflow: clip;
   white-space: nowrap;
-  font-family: var(--font-mono);
-  font-size: var(--fs-label);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0;
   line-height: 1;
   color: var(--paper);
-  background: var(--accent);
+  background: var(--ink);
   border-radius: var(--r-pill);
   box-shadow: var(--shadow-1);
   /* it grows out of the pointer, which sits at its top left */

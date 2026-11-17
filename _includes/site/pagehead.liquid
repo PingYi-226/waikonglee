@@ -1,0 +1,26 @@
+{%- comment -%}
+  Page head of every page except the home page: the title, one sentence, and optionally a figure beside them and a row under them.
+
+    {% capture head_aside %} ...a small figure... {% endcapture %}
+    {% capture head_meta %} ...figures (.stat), controls... {% endcapture %}
+    {% include site/pagehead.liquid aside=head_aside meta=head_meta %}
+
+  Parameters: title (default: the page's title), lede (default: the page's description), aside, meta (captured HTML).
+  The title's characters rise on load, then the lede arrives, then the row; see parts.css for the looks.
+{%- endcomment -%}
+{%- assign head_title = include.title | default: page.title -%}
+{%- assign head_lede = include.lede | default: page.description -%}
+<header class="pagehead wrap{% if include.aside %} pagehead--aside{% endif %}" data-pagehead>
+  <div class="pagehead__main">
+    <h1 class="pagehead__title" data-kit="split" data-split="chars" data-effect="rise" data-trigger="load">{{ head_title }}</h1>
+    {%- if head_lede %}
+      <p class="pagehead__lede" data-kit="split" data-split="words" data-effect="arrive" data-trigger="load" data-delay="260" data-stagger="0.035">{{ head_lede }}</p>
+    {%- endif %}
+  </div>
+  {%- if include.aside %}
+    <div class="pagehead__aside" data-kit="reveal" data-reveal="fade" data-delay="520">{{ include.aside }}</div>
+  {%- endif %}
+  {%- if include.meta %}
+    <div class="pagehead__meta" data-inview>{{ include.meta }}</div>
+  {%- endif %}
+</header>

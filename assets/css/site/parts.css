@@ -3,39 +3,88 @@
    figure-and-label pairs. Looks only; motion comes from the kits named in the markup.
    ========================================================================== */
 
-/* ---------- page header (every page except the home page) ----------
-   <header class="pagehead wrap">
-     <h1 class="pagehead__title t-d1">Publications</h1>
-     <p class="pagehead__lede">One sentence.</p>
-     <div class="pagehead__meta">...optional figures or controls...</div>
-   </header>                                                                 */
+/* ---------- page head (every page except the home page): _includes/site/pagehead.liquid ----------
+   The title and one sentence on the left, an optional figure on the right (.pagehead__aside),
+   and an optional row under a rule that draws itself (.pagehead__meta): figures, controls. */
 .pagehead {
-  padding-top: calc(var(--nav-h) + clamp(3.5rem, 10vw, 8rem));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: clamp(2rem, 5vw, 5rem);
+  row-gap: clamp(2rem, 5vw, 3.5rem);
+  align-items: end;
+  padding-top: calc(var(--nav-h) + clamp(3.25rem, 9vw, 7.5rem));
   padding-bottom: clamp(2.5rem, 6vw, 4.5rem);
 }
 
+.pagehead--aside {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+}
+
 .pagehead__title {
-  margin: 0;
-  margin-left: -0.04em;
+  margin: 0 0 0 -0.04em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(3.2rem, 8.4vw, 7rem);
+  line-height: 0.94;
+  letter-spacing: -0.022em;
+  color: var(--ink);
+  text-wrap: balance;
 }
 
 .pagehead__lede {
-  max-width: 34ch;
-  margin: 1.6rem 0 0;
+  max-width: 30ch;
+  margin: clamp(1.1rem, 2.4vw, 1.75rem) 0 0;
   font-family: var(--font-display);
   font-size: var(--fs-d3);
-  line-height: 1.24;
+  line-height: 1.22;
   color: var(--ink-2);
+  text-wrap: balance;
+}
+
+.pagehead__aside {
+  min-width: 0;
 }
 
 .pagehead__meta {
+  position: relative;
+  grid-column: 1 / -1;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: 1.25rem clamp(2rem, 5vw, 4.5rem);
-  margin-top: clamp(2rem, 5vw, 3.5rem);
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--line);
+  padding-top: 1.35rem;
+}
+
+.pagehead__meta::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: var(--line-strong);
+  transform-origin: 0 50%;
+  transition: transform 1100ms var(--ease-out) 350ms;
+}
+
+html.js .pagehead__meta:not(.is-in)::before {
+  transform: scaleX(0);
+}
+
+/* what is in the row arrives after the rule has started */
+.pagehead__meta > * {
+  transition:
+    opacity var(--t-reveal) 600ms,
+    filter var(--t-reveal) 600ms;
+}
+
+html.js .pagehead__meta:not(.is-in) > * {
+  opacity: 0;
+  filter: blur(2px);
+}
+
+@media (max-width: 860px) {
+  .pagehead--aside {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* ---------- section header: a ruled line, the section's name, an optional link ----------

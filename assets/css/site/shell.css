@@ -127,6 +127,25 @@ html:not(.js) .nav__link[aria-current="page"] {
   gap: 0.1rem;
 }
 
+/* the template styles these two buttons by id (a smaller box, a 4px nudge): put them back on the icon button's terms */
+.nav #light-toggle,
+.nav #search-toggle {
+  display: inline-grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--ink-2);
+  background-color: transparent;
+  transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .nav #light-toggle:hover,
+  .nav #search-toggle:hover {
+    color: var(--ink);
+    background-color: var(--hover);
+  }
+}
+
 /* theme switch: the two icons sit on top of each other and swap with a quarter turn */
 .nav__theme {
   position: relative;
@@ -549,13 +568,6 @@ html.no-vt.is-leaving main#main {
 html[data-vt="theme"],
 html[data-vt="theme"] * {
   view-transition-name: none !important;
-}
-
-html[data-vt="theme"].transition,
-html[data-vt="theme"].transition *,
-html[data-vt="theme"].transition *::before,
-html[data-vt="theme"].transition *::after {
-  transition: none !important;
 }
 
 html[data-vt="theme"]::view-transition-old(root) {

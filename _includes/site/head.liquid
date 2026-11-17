@@ -4,6 +4,10 @@
   // Mark that JavaScript is available so content can start hidden and animate in.
   // If the site script has not started within a few seconds, drop the mark so nothing stays hidden.
   document.documentElement.classList.add('js');
+  // The template's theme script marks <html> with "transition" for a moment whenever it applies a theme, also on load;
+  // while the mark is there its stylesheet lets only colours transition, which would swallow every entrance that starts
+  // in the first third of a second. On load there is nothing to cross-fade, so take the mark off again.
+  document.documentElement.classList.remove('transition');
   setTimeout(function () {
     if (!document.documentElement.classList.contains('is-ready')) document.documentElement.classList.remove('js');
   }, 4000);

@@ -451,15 +451,14 @@ a.btn:visited {
   background: var(--accent-wash);
 }
 
-.tag--clay {
-  color: var(--clay);
-  border-color: color-mix(in srgb, var(--clay) 35%, transparent);
-}
-
+/* a plate: a self-contained object on the page. (The template's main.css also has a .card with a shadow and
+   "transition: all"; both are taken off here.) */
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--r-3);
+  border-radius: var(--r-2);
+  box-shadow: none;
+  transition: none;
 }
 
 .field {

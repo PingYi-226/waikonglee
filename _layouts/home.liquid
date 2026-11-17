@@ -365,7 +365,7 @@ layout: default
           {%- for e in profile.emails -%}
             <p class="contact__address">
               <a class="link" href="mailto:{{ e }}">{{ e }}</a>
-              <button type="button" class="icon-btn contact__copy" data-kit="copy press tooltip" data-copy="{{ e }}" data-tip="Copy" aria-label="Copy {{ e }}">
+              <button type="button" class="icon-btn contact__copy" data-kit="copy press tooltip" data-copy="{{ e }}" data-tip="Copy" data-toast="Address copied" aria-label="Copy {{ e }}">
                 {% include site/icon.liquid name="copy" size=16 %}
                 {% include site/icon.liquid name="check" size=16 %}
               </button>

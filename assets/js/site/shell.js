@@ -146,6 +146,8 @@
           document
             .startViewTransition(function () {
               setTheme(next);
+              // the template's own colour cross-fade is not wanted under the wipe (and it would hold back other transitions)
+              root.classList.remove("transition");
             })
             .finished.then(done, done);
         } catch (err) {

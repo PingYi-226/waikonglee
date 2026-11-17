@@ -305,7 +305,7 @@
         b1: [s * Math.cos(a), s * Math.sin(a)],
         b2: [s * k, -s * (0.92 + 0.035 * Math.cos(time * 0.00009))],
         ox: narrow ? w * 0.5 : w * 0.73,
-        oy: narrow ? h - 150 : h * 0.44,
+        oy: narrow ? h - 78 : h * 0.44,
       };
     }
     function arrow(x0, y0, x1, y1) {
@@ -365,7 +365,7 @@
         ty = pointer.y;
       } else {
         tx = g.ox + Math.cos(time * 0.00021) * g.s * 3.4;
-        ty = g.oy + Math.sin(time * 0.00033) * g.s * (g.narrow ? 1.1 : 2.6);
+        ty = g.oy + Math.sin(time * 0.00033) * g.s * (g.narrow ? 0.7 : 2.6);
       }
       if (cur.x === null) {
         cur.x = tx;
