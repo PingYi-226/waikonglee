@@ -1052,3 +1052,12 @@ html.is-reduced .rproj__fig.is-in .rproj__bar {
     display: none;
   }
 }
+
+/* sections and areas reached from a link take the focus (so Tab goes on from there) without a ring around the whole block */
+.rareas[tabindex="-1"]:focus,
+.rarea[tabindex="-1"]:focus,
+.rres[tabindex="-1"]:focus,
+.rsoft[tabindex="-1"]:focus,
+.rproj[tabindex="-1"]:focus {
+  outline: none;
+}
