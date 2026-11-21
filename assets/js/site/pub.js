@@ -1,12 +1,12 @@
 /*
- * Publications: the behaviour of the publication lists.
+ * Publications: the behaviour of the publications page (_includes/site/pub_page.liquid, one entry: _layouts/bib.liquid).
  *
- * 1. Every list of entries (_layouts/bib.liquid inside .publist[data-publist]): one hover surface gliding over the rows,
- *    one tooltip gliding between the small labels, rows arriving in reading order. The publications page has these in
- *    its markup; the home page's "Selected publications" gets them here, before the kits attach.
- * 2. The publications page ([data-pubs], _includes/site/pub_page.liquid): the list and Fig. 1 are one instrument.
- *    Filters (area, kind, search) live in the URL hash (#area=pqc&q=kyber&type=journal); the list changes through
- *    Site.flip, the counts roll, the bars of Fig. 1 glide to the filtered counts, the rail rolls to the year being read.
+ * 1. The entries: their controls (Abstract, BibTeX, copy) get their kits when the pointer or the focus first comes near;
+ *    the two panels of an entry hand over without a jump; the inside of a panel arrives a beat after it opens;
+ *    citation counts roll the first time they are seen.
+ * 2. The page: the list and the chart are one instrument. Filters (area, kind, search) live in the URL hash
+ *    (#area=pqc&q=kyber&type=journal); the list changes through Site.flip, the counts roll, the bars glide to the
+ *    filtered counts, the rail rolls to the year being read.
  */
 (function () {
   "use strict";
@@ -18,16 +18,7 @@
     Array.prototype.forEach.call(list, fn);
   };
 
-  /* ------------------------------------------------------------------ 1. any list */
-  each(doc.querySelectorAll(".publist--selected[data-publist]"), function (list) {
-    if (list.hasAttribute("data-kit")) return;
-    list.setAttribute("data-kit", "highlight reveal-group tooltip-group");
-    list.setAttribute("data-mode", "hover");
-    list.setAttribute("data-items", ".pub");
-    list.setAttribute("data-reveal", "rise");
-    S.init(list); // safe if the kits attach again at boot
-  });
-
+  /* ------------------------------------------------------------------ 1. the entries */
   /*
    * The controls inside an entry (Abstract, BibTeX, copy) carry their kits as data-pubkit and get them the first time the
    * pointer or the focus comes near the entry: 90 entries would otherwise attach some 250 components at load.
@@ -41,13 +32,183 @@
       el.setAttribute("data-kit", el.getAttribute("data-pubkit"));
       el.removeAttribute("data-pubkit");
     });
+    each(pub.querySelectorAll(".pub__code code"), splitLines);
     S.init(pub);
   }
+
+  /* The BibTeX's lines as boxes of their own, so they can arrive one after the other. The newlines stay as text
+     between them: what is copied (textContent) and what the page shows do not change. */
+  function splitLines(code) {
+    if (code.hasAttribute("data-lines")) return;
+    code.setAttribute("data-lines", "");
+    var out = doc.createDocumentFragment();
+    var line = null;
+    var open = function () {
+      if (!line) {
+        line = doc.createElement("span");
+        line.className = "pub__ln";
+      }
+      return line;
+    };
+    var close = function () {
+      if (line) out.appendChild(line);
+      line = null;
+      out.appendChild(doc.createTextNode("\n"));
+    };
+    Array.prototype.slice.call(code.childNodes).forEach(function (n) {
+      if (n.nodeType !== 3 || n.nodeValue.indexOf("\n") < 0) return open().appendChild(n);
+      n.nodeValue.split("\n").forEach(function (part, i) {
+        if (i > 0) close();
+        if (part) open().appendChild(doc.createTextNode(part));
+      });
+    });
+    if (line) out.appendChild(line);
+    code.textContent = "";
+    code.appendChild(out);
+  }
+
+  /*
+   * Abstract and BibTeX unfold (kit: disclosure, data-effect="unfold"; one open per entry). On top of the kit:
+   * - the two panels of an entry hand over in place: the one closing steps out of the flow (.is-leaving: laid over the
+   *   same place, under the new one, fading as the kit folds it) and the new one opens from the height the two had,
+   *   not from nothing; so the rows below glide from one height to the other, the new content sweeps in where the old
+   *   one was, and the hairline at the edge stays (it is the same line);
+   * - the inside arrives one beat after the panel: the abstract settles up a few pixels; the BibTeX's lines come in
+   *   from the start edge one after the other, and the copy button pops in after the plate.
+   * Closing stays the kit's: quick and plain.
+   */
+  var INNER = 70; // ms, the inside after the outside (base.css --k-inner-delay)
+  var LINE_STAGGER = 22; // ms between two BibTeX lines (the kit's sweep shows a line about every 26 ms)
+  function heightAnim(panel) {
+    var list = panel.getAnimations ? panel.getAnimations() : [];
+    for (var i = 0; i < list.length; i++) {
+      var fx = list[i].effect;
+      if (!fx || fx.target !== panel || fx.pseudoElement || !fx.getKeyframes) continue;
+      var kf = fx.getKeyframes();
+      if (kf.length > 1 && kf[0].height != null) return { anim: list[i], from: String(kf[0].height), to: String(kf[kf.length - 1].height) };
+    }
+    return null;
+  }
+  function release(panel) {
+    panel.classList.remove("is-leaving");
+    panel.style.removeProperty("--pub-leave-top");
+  }
+  function handOver(pub, panel, opening, wasOut) {
+    var leaving = null;
+    each(pub.querySelectorAll(".pub__panel"), function (o) {
+      if (o === panel) return;
+      var h = heightAnim(o);
+      // a fold that starts together with this opening (the kit's group closing it)
+      if (h && h.to === "0px" && (h.anim.currentTime || 0) <= 34) leaving = { el: o, h: h };
+    });
+    if (!leaving) return;
+    var o = leaving.el;
+    // the height the two take in the flow now: the new panel starts from it
+    var start = (wasOut ? 0 : parseFloat(opening.from) || 0) + (o.classList.contains("is-leaving") ? 0 : parseFloat(leaving.h.from) || 0);
+    var top = Math.min(o.offsetTop, panel.offsetTop);
+    o.style.setProperty("--pub-leave-top", top + "px");
+    o.classList.add("is-leaving");
+    var kf = opening.anim.effect.getKeyframes();
+    kf[0].height = start + "px";
+    opening.anim.effect.setKeyframes(kf);
+    // the hairline is already there: it stays drawn
+    (panel.getAnimations ? panel.getAnimations({ subtree: true }) : []).forEach(function (a) {
+      if (a.effect && a.effect.target === panel && a.effect.pseudoElement) a.cancel();
+    });
+    var done = function () {
+      release(o);
+    };
+    leaving.h.anim.finished.then(done, done);
+  }
+  var inner = new WeakMap(); // panel -> its running inside animations
+  function arrive(panel) {
+    (inner.get(panel) || []).forEach(function (a) {
+      a.cancel();
+    });
+    var anims = [];
+    var play = function (el, frames, token, delay) {
+      var t = S.css(token);
+      anims.push(el.animate(frames, { duration: t.duration, easing: t.easing, delay: delay * S.tempo, fill: "backwards" }));
+    };
+    var abs = panel.querySelector(".pub__abs > p");
+    if (abs) play(abs, [{ translate: "0 " + S.tokens.shift.handoff + "px" }, { translate: "0 0" }], "transition.arrive", INNER);
+    var code = panel.querySelector(".pub__code code");
+    if (code) {
+      splitLines(code);
+      var ls = code.querySelectorAll(".pub__ln");
+      each(ls, function (ln, i) {
+        play(ln, [{ opacity: 0, translate: -S.tokens.shift.handoff + "px 0" }, { opacity: 1, translate: "0 0" }], "transition.reveal", INNER + i * LINE_STAGGER);
+      });
+      var copy = panel.querySelector(".pub__copy");
+      if (copy) play(copy, [{ opacity: 0, scale: S.tokens.scale.icon }, { opacity: 1, scale: 1 }], "spring.checkPop", INNER * 3);
+    }
+    inner.set(panel, anims);
+  }
+  function onPanel(e) {
+    var d = e.detail || {};
+    var panel = d.panel;
+    if (!d.open || !panel || !panel.classList.contains("pub__panel")) return;
+    // turned round while it was leaving (or found by find-in-page): back into the flow, it opens from where it is
+    var wasOut = panel.classList.contains("is-leaving");
+    if (wasOut) release(panel);
+    var opening = heightAnim(panel);
+    if (!opening) return; // opened at once (find-in-page, ?static)
+    var fresh = opening.from === "0px";
+    if (fresh) widen(panel, opening.anim);
+    var pub = panel.closest(".pub");
+    if (pub) handOver(pub, panel, opening, wasOut);
+    // a panel turned round on its way keeps what it had; a panel opening from nothing brings its inside in
+    if (fresh && !S.env.reduce) arrive(panel);
+  }
+  /* Opening from nothing is given more time than the kit's default (its spring reaches the full height in about
+     250 ms, which reads as a snap in a list read slowly): the height and the sweep of the lines are stretched on the
+     spot, keeping their curves. Turned round on the way, nothing is stretched (it goes on from where it is). */
+  var OPEN_STRETCH = 1.6; // the height: 95% at about 400 ms
+  var SWEEP_STRETCH = 1.3; // the lines' sweep, its blur and the hairline: 400 to 1070 ms by length
+  function widen(panel, height) {
+    var stretch = function (a, k) {
+      var t = a.effect.getTiming();
+      a.effect.updateTiming({ duration: t.duration * k });
+    };
+    stretch(height, OPEN_STRETCH);
+    var content = panel.children.length === 1 ? panel.firstElementChild : panel;
+    (panel.getAnimations ? panel.getAnimations({ subtree: true }) : []).forEach(function (a) {
+      var fx = a.effect;
+      if (a === height || !fx || (a.currentTime || 0) > 34) return;
+      if (fx.target === content || (fx.target === panel && fx.pseudoElement)) stretch(a, SWEEP_STRETCH);
+    });
+  }
+
   each(doc.querySelectorAll("[data-publist]"), function (list) {
     list.addEventListener("pointerover", wake, { passive: true });
     list.addEventListener("focusin", wake);
     list.addEventListener("click", wake, true);
+    list.addEventListener("kit:disclosure-change", onPanel);
   });
+
+  /* Citation counts roll up the first time they come into view (the kit is attached just before, one at a time). */
+  var counts = doc.querySelectorAll(".pub__cites .pub__n");
+  if (counts.length && window.IntersectionObserver && !S.env.static) {
+    var near = new IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          near.unobserve(en.target);
+          var n = en.target;
+          n.setAttribute("data-kit", "sliding-number");
+          n.setAttribute("data-value", n.textContent.trim());
+          n.setAttribute("data-delay", "260");
+          S.init(n);
+        });
+      },
+      { rootMargin: "0px 0px 25% 0px" },
+    );
+    S.ready(function () {
+      each(counts, function (n) {
+        near.observe(n);
+      });
+    });
+  }
 
   /* ------------------------------------------------------------ 2. the page */
   var page = doc.querySelector("[data-pubs]");
@@ -130,7 +291,7 @@
     });
     var types = typeGroup ? Array.prototype.slice.call(typeGroup.querySelectorAll("[data-type]")) : [];
 
-    /* ---------- Fig. 1 ---------- */
+    /* ---------- the chart: papers per year ---------- */
     var bars = {};
     var barLinks = [];
     var peak = 1;
@@ -261,7 +422,7 @@
       r.title.innerHTML = html + escapeHTML(r.titleText.slice(pos));
     }
 
-    /* ---------- apply a state: rows, counts, chips, Fig. 1, the rail ---------- */
+    /* ---------- apply a state: rows, counts, chips, the chart, the rail ---------- */
     var revealOff = false;
     var announceTimer = null;
     var shownTotal = rows.length;
@@ -365,14 +526,14 @@
       page.classList.toggle("is-filtered", filtered);
 
       if (note && noteText && deep)
-        noteText.textContent = "No title, author or venue has \u201c" + state.q.trim() + "\u201d. " + (shown === 1 ? "This paper has it in its abstract." : "These papers have it in their abstracts.");
+        noteText.textContent = shown === 1 ? "Found in the abstract." : "Found in the abstracts.";
       if (empty && emptyText && !shown) {
         var kind = state.type === "journal" ? "journal papers" : state.type === "conference" ? "conference papers" : "papers";
         emptyText.textContent =
           "No " + kind + (state.area ? " in " + areaNames[state.area] : "") + (state.q.trim() ? " match “" + state.q.trim() + "”" : "") + ".";
       }
 
-      // Fig. 1 follows: each bar glides to its filtered count, the whole year stays faintly behind it
+      // the chart follows: each bar glides to its filtered count, the whole year stays faintly behind it
       if (chart) {
         if (animate) chart.classList.add("is-live");
         Object.keys(bars).forEach(function (y) {
@@ -424,7 +585,7 @@
       Object.keys(bars).forEach(function (k) {
         bars[k].el.classList.toggle("is-current", k === y);
       });
-      // the tab stop of Fig. 1 follows the year being read
+      // the chart's tab stop follows the year being read
       if (y && bars[y] && bars[y].el.tagName === "A" && !chart.contains(doc.activeElement)) {
         barLinks.forEach(function (b) {
           b.tabIndex = b === bars[y].el ? 0 : -1;
@@ -610,7 +771,7 @@
     window.addEventListener("popstate", fromHistory);
     window.addEventListener("hashchange", fromHistory);
 
-    /* ---------- Fig. 1: hover names the year (tooltip) and shows it in the rail; a click goes there ---------- */
+    /* ---------- the chart: hover names the year (tooltip) and shows it in the rail; a click goes there ---------- */
     function peek(y) {
       if (y === peekYear) return;
       peekYear = y;

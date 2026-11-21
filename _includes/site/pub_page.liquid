@@ -1,5 +1,5 @@
 {%- comment -%}
-  The publications page (/publications/): page head with Fig. 1 (papers per year), the tool bar (search, areas, type, count),
+  The publications page (/publications/): page head with the chart of papers per year, the tool bar (search, areas, type, count),
   and the list: a sticky rail with the year in view, then one section per year. Every entry is _layouts/bib.liquid.
   Data: _bibliography/papers.bib (entries, counts), _data/research.yml (areas), _data/profile.yml (metrics).
   Behaviour: assets/js/site/pub.js. Looks: assets/css/site/pub.css.
@@ -49,7 +49,6 @@
       <span>{% if forloop.first or forloop.last %}{{ y }}{% elsif m == 0 and from_first > 2 and to_last > 2 %}{{ y }}{% endif %}</span>
     {%- endfor -%}
   </div>
-  <figcaption class="figcap"><span class="figcap__no">Fig. 1</span><span>Papers per year</span></figcaption>
 </figure>
 {%- endcapture -%}
 
@@ -61,14 +60,19 @@
   </div>
   <div class="stat">
     <dt class="stat__label">citations</dt>
-    <dd class="stat__value"><span data-kit="sliding-number" data-value="{{ profile.metrics.citations | remove: ',' }}" data-delay="760">{{ profile.metrics.citations }}</span></dd>
+    <dd class="stat__value">
+      {%- if profile.metrics.source_url -%}
+        <a class="pubhead__src" href="{{ profile.metrics.source_url }}" data-cursor="Scholar"><span data-kit="sliding-number" data-value="{{ profile.metrics.citations | remove: ',' }}" data-delay="760">{{ profile.metrics.citations }}</span></a>
+      {%- else -%}
+        <span data-kit="sliding-number" data-value="{{ profile.metrics.citations | remove: ',' }}" data-delay="760">{{ profile.metrics.citations }}</span>
+      {%- endif -%}
+    </dd>
   </div>
   <div class="stat">
     <dt class="stat__label">h-index</dt>
     <dd class="stat__value"><span data-kit="sliding-number" data-value="{{ profile.metrics.h_index }}" data-delay="820">{{ profile.metrics.h_index }}</span></dd>
   </div>
 </dl>
-<p class="pubhead__note t-label">Citation figures from <a class="link" href="{{ profile.metrics.source_url }}">{{ profile.metrics.source }}</a>, {{ profile.metrics.as_of }}.</p>
 {%- endcapture -%}
 
 <div class="pubs" data-pubs data-total="{{ total }}">

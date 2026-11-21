@@ -2,7 +2,7 @@
 ---
 {%- comment -%}
   One publication: local override of al_folio_core's entry template, used by every {% bibliography %} on the site
-  (the publications page and the home page's "Selected publications"). jekyll-scholar wraps it in <li>.
+  (today only the publications page, _includes/site/pub_page.liquid). jekyll-scholar wraps it in <li>.
   Looks: assets/css/site/pub.css. Behaviour (hover surface, filter, search marks): assets/js/site/pub.js.
   Extra BibTeX fields read here: abbr, theme (key from _data/research.yml), pubtype (journal | conference),
   selected, code, pdf, html, google_scholar_id (count from _data/citations.yml), abstract, bibtex_show.
@@ -37,16 +37,15 @@
     {%- if entry.volume %}, vol. {{ entry.volume }}{% endif -%}
     {%- if entry.number %}, no. {{ entry.number }}{% endif -%}
     {%- if entry.pages %}, pp. {{ entry.pages | replace: '--', '–' }}{% endif -%}
-    <span class="pub__year">, {{ entry.year }}</span>
   </p>
   <div class="pub__acts">
     {%- if entry.abstract -%}
-      <button type="button" class="pub__act" data-pubkit="disclosure press" data-group="{{ k }}" aria-expanded="false" aria-controls="{{ k }}-abs">
+      <button type="button" class="pub__act" data-pubkit="disclosure press" data-effect="unfold" data-group="{{ k }}" aria-expanded="false" aria-controls="{{ k }}-abs">
         Abstract<span class="pub__chev" data-disclosure-icon>{% include site/icon.liquid name="chevron-down" size="14" %}</span>
       </button>
     {%- endif -%}
     {%- if entry.bibtex_show -%}
-      <button type="button" class="pub__act pub__act--bib" data-pubkit="disclosure press" data-group="{{ k }}" aria-expanded="false" aria-controls="{{ k }}-bib">
+      <button type="button" class="pub__act pub__act--bib" data-pubkit="disclosure press" data-effect="unfold" data-group="{{ k }}" aria-expanded="false" aria-controls="{{ k }}-bib">
         BibTeX<span class="pub__chev" data-disclosure-icon>{% include site/icon.liquid name="chevron-down" size="14" %}</span>
       </button>
     {%- endif -%}
@@ -62,7 +61,7 @@
       <a class="pub__act" href="{% if entry.pdf contains '://' %}{{ entry.pdf }}{% else %}{{ entry.pdf | prepend: '/assets/pdf/' | relative_url }}{% endif %}">PDF{% include site/icon.liquid name="arrow-up-right" size="14" %}</a>
     {%- endif -%}
     {%- if gs and gs.citations > 0 -%}
-      <a class="pub__cites" href="https://scholar.google.com/citations?view_op=view_citation&amp;hl=en&amp;user={{ site.data.socials.scholar_userid }}&amp;citation_for_view={{ gs_key }}" data-tip="Citations on Google Scholar">
+      <a class="pub__cites" href="https://scholar.google.com/citations?view_op=view_citation&amp;hl=en&amp;user={{ site.data.socials.scholar_userid }}&amp;citation_for_view={{ gs_key }}" data-cursor="Scholar">
         <span class="pub__n">{{ gs.citations }}</span> citation{% if gs.citations != 1 %}s{% endif %}
       </a>
     {%- endif -%}
@@ -76,7 +75,7 @@
     <div class="pub__panel pub__panel--bib" id="{{ k }}-bib" data-disclosure-panel>
       <div class="pub__bib">
         <div class="pub__code" id="{{ k }}-bibsrc">{% highlight bibtex %}{{- entry.bibtex | hideCustomBibtex -}}{% endhighlight %}</div>
-        <button type="button" class="icon-btn pub__copy" data-pubkit="copy press" data-copy-from="#{{ k }}-bibsrc" data-toast="BibTeX copied" data-tip="Copy BibTeX" aria-label="Copy BibTeX">
+        <button type="button" class="icon-btn pub__copy" data-pubkit="copy magnetic press" data-copy-from="#{{ k }}-bibsrc" data-toast="BibTeX copied" data-tip="Copy BibTeX" aria-label="Copy BibTeX">
           {%- include site/icon.liquid name="copy" size="16" -%}{%- include site/icon.liquid name="check" size="16" -%}
         </button>
       </div>
