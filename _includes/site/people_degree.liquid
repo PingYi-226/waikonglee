@@ -1,0 +1,22 @@
+{%- comment -%}
+  A small drawn mark for a degree, in the line style of the site's icons (24 px grid, 1.5 px strokes, round ends):
+  a doctoral cap for PhD, a rolled diploma for a master's degree (Master, MSc). Every stroke has pathLength="1"
+  so group.css can draw it in when the card it sits on is hovered or focused.
+    {% include site/people_degree.liquid degree=p.degree %}
+{%- endcomment -%}
+{%- assign deg_k = include.degree | downcase -%}
+{%- if deg_k == 'phd' -%}
+<svg class="gdeg gdeg--phd" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+  <path d="M12 4.5 22 9l-10 4.5L2 9Z" pathLength="1"/>
+  <path d="M6.5 11.2v4c0 1.6 2.5 2.9 5.5 2.9s5.5-1.3 5.5-2.9v-4" pathLength="1"/>
+  <path d="m12 9 7.2 1.8v5.4" pathLength="1"/>
+  <path d="M19.2 18.4v.1" pathLength="1"/>
+</svg>
+{%- elsif deg_k == 'master' or deg_k == 'msc' -%}
+<svg class="gdeg gdeg--master" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+  <path d="M18.5 8H5.5a2 3.5 0 0 0 0 7h13" pathLength="1"/>
+  <ellipse cx="18.5" cy="11.5" rx="2" ry="3.5" pathLength="1"/>
+  <path d="M10 8v7" pathLength="1"/>
+  <path d="m10 15-1.7 4.3M10 15l1.7 4.3" pathLength="1"/>
+</svg>
+{%- endif -%}
