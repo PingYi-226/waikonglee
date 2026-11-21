@@ -1820,6 +1820,283 @@
     };
   });
 
+  /** A layer the kit puts inside a card, under its content: the card becomes its stacking context (k-layered). */
+  function layerIn(host, className) {
+    const node = doc.createElement("span");
+    node.className = className;
+    node.setAttribute("aria-hidden", "true");
+    if (getComputedStyle(host).position === "static") {
+      host.style.position = "relative";
+      host.setAttribute("data-k-positioned", "");
+    }
+    host.classList.add("k-layered");
+    host.appendChild(node);
+    return node;
+  }
+  function unlayer(host, node) {
+    node.remove();
+    if (host.querySelector(":scope > .k-spot__light, :scope > .k-fill")) return;
+    host.classList.remove("k-layered");
+    if (host.hasAttribute("data-k-positioned")) {
+      host.style.position = "";
+      host.removeAttribute("data-k-positioned");
+    }
+  }
+  /** The pointer in an element's own (untransformed) coordinates, from its drawn box. */
+  function localPoint(el, rect, x, y) {
+    const sx = rect.width ? el.offsetWidth / rect.width : 1;
+    const sy = rect.height ? el.offsetHeight / rect.height : 1;
+    return { x: (x - rect.left) * sx, y: (y - rect.top) * sy };
+  }
+
+  /* ----------------------------------------------------------------- spotlight
+   * The owner's "pointer spotlight" on a group of cards: soft light on the card under the pointer, and the borders
+   * of its neighbours lighting up as the pointer comes near. Every item gets, in its own box, the pointer's place
+   * (--spot-x, --spot-y, px), a strength that falls off with the pointer's distance from the item's box
+   * (--spot-o: 1 inside, 0 at data-radius px) and whether the pointer is inside (--spot-in, 0 or 1). The kit's
+   * default look (.k-spot__light in kit-pointer.css: a fill light and a border ring) draws from them; data-spot="vars"
+   * keeps only the variables for a page's own drawing. Item boxes are read once and kept (read again after a scroll,
+   * a resize, a layout change or refresh(); every frame with data-live), so a pointer move costs no layout.
+   * Fine pointers only; keyboard focus lights the focused item from its centre.
+   */
+  const SPOT_RADIUS = 240; // px from an item's box at which its border no longer catches the light (site value)
+
+  Site.register("spotlight", function (el, opts) {
+    const selector = typeof opts.items === "string" && opts.items ? opts.items : ":scope > *";
+    const radius = Number(opts.radius) > 0 ? Number(opts.radius) : SPOT_RADIUS;
+    const draw = opts.spot !== "vars";
+    const live = opts.live === true;
+    let items = [];
+    let dirty = true;
+    let at = null; // { x, y } in the viewport, from the pointer or the focus
+    let queued = false;
+
+    function collect() {
+      const now = Array.prototype.filter.call(el.querySelectorAll(selector), (n) => !n.classList.contains("k-spot__light"));
+      items.forEach((it) => {
+        if (now.indexOf(it.el) < 0) release(it);
+      });
+      items = now.map((n) => items.find((it) => it.el === n) || { el: n, light: draw ? layerIn(n, "k-spot__light") : null, rect: null, o: -1, inside: -1 });
+      items.forEach((it) => it.el.classList.add("k-spot"));
+      dirty = true;
+    }
+    function release(it) {
+      if (it.light) unlayer(it.el, it.light);
+      it.el.classList.remove("k-spot", "is-spot");
+      ["--spot-x", "--spot-y", "--spot-o", "--spot-in"].forEach((p) => it.el.style.removeProperty(p));
+    }
+    function measure() {
+      items.forEach((it) => (it.rect = it.el.getBoundingClientRect()));
+      dirty = false;
+    }
+    function paint() {
+      queued = false;
+      if (dirty || live) measure();
+      items.forEach((it) => {
+        const r = it.rect;
+        let o = 0;
+        let inside = 0;
+        if (at && r) {
+          const dx = Math.max(r.left - at.x, 0, at.x - r.right);
+          const dy = Math.max(r.top - at.y, 0, at.y - r.bottom);
+          const d = Math.hypot(dx, dy);
+          o = d >= radius ? 0 : 1 - d / radius;
+          o = o * o * (3 - 2 * o); // a soft shoulder rather than a cone
+          inside = dx === 0 && dy === 0 ? 1 : 0;
+          if (o > 0) {
+            const p = localPoint(it.el, r, at.x, at.y);
+            it.el.style.setProperty("--spot-x", p.x.toFixed(1) + "px");
+            it.el.style.setProperty("--spot-y", p.y.toFixed(1) + "px");
+          }
+        }
+        if (Math.abs(o - it.o) > 0.004) it.el.style.setProperty("--spot-o", o.toFixed(3));
+        if (inside !== it.inside) {
+          it.el.style.setProperty("--spot-in", String(inside));
+          it.el.classList.toggle("is-spot", inside === 1);
+        }
+        it.o = o;
+        it.inside = inside;
+      });
+    }
+    const schedule = () => {
+      if (queued) return;
+      queued = true;
+      frame(paint);
+    };
+    const enabled = () => env.hover && !env.static;
+    const onEnter = (e) => {
+      if (!enabled() || e.pointerType === "touch") return;
+      collect();
+    };
+    const onMove = (e) => {
+      if (!enabled() || e.pointerType === "touch") return;
+      if (!items.length) collect();
+      at = { x: e.clientX, y: e.clientY };
+      schedule();
+    };
+    const onLeave = () => {
+      at = null;
+      schedule();
+    };
+    const onFocusIn = (e) => {
+      if (env.static || !focusVisible(e.target)) return;
+      if (!items.length) collect();
+      const it = items.find((i) => i.el.contains(e.target));
+      if (!it) return;
+      const r = it.el.getBoundingClientRect();
+      dirty = true;
+      at = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      schedule();
+    };
+    const onFocusOut = (e) => {
+      if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+      onLeave();
+    };
+    const onScroll = () => {
+      dirty = true;
+      if (at) schedule();
+    };
+    el.addEventListener("pointerenter", onEnter);
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerleave", onLeave);
+    el.addEventListener("focusin", onFocusIn);
+    el.addEventListener("focusout", onFocusOut);
+    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    const offResize = Site.on("resize", onScroll);
+    const resize = new ResizeObserver(onScroll);
+    resize.observe(el);
+    if (draw && env.hover && !env.static) collect(); // the light layers exist before the first move
+
+    return {
+      /** Read the items and their boxes again (items added, or moved by something the kit cannot see). */
+      refresh() {
+        collect();
+        schedule();
+      },
+      destroy() {
+        el.removeEventListener("pointerenter", onEnter);
+        el.removeEventListener("pointermove", onMove);
+        el.removeEventListener("pointerleave", onLeave);
+        el.removeEventListener("focusin", onFocusIn);
+        el.removeEventListener("focusout", onFocusOut);
+        window.removeEventListener("scroll", onScroll, { capture: true });
+        offResize();
+        resize.disconnect();
+        items.forEach(release);
+        items = [];
+      },
+    };
+  });
+
+  /* ---------------------------------------------------------------- hover-fill
+   * The owner's "hover reveal": a fill (--k-fill-bg) spreads from the point where the pointer came in and withdraws
+   * toward the point where it left (a circle clip on a layer under the card's content, on transition.fill); coming
+   * back on the way, it grows again from where it is. Children marked data-hover-show come in a beat later (CSS,
+   * --k-fill-delay). Keyboard focus fills from the centre and shows them too; without hover (touch) there is no
+   * fill and they are simply visible. Reduced motion: the fill fades instead of spreading.
+   */
+  const CIRCLE = /circle\(\s*([\d.]+)px\s+at\s+([-\d.]+)px\s+([-\d.]+)px\s*\)/;
+
+  Site.register("hover-fill", function (el) {
+    let layer = null;
+    let anim = null;
+    let filled = false;
+    let byFocus = false;
+
+    function ensure() {
+      if (!layer) layer = layerIn(el, "k-fill");
+      return layer;
+    }
+    function pointOf(e) {
+      const r = el.getBoundingClientRect();
+      const p = e ? localPoint(el, r, e.clientX, e.clientY) : { x: el.offsetWidth / 2, y: el.offsetHeight / 2 };
+      return { x: Site.util.clamp(p.x, 0, el.offsetWidth), y: Site.util.clamp(p.y, 0, el.offsetHeight) };
+    }
+    const reach = (p) => Math.hypot(Math.max(p.x, el.offsetWidth - p.x), Math.max(p.y, el.offsetHeight - p.y)) + 1;
+    const circle = (r, p) => "circle(" + r.toFixed(1) + "px at " + p.x.toFixed(1) + "px " + p.y.toFixed(1) + "px)";
+
+    function to(on, p) {
+      const node = ensure();
+      const t = css("transition.fill");
+      const previous = anim;
+      if (env.reduce || env.static) {
+        // a fade, from wherever the last one was
+        const from = getComputedStyle(node).opacity;
+        node.style.clipPath = "none";
+        anim = env.static ? null : node.animate([{ opacity: from }, { opacity: on ? 1 : 0 }], { duration: css("transition.fade").duration, easing: css("transition.fade").easing, fill: "both" });
+        if (!anim) node.style.opacity = on ? "1" : "0";
+      } else {
+        node.style.opacity = "";
+        node.style.clipPath = "";
+        const now = CIRCLE.exec(getComputedStyle(node).clipPath || "");
+        // from the circle on screen (held by the last animation, finished or not), else from nothing at p
+        const from = now && previous ? now[0] : circle(0, p);
+        const target = on ? circle(reach(p), p) : circle(0, p);
+        anim = node.animate([{ clipPath: from, opacity: 1 }, { clipPath: target, opacity: 1 }], { duration: t.duration, easing: t.easing, fill: "both" });
+      }
+      if (previous) previous.cancel();
+      const mine = anim;
+      if (mine && !on)
+        mine.finished.then(
+          () => {
+            if (anim === mine) {
+              mine.cancel();
+              anim = null;
+            }
+          },
+          () => {},
+        );
+    }
+    function set(on, p) {
+      if (on === filled) return;
+      filled = on;
+      el.classList.toggle("is-filled", on);
+      to(on, p);
+    }
+    const onEnter = (e) => {
+      if (!env.hover || e.pointerType === "touch") return;
+      byFocus = false;
+      set(true, pointOf(e));
+    };
+    const onLeave = (e) => {
+      if (e.pointerType === "touch" || byFocus) return;
+      set(false, pointOf(e));
+    };
+    const onFocusIn = (e) => {
+      if (!focusVisible(e.target) || filled) return;
+      byFocus = true;
+      set(true, pointOf(null));
+    };
+    const onFocusOut = (e) => {
+      if (!byFocus || (e.relatedTarget && el.contains(e.relatedTarget))) return;
+      byFocus = false;
+      if (env.hover && el.matches(":hover")) return;
+      set(false, pointOf(null));
+    };
+    el.addEventListener("pointerenter", onEnter);
+    el.addEventListener("pointerleave", onLeave);
+    el.addEventListener("focusin", onFocusIn);
+    el.addEventListener("focusout", onFocusOut);
+    el.classList.add("k-fillable");
+
+    return {
+      /** Fill (true) or empty (false) from the centre, as keyboard focus does. */
+      set: (on) => set(!!on, pointOf(null)),
+      get filled() {
+        return filled;
+      },
+      destroy() {
+        el.removeEventListener("pointerenter", onEnter);
+        el.removeEventListener("pointerleave", onLeave);
+        el.removeEventListener("focusin", onFocusIn);
+        el.removeEventListener("focusout", onFocusOut);
+        if (anim) anim.cancel();
+        if (layer) unlayer(el, layer);
+        el.classList.remove("k-fillable", "is-filled");
+      },
+    };
+  });
+
   /* ---------------------------------------------------------------- Site.toast
    * A small message rising from the bottom edge (recipes/toast.md, recipes/css-driven.md, primitives/base-ui/toast):
    * it rises its own height from scale.toast out of blur.surface on spring.toast; the newest is in front, the ones
