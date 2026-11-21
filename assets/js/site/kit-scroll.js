@@ -98,13 +98,16 @@
   var SHINE_SWEEP = { duration: 1.2, ease: [0.4, 0, 0.2, 1] };
   var SHINE_DEG = -15;
 
-  // primitives/cursor: the follower's spring, its entrance (scale on a press-like spring, opacity on ease.enter)
-  // and its exit (the same spring critically damped).
+  // primitives/cursor (CursorFollow): the spring the ring follows the pointer on.
   var CURSOR_FOLLOW = { type: "spring", stiffness: 500, damping: 50, bounce: 0 };
-  var CURSOR_SCALE_IN = { type: "spring", stiffness: 550, damping: 30, restSpeed: 10 };
-  var CURSOR_SCALE_OUT = { type: "spring", stiffness: 550, damping: 2 * Math.sqrt(550), restSpeed: 10 };
-  var CURSOR_OPACITY = { duration: 0.3, ease: [0.25, 0.1, 0.35, 1] };
-  // Own: the label sits below-right of the native arrow (the source places it 10px off its own 20px cursor).
+  // ROUND2_SPEC 4.2: a dot of about 6 px, a ring of about 34 px that grows to about 56 px over controls.
+  // The ring is drawn at its large size and scaled down at rest (a hairline that stays a hairline when it grows).
+  var CURSOR_RING = 34;
+  var CURSOR_BIG = 56;
+  // Own: over a control the dot shrinks to this share; under a press the ring tightens to this share.
+  var CURSOR_DOT_GROW = 0.5;
+  var CURSOR_PRESS = 0.8;
+  // Own (reduced motion): the word sits below-right of the native arrow.
   var CURSOR_OFFSET = { x: 14, y: 20 };
 
   // internal/follow-cursor.tsx: the spring of a popup following the pointer.
@@ -1634,127 +1637,272 @@
   });
 
   /* ---------------------------------------------------------------- cursor */
-  /* A port of primitives/cursor's CursorFollow, beside the native cursor: one label for the page, shown over
-   * [data-cursor] targets. It pops in (scale from 0 on a press-like spring, opacity on ease.enter), follows on
-   * its own spring, swaps its text through blur.icon on transition.swap while its width glides, and leaves
-   * on the same spring critically damped. Decorative: aria-hidden, nothing that only it says. */
+  /*
+   * The page's pointer: a dot at the pointer and a hairline ring that follows on CursorFollow's spring, so it
+   * trails a little. Over a control the ring grows (with a faint fill) and the dot shrinks; over [data-cursor="Word"]
+   * the ring becomes a filled disc carrying the word (the text swaps through blur.icon while the width glides on
+   * spring.tooltip); a press tightens the ring and it springs back. Over text fields the native I-beam shows and
+   * ours hides. Fine pointers only. Under reduced motion the native cursor stays and only the word shows, beside
+   * it. Decorative (aria-hidden), never takes pointer events. One per page (the footer prints its element).
+   */
+  var CURSOR_GROW = 'a[href], button, [role="button"], [role="link"], [role="tab"], [role="checkbox"], [role="switch"], summary, label, select, input[type="checkbox"], input[type="radio"], input[type="range"], input[type="submit"], input[type="button"], input[type="reset"], input[type="file"], input[type="color"], [data-cursor-grow]';
+  var CURSOR_FIELD = 'input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="file"]):not([type="color"]):not([type="image"]), textarea, [contenteditable]:not([contenteditable="false"])';
   var cursorInstance = null;
+  function cursorState(target) {
+    if (!target || target.nodeType !== 1) return { s: "rest" };
+    if (closest(target, CURSOR_FIELD)) return { s: "native" };
+    var zone = closest(target, "[data-cursor]");
+    var ctl = closest(target, CURSOR_GROW);
+    if (ctl && ctl.matches(':disabled, [aria-disabled="true"]')) ctl = null;
+    if (zone) {
+      var w = zone.getAttribute("data-cursor");
+      if (w === "none") return { s: "hidden" };
+      if (w === "native") return { s: "native" };
+      // a control inside a word zone is the nearer thing
+      if (ctl && ctl !== zone && zone.contains(ctl)) return { s: "grow" };
+      if (w && w !== "grow") return { s: "word", w: w };
+      return { s: "grow" };
+    }
+    return { s: ctl ? "grow" : "rest" };
+  }
+  function topLayerModal() {
+    try {
+      return !!document.querySelector(":modal");
+    } catch (e) {
+      return false;
+    }
+  }
   function createCursor(el) {
     if (cursorInstance) return null;
     el.classList.add("k-cursor");
     el.setAttribute("aria-hidden", "true");
-    el.hidden = false; // the markup may hide it until the script runs (footer.liquid does)
+    el.hidden = false; // the markup hides it until the script runs (footer.liquid)
     el.innerHTML = "";
-    var pill = document.createElement("span");
-    pill.className = "k-cursor__pill";
-    el.appendChild(pill);
+    el.style.setProperty("--k-cursor-blur", Site.tokens.blur.icon + "px");
+    el.style.setProperty("--k-cursor-big", CURSOR_BIG + "px");
+    function part(cls, parent) {
+      var n = document.createElement("span");
+      n.className = cls;
+      parent.appendChild(n);
+      return n;
+    }
+    var ring = part("k-cursor__ring", el);
+    var shape = part("k-cursor__shape", ring);
+    var dot = part("k-cursor__dot", el);
+    var dotc = part("k-cursor__dotc", dot);
+    var mode = null; // "full" (dot + ring), "label" (reduced motion: the word beside the native cursor) or null
+    var state = "rest";
+    var word = "";
     var label = null;
-    var text = "";
-    var active = false;
-    var pillScale = styleValue(reduced() ? 1 : 0, function (v) {
-      pill.style.transform = v === 1 ? "" : "scale(" + v.toFixed(4) + ")";
-    });
-    var pillFade = styleValue(0, function (v) {
-      pill.style.opacity = String(clamp(v, 0, 1));
-    });
+    var seen = false; // a mouse has moved over the page
+    var inside = false; // the pointer is in the window
+    var away = true; // it has been out of the window (or never in): the ring starts at the pointer, not from where it was
+    var byTouch = false; // the last pointer was a finger
+    var suspended = false; // a top-layer modal is open: the native cursor is back
+    var px = -100;
+    var py = -100;
+    var rx = -100;
+    var ry = -100;
+    var base = CURSOR_RING / CURSOR_BIG;
+    var press = 1;
     var widthAnim = null;
-    var x = 0;
-    var y = 0;
-    function place() {
-      el.style.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px,0)";
+    function writeShape() {
+      shape.style.transform = mode === "label" ? "" : "translate(-50%,-50%) scale(" + (base * press).toFixed(4) + ")";
+    }
+    var sBase = styleValue(base, function (v) {
+      base = v;
+      writeShape();
+    });
+    var sPress = styleValue(1, function (v) {
+      press = v;
+      writeShape();
+    });
+    var sDot = styleValue(1, function (v) {
+      dotc.style.transform = Math.abs(v - 1) < 0.001 ? "" : "scale(" + Math.max(0, v).toFixed(4) + ")";
+    });
+    function placeRing() {
+      ring.style.transform = "translate3d(" + rx.toFixed(2) + "px," + ry.toFixed(2) + "px,0)";
     }
     var fx = follower(CURSOR_FOLLOW, 0, function (v) {
-      x = v;
-      place();
+      rx = v;
+      placeRing();
     });
     var fy = follower(CURSOR_FOLLOW, 0, function (v) {
-      y = v;
-      place();
+      ry = v;
+      placeRing();
     });
+    function placeDot() {
+      dot.style.transform = "translate3d(" + px + "px," + py + "px,0)";
+    }
+    function sync() {
+      var show = !!mode && seen && inside && !byTouch && !suspended && (mode === "full" ? state !== "hidden" && state !== "native" : state === "word");
+      el.classList.toggle("is-visible", show);
+      root.classList.toggle("has-cursor", mode === "full" && seen && !byTouch && !suspended);
+    }
     function swapText(next) {
-      if (next === text) return;
+      if (label && label.textContent === next && !label.classList.contains("is-leaving")) return;
       var old = label;
-      var fromW = pill.offsetWidth;
-      label = document.createElement("span");
-      label.className = "k-cursor__text";
-      label.textContent = next;
-      pill.appendChild(label);
-      text = next;
+      label = null;
       if (old) {
+        old.classList.remove("is-current");
         old.classList.add("is-leaving");
-        if (!env.static && old.animate) {
-          old.animate([{ opacity: 0, filter: "blur(" + Site.tokens.blur.icon + "px)" }], timing("transition.swap")).finished.then(
-            function () {
-              old.remove();
-            },
-            function () {},
-          );
-          label.animate([{ opacity: 0, filter: "blur(" + Site.tokens.blur.icon + "px)" }, {}], timing("transition.swap"));
-        } else old.remove();
-        var toW = pill.offsetWidth;
-        if (widthAnim) widthAnim.cancel();
-        if (!env.static && pill.animate && Math.abs(toW - fromW) > 0.5) {
-          var c = Site.css("spring.tooltip");
-          widthAnim = pill.animate([{ width: fromW + "px" }, { width: toW + "px" }], { duration: c.duration, easing: c.easing });
+        setTimeout(function () {
+          old.remove();
+        }, Site.css("transition.swap").duration + 40);
+      }
+      if (next == null) return;
+      label = part("k-cursor__text", shape);
+      label.textContent = next;
+      // next frame: the CSS transition plays from the hidden state (opacity, blur)
+      requestAnimationFrame(function () {
+        if (label && label.parentNode) label.classList.add("is-current");
+      });
+    }
+    function setState(next) {
+      var s = next.s;
+      var w = next.w || "";
+      if (s === state && w === word) return;
+      var fromW = shape.offsetWidth;
+      state = s;
+      word = w;
+      el.classList.toggle("is-grow", s === "grow");
+      el.classList.toggle("is-word", s === "word");
+      swapText(s === "word" ? w : null);
+      // the disc's width glides to its word (A8: the resizing indicator)
+      var toW = shape.offsetWidth;
+      if (widthAnim) widthAnim.cancel();
+      widthAnim = null;
+      if (!env.static && shape.animate && fromW && Math.abs(toW - fromW) > 0.5) {
+        var c = Site.css("spring.tooltip");
+        widthAnim = shape.animate([{ width: fromW + "px" }, { width: toW + "px" }], { duration: c.duration, easing: c.easing });
+      }
+      if (mode === "full") {
+        if (s === "rest" || s === "grow" || s === "word") sBase.to(s === "rest" ? CURSOR_RING / CURSOR_BIG : 1, Site.t("spring.pop"));
+        sDot.to(s === "grow" ? CURSOR_DOT_GROW : s === "word" ? 0 : 1, Site.t("spring.pop"));
+      }
+      sync();
+    }
+    function modeNow() {
+      if (!env.hover || env.static) return null;
+      return env.reduce ? "label" : "full";
+    }
+    function applyMode() {
+      var m = modeNow();
+      if (m === mode) return sync();
+      mode = m;
+      el.classList.toggle("k-cursor--label", m === "label");
+      sBase.to(m === "label" ? 1 : state === "rest" ? CURSOR_RING / CURSOR_BIG : 1, null);
+      writeShape();
+      sync();
+    }
+    function retarget() {
+      if (!mode || !seen) return;
+      setState(cursorState(document.elementFromPoint(px, py)));
+    }
+    var onScroll = util.throttle(retarget);
+    function onMove(e) {
+      if (e.pointerType === "touch") {
+        byTouch = true;
+        return sync();
+      }
+      byTouch = false;
+      if (!mode) return;
+      px = e.clientX;
+      py = e.clientY;
+      if (mode === "label") {
+        fx.jump(px + CURSOR_OFFSET.x);
+        fy.jump(py + CURSOR_OFFSET.y);
+      } else {
+        placeDot();
+        if (away) {
+          fx.jump(px);
+          fy.jump(py);
+        } else {
+          fx.set(px);
+          fy.set(py);
         }
       }
-    }
-    function show(target) {
-      swapText(target.getAttribute("data-cursor") || "");
-      var tx = pointer.x + CURSOR_OFFSET.x;
-      var ty = pointer.y + CURSOR_OFFSET.y;
-      if (!active) {
-        active = true;
-        fx.jump(tx);
-        fy.jump(ty);
-        el.classList.add("is-active");
-        pillScale.to(1, reduced() ? null : Site.t(CURSOR_SCALE_IN));
-        pillFade.to(1, Site.t(CURSOR_OPACITY));
+      away = false;
+      if (!seen || !inside) {
+        seen = true;
+        inside = true;
+        setState(cursorState(e.target));
       }
+      sync();
     }
-    function hide() {
-      if (!active) return;
-      active = false;
-      el.classList.remove("is-active");
-      // under reduced motion it only fades, from and to its full size
-      if (!reduced()) pillScale.to(0, Site.t(CURSOR_SCALE_OUT));
-      pillFade.to(0, Site.t(CURSOR_OPACITY));
-    }
-    function enabled() {
-      return env.hover;
-    }
-    function onMove(e) {
-      if (e.pointerType === "touch" || !enabled()) return hide();
-      var target = closest(e.target, "[data-cursor]");
-      if (!target) return hide();
-      show(target);
-      fx.set(e.clientX + CURSOR_OFFSET.x);
-      fy.set(e.clientY + CURSOR_OFFSET.y);
+    function onOver(e) {
+      if (e.pointerType === "touch" || !mode) return;
+      inside = true;
+      setState(cursorState(e.target));
     }
     function onOut(e) {
-      if (!e.relatedTarget) hide();
+      if (!e.relatedTarget) {
+        inside = false;
+        away = true;
+        sync();
+      }
+    }
+    function onDown(e) {
+      if (e.pointerType === "touch") {
+        byTouch = true;
+        return sync();
+      }
+      if (mode === "full") sPress.to(CURSOR_PRESS, Site.t("spring.press"));
+    }
+    function onUp() {
+      if (mode === "full") sPress.to(1, Site.t("spring.bounce")); // springs back past its size
     }
     function onHidden() {
-      if (document.hidden) hide();
+      if (document.hidden) {
+        inside = false;
+        away = true;
+        sync();
+      }
     }
-    document.addEventListener("pointermove", onMove, { passive: true });
-    document.addEventListener("pointerover", onMove, { passive: true });
+    var mo = new MutationObserver(function () {
+      var next = root.classList.contains("is-modal") && topLayerModal();
+      if (next !== suspended) {
+        suspended = next;
+        sync();
+      }
+    });
+    mo.observe(root, { attributes: true, attributeFilter: ["class"] });
+    document.addEventListener("pointermove", onMove, { passive: true, capture: true });
+    document.addEventListener("pointerover", onOver, { passive: true });
     document.addEventListener("pointerout", onOut, { passive: true });
+    document.addEventListener("pointerdown", onDown, { passive: true, capture: true });
+    document.addEventListener("pointerup", onUp, { passive: true, capture: true });
+    document.addEventListener("pointercancel", onUp, { passive: true, capture: true });
     document.addEventListener("visibilitychange", onHidden);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    var offH = Site.on("hover", applyMode);
+    var offR = Site.on("reduce", applyMode);
+    applyMode();
     cursorInstance = {
-      hide: hide,
+      get state() {
+        return mode ? state : "off";
+      },
       destroy: function () {
-        document.removeEventListener("pointermove", onMove);
-        document.removeEventListener("pointerover", onMove);
+        document.removeEventListener("pointermove", onMove, { capture: true });
+        document.removeEventListener("pointerover", onOver);
         document.removeEventListener("pointerout", onOut);
+        document.removeEventListener("pointerdown", onDown, { capture: true });
+        document.removeEventListener("pointerup", onUp, { capture: true });
+        document.removeEventListener("pointercancel", onUp, { capture: true });
         document.removeEventListener("visibilitychange", onHidden);
+        window.removeEventListener("scroll", onScroll);
+        mo.disconnect();
+        offH();
+        offR();
         fx.destroy();
         fy.destroy();
-        pillScale.destroy();
-        pillFade.destroy();
+        sBase.destroy();
+        sPress.destroy();
+        sDot.destroy();
         if (widthAnim) widthAnim.cancel();
+        root.classList.remove("has-cursor");
         el.innerHTML = "";
-        el.classList.remove("k-cursor", "is-active");
+        el.classList.remove("k-cursor", "k-cursor--label", "is-visible", "is-grow", "is-word");
         cursorInstance = null;
       },
     };
@@ -1763,9 +1911,9 @@
   Site.register("cursor", function (el) {
     return createCursor(el);
   });
-  // a page with [data-cursor] targets and no cursor element gets one
+  // a page without the footer's cursor element gets one
   Site.ready(function () {
-    if (cursorInstance || !document.querySelector("[data-cursor]")) return;
+    if (cursorInstance) return;
     var el = document.createElement("div");
     el.setAttribute("data-kit", "cursor");
     document.body.appendChild(el);
