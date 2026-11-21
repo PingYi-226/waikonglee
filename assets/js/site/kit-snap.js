@@ -400,7 +400,8 @@
     var s = this.nextStop(dir, y);
     if (!s) return null;
     var reach = REACH * this.vh;
-    if (Math.abs(s.y - y) <= reach || this.zoneAt(y)) return { y: s.y, stop: s };
+    // (also from a pinned section's edge into it: from its last point back to an earlier one)
+    if (Math.abs(s.y - y) <= reach || this.zoneAt(y) || this.zoneAt((y + s.y) / 2)) return { y: s.y, stop: s };
     var line = this.freeLine(dir, y, s.y);
     var free = line === null ? Math.abs(s.y - y) : Math.abs(line - y);
     if (free <= reach) return { y: s.y, stop: s };
