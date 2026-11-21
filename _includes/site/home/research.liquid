@@ -1,0 +1,66 @@
+{%- comment -%}
+  Home page, research block. Without the script (or where the scene does not run) this is a plain list of cards;
+  home-research.js turns it into the scroll-driven piece: the cards circle a lattice and settle into a grid.
+{%- endcomment -%}
+<section class="orbit" id="research" data-orbit aria-labelledby="orbit-title">
+  <div class="orbit__stage">
+    <div class="orbit__scene" data-orbit-scene>
+      <header class="orbit__head">
+        <h2 class="orbit__title t-d1" id="orbit-title" data-orbit-title="0">Research</h2>
+        <p class="orbit__title orbit__title--alt t-d2" data-orbit-title="1" aria-hidden="true">{{ count_words[areas.size] | default: areas.size }} areas. Pick one.</p>
+      </header>
+
+      <canvas class="orbit__core" data-orbit-core aria-hidden="true"></canvas>
+
+      <ul class="orbit__cards">
+        {%- for a in areas -%}
+          <li class="orbit__card" data-orbit-card>
+            <a class="ocard" href="{{ '/research/' | relative_url }}#{{ a.key }}" data-kit="press" data-press="choice">
+              <span class="ocard__fig">{% include site/diagrams/{{ a.key }}.liquid %}</span>
+              <span class="ocard__foot">
+                <span class="ocard__title">{{ a.short | default: a.title }}</span>
+                <span class="ocard__meta t-data">{% bibliography_count --query @*[theme={{ a.key }}] %} papers</span>
+              </span>
+            </a>
+          </li>
+        {%- endfor -%}
+        <li class="orbit__card" data-orbit-card>
+          <a class="ocard ocard--pubs" href="{{ '/publications/' | relative_url }}" data-kit="press" data-press="choice">
+            <span class="ocard__fig ocard__bars" aria-hidden="true">
+              {%- assign peak = 1 -%}
+              {%- capture counts -%}
+                {%- for y in (2014..year_now) -%}{% bibliography_count --query @*[year={{ y }}] %}{% unless forloop.last %},{% endunless %}{%- endfor -%}
+              {%- endcapture -%}
+              {%- assign counts = counts | strip | split: ',' -%}
+              {%- for c in counts -%}{%- assign n = c | plus: 0 -%}{%- if n > peak -%}{%- assign peak = n -%}{%- endif -%}{%- endfor -%}
+              {%- for c in counts -%}
+                {%- assign n = c | plus: 0 -%}
+                <i style="--h: {{ n | times: 1.0 | divided_by: peak | round: 3 }}; --i: {{ forloop.index0 }}"></i>
+              {%- endfor -%}
+            </span>
+            <span class="ocard__foot">
+              <span class="ocard__title">All publications</span>
+              <span class="ocard__meta t-data">{% bibliography_count %} papers</span>
+            </span>
+          </a>
+        </li>
+        <li class="orbit__card" data-orbit-card>
+          <a class="ocard ocard--code" href="{{ '/research/' | relative_url }}#software" data-kit="press" data-press="choice">
+            <span class="ocard__fig ocard__term" aria-hidden="true">
+              <span class="ocard__prompt">$</span>
+              {%- capture repos -%}
+                {%- for g in site.data.software -%}{%- for s in g.items -%}git clone {{ s.repo | split: '/' | last }}|{%- endfor -%}{%- endfor -%}
+              {%- endcapture -%}
+              {%- assign repos = repos | strip | split: '|' -%}
+              <span data-kit="typing-text" data-strings='{{ repos | jsonify }}' data-loop="true">{{ repos | first }}</span>
+            </span>
+            <span class="ocard__foot">
+              <span class="ocard__title">Open-source code</span>
+              <span class="ocard__meta t-data">{{ repos | size }} repositories</span>
+            </span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>

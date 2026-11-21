@@ -1,0 +1,33 @@
+{%- comment -%} Home page, contact block. Styles and script: home. {%- endcomment -%}
+<section class="contact section" id="contact">
+  <div class="wrap">
+    <header class="sechead" data-inview>
+      <h2 class="sechead__title">Contact</h2>
+    </header>
+    <p class="contact__lede t-d2" data-kit="split" data-split="lines" data-effect="rise">{{ profile.joining }}</p>
+    <div class="contact__grid" data-kit="reveal-group">
+      <div class="contact__mail">
+        <p class="t-label">Email</p>
+        {%- for e in profile.emails -%}
+          <p class="contact__address">
+            <a class="link" href="mailto:{{ e }}">{{ e }}</a>
+            <button type="button" class="icon-btn contact__copy" data-kit="copy press tooltip" data-copy="{{ e }}" data-tip="Copy" data-toast="Address copied" aria-label="Copy {{ e }}">
+              {% include site/icon.liquid name="copy" size=16 %}
+              {% include site/icon.liquid name="check" size=16 %}
+            </button>
+          </p>
+        {%- endfor -%}
+      </div>
+      <div class="contact__post">
+        <p class="t-label">Office</p>
+        <address>
+          {%- for line in profile.address -%}{{ line }}<br>{%- endfor -%}
+        </address>
+      </div>
+      <div class="contact__links">
+        <p class="t-label">Elsewhere</p>
+        {% include site/socials.liquid %}
+      </div>
+    </div>
+  </div>
+</section>

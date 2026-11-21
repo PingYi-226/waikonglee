@@ -1,0 +1,88 @@
+{%- comment -%} Home page, about block: the lede, the portrait, the strip of education and work. Styles and script: home-about. {%- endcomment -%}
+<section class="about section" id="about">
+  <div class="wrap">
+    <header class="sechead" data-inview>
+      <h2 class="sechead__title">About</h2>
+    </header>
+
+    <div class="about__grid">
+      <div class="about__lede" data-kit="word-scrub">{{ paras[0] | append: '</p>' }}</div>
+
+      <figure class="about__photo" data-kit="reveal" data-reveal="clip">
+        <div class="about__frame" data-kit="tilt" data-max="5" data-shine="true">
+          <img
+            src="{{ '/assets/img/prof_pic.jpg' | relative_url }}"
+            alt="Portrait of {{ site.first_name }} {{ site.last_name }}"
+            width="339"
+            height="418"
+          >
+        </div>
+      </figure>
+
+      <div class="about__body prose" data-kit="reveal-group">
+        {%- for para in paras offset: 1 -%}
+          {%- assign text = para | strip -%}
+          {%- if text != '' -%}{{ text | append: '</p>' }}{%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+
+    {%- comment -%}
+      Career strip: one bar per appointment in _data/cv.yml, placed on a time axis from the first job to today.
+      Hover or focus a bar for the details.
+    {%- endcomment -%}
+    {%- assign jobs = site.data.cv.cv.sections.Experience | reverse -%}
+    {%- assign first_job = jobs | first -%}
+    {%- assign y0 = first_job.start_date | slice: 0, 4 | plus: 0 -%}
+    {%- assign t0 = y0 | times: 12 -%}
+    {%- assign t1 = year_now | times: 12 | plus: month_now -%}
+    {%- assign span = t1 | minus: t0 -%}
+    <div class="career" data-inview>
+      <p class="career__label t-label">Career, {{ y0 }} to today</p>
+      <ol class="career__track" data-kit="tooltip-group">
+        {%- for job in jobs -%}
+          {%- assign sy = job.start_date | slice: 0, 4 | plus: 0 -%}
+          {%- assign sm = job.start_date | slice: 5, 2 | plus: 0 -%}
+          {%- if job.end_date == 'present' -%}
+            {%- assign ey = year_now -%}
+            {%- assign em = month_now -%}
+            {%- assign until = 'now' -%}
+          {%- else -%}
+            {%- assign ey = job.end_date | slice: 0, 4 | plus: 0 -%}
+            {%- assign em = job.end_date | slice: 5, 2 | plus: 0 -%}
+            {%- assign until = ey -%}
+          {%- endif -%}
+          {%- assign s = sy | times: 12 | plus: sm | minus: 1 | minus: t0 -%}
+          {%- assign e = ey | times: 12 | plus: em | minus: t0 -%}
+          {%- assign left = s | times: 100.0 | divided_by: span -%}
+          {%- assign width = e | minus: s | times: 100.0 | divided_by: span -%}
+          {%- assign kind = 'industry' -%}
+          {%- if job.position contains 'Professor' -%}{%- assign kind = 'faculty' -%}{%- endif -%}
+          {%- if job.position contains 'octoral' -%}{%- assign kind = 'postdoc' -%}{%- endif -%}
+          <li class="career__seg career__seg--{{ kind }}" style="--l: {{ left | round: 3 }}%; --w: {{ width | round: 3 }}%; --i: {{ forloop.index0 }}">
+            <button
+              type="button"
+              class="career__bar"
+              data-tip="{{ job.position | split: ',' | first }} · {{ job.company }} · {{ sy }}–{{ until }}"
+              aria-label="{{ job.position }}, {{ job.company }}, {{ sy }} to {{ until }}"
+            ></button>
+          </li>
+        {%- endfor -%}
+      </ol>
+      <ol class="career__years t-data" aria-hidden="true">
+        {%- for y in (y0..year_now) -%}
+          {%- assign mod = y | modulo: 4 -%}
+          {%- if mod == 0 -%}
+            {%- assign yl = y | times: 12 | minus: t0 | times: 100.0 | divided_by: span -%}
+            <li style="--l: {{ yl | round: 3 }}%">{{ y }}</li>
+          {%- endif -%}
+        {%- endfor -%}
+      </ol>
+      <ul class="career__legend t-label" aria-hidden="true">
+        <li class="career__key career__key--industry">Industry</li>
+        <li class="career__key career__key--faculty">Faculty</li>
+        <li class="career__key career__key--postdoc">Postdoctoral</li>
+      </ul>
+    </div>
+  </div>
+</section>

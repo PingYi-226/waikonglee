@@ -1,0 +1,280 @@
+/* ==========================================================================
+   Home page, first screen: the intro overlay and the hero.
+   ========================================================================== */
+
+/* ---------- intro: the name draws itself, then glides to its place ---------- */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-intro);
+  pointer-events: none;
+}
+
+.intro__veil {
+  position: absolute;
+  inset: 0;
+  background: var(--paper);
+}
+
+.intro svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.intro text {
+  fill: var(--ink);
+  stroke: var(--ink);
+  stroke-width: 1.1px;
+  stroke-linejoin: round;
+}
+
+html.is-intro {
+  overflow: hidden;
+}
+
+html {
+  scrollbar-gutter: stable; /* nothing shifts when the page is locked for the intro or the menu */
+}
+
+.nav {
+  transition:
+    transform var(--spring-slide),
+    border-color var(--t-overlay),
+    opacity 700ms var(--ease-out);
+}
+
+html.is-intro .nav {
+  opacity: 0;
+}
+
+/* ---------- hero ---------- */
+.hero {
+  --hero-p: 0; /* 0 at rest, 1 when the hero has scrolled away (set by home.js) */
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-top: calc(var(--nav-h) + 1.5rem);
+  overflow: clip;
+}
+
+.hero__lattice {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-mask-image: linear-gradient(98deg, transparent 0%, transparent 30%, #000 66%);
+  mask-image: linear-gradient(98deg, transparent 0%, transparent 30%, #000 66%);
+  opacity: calc(1 - var(--hero-p) * 1.4);
+}
+
+.hero__main,
+.hero__base {
+  position: relative;
+  width: min(100% - 2 * var(--gutter), 1480px);
+  margin-inline: auto;
+}
+
+.hero__main {
+  align-self: end;
+  padding-bottom: clamp(1.75rem, 4.5vh, 3.25rem);
+  transform: translate3d(0, calc(var(--hero-p) * -70px), 0);
+  opacity: calc(1 - var(--hero-p) * 1.25);
+  pointer-events: none; /* the lattice behind stays reachable; links and buttons opt back in */
+}
+
+.hero__main a,
+.hero__main button {
+  pointer-events: auto;
+}
+
+.hero__name {
+  margin: 0 0 clamp(0.9rem, 2.2vh, 1.5rem) -0.045em;
+}
+
+.hero__role {
+  margin: 0 0 clamp(0.9rem, 2.4vh, 1.6rem);
+  font-size: var(--fs-small);
+  color: var(--muted);
+}
+
+.hero__line {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+}
+
+.hero__statement {
+  max-width: 21em;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.45vw, 2.15rem);
+  line-height: 1.2;
+  letter-spacing: -0.006em;
+  color: var(--ink-2);
+  text-wrap: balance;
+}
+
+.hero__rotate {
+  font-style: italic;
+  color: var(--ink);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: clamp(1.4rem, 3.4vh, 2.2rem);
+}
+
+.hero__base {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    "figures fig"
+    "note scroll";
+  align-items: end;
+  gap: 0.9rem 3rem;
+  padding: 1.25rem 0 clamp(1.1rem, 2.6vh, 1.8rem);
+  border-top: 1px solid var(--line);
+  opacity: calc(1 - var(--hero-p) * 1.6);
+}
+
+.hero__figures {
+  grid-area: figures;
+  display: flex;
+  gap: clamp(1.5rem, 4.6vw, 4.25rem);
+  margin: 0;
+}
+
+.hero__note {
+  grid-area: note;
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.hero__fig {
+  grid-area: fig;
+  justify-self: end;
+  justify-content: flex-end;
+  align-items: baseline;
+  text-align: right;
+}
+
+.hero__fig-out {
+  min-width: 4.6em;
+  color: var(--ink);
+  text-align: right;
+}
+
+.hero__scroll,
+.hero__scroll:visited {
+  grid-area: scroll;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--muted);
+}
+
+/* a hairline with a mark travelling down it, over and over */
+.hero__scroll-line {
+  position: relative;
+  display: block;
+  width: 3.4rem;
+  height: 1px;
+  background: var(--line-strong);
+  overflow: hidden;
+}
+
+.hero__scroll-line::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: var(--ink);
+  transform: translateX(-110%);
+  animation: hero-scroll 2.6s var(--ease-in-out) infinite;
+}
+
+@keyframes hero-scroll {
+  0% {
+    transform: translateX(-110%);
+  }
+  60%,
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+/* entrance: these start hidden only while the script is there to bring them in */
+html.js .hero [data-hero-item]:not(.is-on) {
+  opacity: 0;
+}
+
+html.js .hero [data-hero-name]:not(.is-on) {
+  visibility: hidden;
+}
+
+html.js .hero__lattice:not(.is-on) {
+  visibility: hidden;
+}
+
+@media (max-width: 760px) {
+  .hero {
+    padding-bottom: 0;
+  }
+
+  .hero__lattice {
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, transparent calc(100% - 10.5rem), #000 calc(100% - 7.5rem));
+    mask-image: linear-gradient(180deg, transparent 0%, transparent calc(100% - 10.5rem), #000 calc(100% - 7.5rem));
+  }
+
+  .hero__base {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "figures"
+      "note";
+    padding-bottom: 11.5rem; /* room for the lattice strip */
+  }
+
+  .hero__figures {
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .hero__fig,
+  .hero__scroll {
+    display: none;
+  }
+}
+
+/* ---------- reduced motion and print ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .hero__scroll-line::after {
+    animation: none;
+  }
+
+  .hero__main {
+    transform: none;
+  }
+}
+
+.is-static .hero__scroll-line::after {
+  animation: none;
+}
+
+@media print {
+  .hero {
+    min-height: 0;
+  }
+
+  .hero__lattice,
+  .hero__scroll,
+  .hero__fig {
+    display: none !important;
+  }
+}

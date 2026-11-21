@@ -1,0 +1,40 @@
+{%- comment -%} Home page, news block: the newest hand-written items. Styles and script: home. {%- endcomment -%}
+  {%- comment -%} Items written by hand only: the ones derived from the publication list (derived: true) stay on the news page. {%- endcomment -%}
+  {%- assign news = site.news | where_exp: 'item', 'item.derived != true' | sort: 'date' | reverse -%}
+  <section class="hnews section" id="news">
+    <div class="wrap">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title">News</h2>
+        <a class="link" href="{{ '/news/' | relative_url }}">All news</a>
+      </header>
+      <ol class="hnews__list rows" data-kit="highlight hover-preview reveal-group" data-mode="hover" data-items=".hnews__row">
+        {%- for item in news limit: page.announcements.limit -%}
+          <li
+            class="hnews__row"
+            {% if item.image %}
+              data-preview="{{ item.image | prepend: '/assets/img/' | relative_url }}"
+              data-preview-alt="{{ item.image_alt | default: 'News photo' }}"
+            {% endif %}
+          >
+            <p class="hnews__date t-data">
+              {%- if item.label %}<span class="hnews__tag tag">{{ item.label }}</span>{% endif -%}
+              {%- if item.date_label -%}
+                <span>{{ item.date_label }}</span>
+              {%- else -%}
+                <time datetime="{{ item.date | date_to_xmlschema }}">{{ item.date | date: '%-d %b %Y' }}</time>
+              {%- endif -%}
+            </p>
+            <div class="hnews__text">{{ item.content }}</div>
+            {%- if item.image %}
+              <img
+                class="hnews__thumb"
+                src="{{ item.image | prepend: '/assets/img/' | relative_url }}"
+                alt="{{ item.image_alt | default: 'News photo' }}"
+                loading="lazy"
+              >
+            {%- endif %}
+          </li>
+        {%- endfor -%}
+      </ol>
+    </div>
+  </section>

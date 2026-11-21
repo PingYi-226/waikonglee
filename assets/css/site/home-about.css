@@ -1,0 +1,204 @@
+/* ==========================================================================
+   Home page, about block: the lede, the portrait, the strip of education and work.
+   ========================================================================== */
+
+/* ---------- about ---------- */
+.about__grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: clamp(1rem, 2.2vw, 2rem);
+  row-gap: clamp(2rem, 5vw, 3.5rem);
+  align-items: start;
+}
+
+.about__lede {
+  grid-column: 1 / span 8;
+}
+
+.about__lede p {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.85rem, 3.35vw, 2.95rem);
+  line-height: 1.15;
+  letter-spacing: -0.014em;
+  color: var(--ink);
+}
+
+.about__photo {
+  grid-column: 10 / span 3;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  width: min(100%, 15.5rem);
+  margin: 0.4rem 0 0;
+}
+
+/* the portrait as a mounted print: a paper mat, a hairline, a soft shadow; always in colour */
+.about__frame {
+  padding: 0.55rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  box-shadow: var(--shadow-2);
+}
+
+.about__frame img {
+  width: 100%;
+  border-radius: 3px;
+  filter: saturate(0.96) contrast(1.02);
+}
+
+.about__body {
+  grid-column: 4 / span 5;
+  font-size: 1.06rem;
+  color: var(--ink-2);
+}
+
+/* career strip */
+.career {
+  display: grid;
+  grid-template-columns: minmax(6rem, 2fr) minmax(0, 10fr);
+  gap: 0.6rem clamp(1rem, 2.2vw, 2rem);
+  align-items: center;
+  margin-top: clamp(3.5rem, 8vw, 6.5rem);
+}
+
+.career__label {
+  margin: 0;
+}
+
+.career__track {
+  position: relative;
+  height: 2.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.career__seg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--l);
+  width: var(--w);
+  min-width: 10px;
+  padding: 0 1.5px;
+}
+
+.career__bar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background-color: var(--paper-3);
+  cursor: default;
+  transition: background-color var(--t-color);
+}
+
+.career__seg--faculty .career__bar {
+  background-color: color-mix(in srgb, var(--accent) 38%, var(--paper));
+}
+
+.career__seg--postdoc .career__bar {
+  background-color: color-mix(in srgb, var(--accent) 16%, var(--paper));
+  background-image: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--accent) 45%, transparent) 4px 5px);
+}
+
+.career__bar:focus-visible {
+  background-color: var(--accent);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .career__bar:hover {
+    background-color: var(--accent);
+  }
+}
+
+/* the bars draw in from the left, one after the other, when the strip comes into view */
+html.js .career:not(.is-in) .career__bar {
+  clip-path: inset(0 100% 0 0 round 3px);
+}
+
+.career__bar {
+  clip-path: inset(0 0 0 0 round 3px);
+}
+
+.career.is-in .career__bar {
+  transition:
+    clip-path 900ms var(--ease-out) calc(200ms + var(--i) * 90ms),
+    background-color var(--t-color);
+}
+
+.career__years {
+  grid-column: 2;
+  position: relative;
+  height: 1.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.career__years li {
+  position: absolute;
+  left: var(--l);
+  top: 0;
+  padding-left: 0.4rem;
+  font-size: 0.72rem;
+  border-left: 1px solid var(--line-strong);
+}
+
+.career__legend {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.4rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+}
+
+.career__key::before {
+  content: "";
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.5rem;
+  margin-right: 0.5rem;
+  border-radius: 2px;
+  background-color: var(--paper-3);
+}
+
+.career__key--faculty::before {
+  background-color: color-mix(in srgb, var(--accent) 38%, var(--paper));
+}
+
+.career__key--postdoc::before {
+  background-color: color-mix(in srgb, var(--accent) 16%, var(--paper));
+  background-image: repeating-linear-gradient(135deg, transparent 0 3px, color-mix(in srgb, var(--accent) 45%, transparent) 3px 4px);
+}
+
+@media (max-width: 760px) {
+  .about__lede,
+  .about__body {
+    grid-column: 1 / -1;
+  }
+
+  .about__photo {
+    grid-column: 1 / -1;
+    grid-row: auto;
+    justify-self: start;
+    width: 11.5rem;
+    order: -1;
+  }
+
+  .career {
+    grid-template-columns: 1fr;
+  }
+
+  .career__years,
+  .career__legend {
+    grid-column: 1;
+  }
+}
+

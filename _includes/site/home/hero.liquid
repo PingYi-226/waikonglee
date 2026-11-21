@@ -1,0 +1,65 @@
+{%- comment -%} Home page, first screen: the name, the statement, the key figures and the lattice. Styles and script: home-hero. {%- endcomment -%}
+<section class="hero" data-hero aria-labelledby="hero-name">
+  <canvas class="hero__lattice" data-lattice aria-hidden="true"></canvas>
+
+  <div class="hero__main">
+    <h1 class="hero__name t-hero" id="hero-name" data-hero-name aria-label="{{ site.first_name }} {{ site.last_name }}">
+      <span class="hero__line" aria-hidden="true">{{ site.first_name }}</span>
+      <span class="hero__line" aria-hidden="true">{{ site.last_name }}</span>
+    </h1>
+
+    <p class="hero__role" data-hero-item>{{ profile.role }}, {{ profile.affiliation }}</p>
+
+    {%- comment -%} The last words of the statement take turns. Without the script the whole sentence is there. {%- endcomment -%}
+    {%- capture rotate_words -%}
+      {%- for w in profile.statement_rotate -%}{{ w }}.{% unless forloop.last %}|{% endunless %}{%- endfor -%}
+    {%- endcapture -%}
+    {%- assign rotate_words = rotate_words | strip | split: '|' -%}
+    <p class="hero__statement" data-hero-item>
+      {{ profile.statement_lead }}
+      <span class="hero__rotate" data-kit="rotating-text" data-words='{{ rotate_words | jsonify }}' data-duration="2600" data-delay="1800">
+        {{- profile.statement_tail -}}.
+      </span>
+    </p>
+
+    <div class="hero__actions" data-hero-item>
+      <a class="btn" href="{{ '/publications/' | relative_url }}" data-kit="press ripple">
+        <span data-kit="sliding-text">Publications</span>
+        {% include site/icon.liquid name="arrow-right" size=18 %}
+      </a>
+      <a class="btn btn--ghost" href="{{ '/research/' | relative_url }}" data-kit="press">
+        <span data-kit="sliding-text">Research</span>
+        {% include site/icon.liquid name="arrow-right" size=18 %}
+      </a>
+    </div>
+  </div>
+
+  <div class="hero__base" data-hero-item>
+    <dl class="hero__figures">
+      <div class="stat">
+        <dt class="stat__label">peer-reviewed papers</dt>
+        <dd class="stat__value"><span data-kit="sliding-number" data-trigger="manual" data-value="{% bibliography_count %}">{% bibliography_count %}</span></dd>
+      </div>
+      <div class="stat">
+        <dt class="stat__label">citations</dt>
+        <dd class="stat__value"><span data-kit="sliding-number" data-trigger="manual" data-value="{{ profile.metrics.citations | remove: ',' }}">{{ profile.metrics.citations }}</span></dd>
+      </div>
+      <div class="stat">
+        <dt class="stat__label">h-index</dt>
+        <dd class="stat__value"><span data-kit="sliding-number" data-trigger="manual" data-value="{{ profile.metrics.h_index }}">{{ profile.metrics.h_index }}</span></dd>
+      </div>
+    </dl>
+    <p class="hero__note">
+      Citation figures from <a class="link" href="{{ profile.metrics.source_url }}">{{ profile.metrics.source }}</a>, {{ profile.metrics.as_of }}.
+    </p>
+    <p class="hero__fig figcap" aria-hidden="true">
+      <span class="figcap__no">Fig. 1</span>
+      <span>The lattice point closest to the pointer</span>
+      <output class="hero__fig-out t-data" data-lattice-out>(0, 0)</output>
+    </p>
+    <a class="hero__scroll t-label" href="#about" aria-label="Scroll to the next section">
+      <span>Scroll</span>
+      <span class="hero__scroll-line" aria-hidden="true"></span>
+    </a>
+  </div>
+</section>
