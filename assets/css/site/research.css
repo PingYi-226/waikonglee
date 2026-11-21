@@ -307,9 +307,29 @@
   html.js:not(.is-static) .rsteps__stage {
     position: sticky;
     top: 0;
+    display: flex;
+    flex-direction: column;
     height: 100vh;
     padding-top: var(--part-top);
+    padding-bottom: clamp(2rem, 7vh, 4.5rem);
     overflow: clip;
+  }
+
+  /* the section's rule stays level with the other parts' and the rail; the deck sits in the middle of the rest */
+  html.js:not(.is-static) .rsteps__stage > .wrap {
+    flex: 1;
+    min-height: 0;
+  }
+
+  html.js:not(.is-static) .rsteps__main {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+  }
+
+  html.js:not(.is-static) .rsteps__main > .rsteps__deck {
+    flex: 1;
+    align-content: center;
   }
 
   html.js:not(.is-static) .rsteps__deck {
@@ -444,6 +464,7 @@
    A table in ARIA terms; each line is a grid with the same tracks (--tracks, written by the include: the names, one
    track per year with a narrow one before a gap in the years, the sums). */
 .rmat__scroll {
+  position: relative; /* the hidden labels (absolute) stay inside the scroller */
   overflow-x: auto;
   overscroll-behavior-x: contain;
 }
@@ -962,8 +983,17 @@ html.js .rmat .rmat__link {
 
 /* ---------- phones ---------- */
 @media (max-width: 759.98px) {
+  .rpage {
+    --part-top: calc(var(--nav-h) + 1.5rem);
+  }
+
   .rpart {
     min-height: 0;
+  }
+
+  .rmat {
+    --rmat-name: 9.25rem;
+    min-width: 46rem;
   }
 
   .rhead {
