@@ -6,7 +6,7 @@
 <header class="nav" data-nav>
   <div class="nav__bar">
     <a class="nav__brand" href="{{ '/' | relative_url }}" aria-label="{{ site.first_name }} {{ site.last_name }}: home">
-      <span class="nav__brand-name">{{ site.first_name }} {{ site.last_name }}</span>
+      <span class="nav__brand-name" data-kit="rolling-text">{{ site.first_name }} {{ site.last_name }}</span>
     </a>
 
     <nav class="nav__links" aria-label="Primary">
@@ -14,7 +14,7 @@
         {%- for p in nav_pages -%}
           {%- unless p.dropdown -%}
             <li>
-              <a class="nav__link" href="{{ p.url | relative_url }}"{% if page.url == p.url %} aria-current="page"{% endif %}>{{ p.title }}</a>
+              <a class="nav__link" href="{{ p.url | relative_url }}"{% if page.url == p.url %} aria-current="page"{% endif %}><span class="nav__label">{{ p.title }}</span></a>
             </li>
           {%- endunless -%}
         {%- endfor -%}

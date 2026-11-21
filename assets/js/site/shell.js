@@ -30,7 +30,8 @@
       nav.classList.toggle("is-scrolled", y > 12);
       if (Math.abs(y - lastY) < 6) return;
       // out of the way while reading down; back as soon as the page moves up
-      setHidden(y > lastY && y > 520 && !sheetOpen && !nav.contains(document.activeElement));
+      // (not while the page moves in steps: there the header is part of every slide)
+      setHidden(y > lastY && y > 520 && !sheetOpen && !nav.contains(document.activeElement) && !root.classList.contains("has-snap"));
       lastY = y;
     });
     window.addEventListener("scroll", update, { passive: true });
@@ -66,7 +67,7 @@
       void sheet.offsetHeight; // paint the closed state first so the slide runs
       sheet.classList.add("is-open");
       button.setAttribute("aria-expanded", "true");
-      root.classList.add("is-menu-open");
+      root.classList.add("is-menu-open", "is-modal");
       var first = focusables()[0];
       if (first) first.focus({ preventScroll: true });
     }
@@ -75,7 +76,7 @@
       sheetOpen = false;
       sheet.classList.remove("is-open");
       button.setAttribute("aria-expanded", "false");
-      root.classList.remove("is-menu-open");
+      root.classList.remove("is-menu-open", "is-modal");
       if (returnFocus !== false) button.focus({ preventScroll: true });
       closeTimer = setTimeout(
         function () {
@@ -226,6 +227,8 @@
     Site.on("resize", measure);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
 
+    initMark(foot);
+
     // local time where the group works; the digits roll when the sliding-number kit is present
     var clock = foot.querySelector("[data-clock]");
     var out = clock && clock.querySelector("[data-clock-out]");
@@ -270,6 +273,71 @@
         schedule();
       } else clearTimeout(timer);
     });
+  }
+
+  /* The large name at the very end. Its letters roll under the pointer (the kit's own hover trigger) and also once
+     when the visitor has reached the end of the page and keeps pulling down: again after moving up a little and
+     coming back. One roll at a time, whichever trigger asked for it. */
+  function initMark(foot) {
+    var mark = foot.querySelector(".foot__mark");
+    if (!mark) return;
+    var armed = true;
+    var busy = false;
+    function atEnd() {
+      return window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+    }
+    function roll() {
+      var c = Site.get(mark, "rolling-text");
+      if (!c || !c.roll || busy || c.rolling === true || Site.env.reduce) return;
+      busy = true;
+      var free = function () {
+        busy = false;
+      };
+      var p = c.roll();
+      if (p && typeof p.then === "function") p.then(free, free);
+      else setTimeout(free, 1400);
+    }
+    function pull() {
+      if (!armed || !atEnd()) return;
+      armed = false;
+      roll();
+    }
+    mark.addEventListener("kit:rolling-done", function () {
+      busy = false;
+    });
+    // a wheel or a finger still asking for more at the end of the page
+    window.addEventListener(
+      "wheel",
+      function (e) {
+        if (e.deltaY > 0) pull();
+      },
+      { passive: true },
+    );
+    var touchY = null;
+    window.addEventListener(
+      "touchstart",
+      function (e) {
+        touchY = e.touches.length ? e.touches[0].clientY : null;
+      },
+      { passive: true },
+    );
+    window.addEventListener(
+      "touchmove",
+      function (e) {
+        if (touchY === null || !e.touches.length) return;
+        if (touchY - e.touches[0].clientY > 24) pull();
+      },
+      { passive: true },
+    );
+    // where the page moves in steps, the stepper says when a step past the end was asked for
+    document.addEventListener("kit:snap-end", pull);
+    window.addEventListener(
+      "scroll",
+      function () {
+        if (!armed && window.scrollY + window.innerHeight < document.documentElement.scrollHeight - 24) armed = true;
+      },
+      { passive: true },
+    );
   }
 
   /* ---------- [data-inview]: .is-in the first time an element is seen; what happens then is CSS ----------

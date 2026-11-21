@@ -109,10 +109,31 @@
   color: var(--ink);
 }
 
+/* The current page rests on a soft pill. Under the pointer (or the keyboard focus) a line glides from link to link,
+   and the label it is under rises a little, a beat after the line has arrived. */
+.nav__list > .k-highlight__surface--hover {
+  --k-highlight-inset: calc(2.15rem - 0.46rem - 1.5px) 0.95rem 0.46rem;
+  background: var(--ink);
+  border-radius: 1px;
+}
+
+.nav__label {
+  display: inline-block;
+  transition: translate 300ms var(--ease-out) 60ms;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .nav__link:hover {
     color: var(--ink);
   }
+
+  .nav__link:hover .nav__label {
+    translate: 0 -1.5px;
+  }
+}
+
+.nav__link:focus-visible .nav__label {
+  translate: 0 -1.5px;
 }
 
 /* without the script there is no gliding surface: mark the current page plainly */
