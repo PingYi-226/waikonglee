@@ -278,7 +278,7 @@
   /* ================================================================ lattice
      A drawing of lattice cryptography, without a word.
      - The points of one lattice, on a plane seen in perspective: near points larger and darker, far ones smaller and paler.
-     - Two bases of that same lattice, a short nearly orthogonal one and a long skewed one: the tiling of their
+     - Two bases of that same lattice, a short nearly orthogonal one and a longer skewed one: the tiling of their
        fundamental cells (same area) shears from one to the other in elementary steps and back (basis reduction). The points
        never move; only the cells change. Shown as a patch of cell lines around the target, and the target's own cell.
      - The pointer is the target: its closest lattice point is ringed and joined to it by the short error vector.
@@ -298,7 +298,9 @@
     sweepTo: 0.82, // ... and when it has crossed (the lattice is gone)
   };
   // the basis walks from good to bad by these elementary steps (b2 += b1, b1 += b2, b2 += b1) and back
-  var STEPS = [2, 1, 2]; // which vector takes the other (1: b1 += b2, 2: b2 += b1)
+  // which vector takes the other at each step (1: b1 += b2, 2: b2 += b1): from (g1, g2) to (2 g1 + g2, g1 + g2), cells of the
+  // same area but long and thin; a third step makes them so thin that the tiling reads as hatching
+  var STEPS = [2, 1];
 
   function bezier(p) {
     // a cubic-bezier easing (the tokens' curves) as a function of t
@@ -705,7 +707,7 @@
 
       // the sweep of light that takes the drawing as the next block arrives: a front crossing from lower left to upper right
       var q = util.clamp((exitP - LAT.sweepFrom) / (LAT.sweepTo - LAT.sweepFrom), 0, 1);
-      var BAND = 0.11;
+      var BAND = 0.075;
       var front = -BAND * 2 + q * (1 + BAND * 4);
       function sweepAt(x, y) {
         // returns [visibility, light] for a screen point
@@ -718,7 +720,7 @@
         var d = 0.8 * (x / w) + 0.2 * (1 - y / h);
         var rel = (d - front) / BAND;
         SW[0] = rel >= 0 ? 1 : util.smooth(util.clamp(1 + rel / 1.4, 0, 1));
-        SW[1] = Math.exp(-rel * rel * 1.6) * (1 - q * 0.35);
+        SW[1] = Math.exp(-rel * rel * 2.2) * (1 - q * 0.35);
         return SW;
       }
       var SW = [1, 0];
@@ -886,8 +888,8 @@
           var r = (0.75 + 0.75 * k) * (1 + 0.85 * near);
           var light = sw[1] * Math.max(c, 0.25) * appear;
           if (light > 0.04) {
-            var la2 = Math.min(1, alpha + light * 0.9);
-            addDot(lit, la2, x, y, r * (1 + 0.9 * light));
+            var la2 = Math.min(0.8, alpha + light * 0.6);
+            addDot(lit, la2, x, y, r * (1 + 0.5 * light));
           } else if (alpha > 0.012) addDot(ink, alpha, x, y, r);
         }
       }
