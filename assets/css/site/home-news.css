@@ -3,11 +3,16 @@
    ========================================================================== */
 
 /* ---------- news rows ---------- */
+.hnews {
+  --hnews-cols: minmax(8rem, 2fr) minmax(0, 9fr) 2.1rem 4.6rem;
+}
+
 .hnews__row {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(8rem, 2fr) minmax(0, 9fr) auto;
+  /* date | text | (the featured row's icon) | thumbnail: every row has the same tracks, so the texts line up */
+  grid-template-columns: var(--hnews-cols);
   gap: 0.6rem clamp(1rem, 2.2vw, 2rem);
   align-items: center;
   padding: 1.35rem 0.9rem;
@@ -31,20 +36,73 @@
 }
 
 .hnews__thumb {
+  grid-column: 4;
   width: 4.6rem;
   height: 3.4rem;
   object-fit: cover;
   border-radius: var(--r-1);
 }
 
+/* ---------- the featured row (news-feature.css): the same columns as the rows, a portrait thumbnail ---------- */
+.hnews__row.hnews__row--feature {
+  display: block;
+  padding: 0;
+}
+
+.hnews__row--feature .nfeat {
+  --nfeat-cols: var(--hnews-cols);
+  --nfeat-thumb: 3.3rem;
+  --nfeat-fs: 1.1rem;
+  --nfeat-ink: var(--ink);
+  gap: 0.6rem clamp(1rem, 2.2vw, 2rem);
+  padding: 1.15rem 0.9rem;
+}
+
+.hnews__row--feature .nfeat__text {
+  max-width: 62ch;
+  line-height: 1.5;
+}
+
+.hnews__row--feature .nfeat__meta {
+  align-self: center;
+  gap: 0.3rem;
+}
+
+/* the slide names the deadline, not the day it was posted */
+.hnews__row--feature .nfeat__date {
+  display: none;
+}
+
+.hnews__row--feature .nfeat__note {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.hnews__row--feature .nfeat__thumb {
+  justify-self: center;
+}
+
 @media (max-width: 700px) {
+  .hnews {
+    --hnews-cols: minmax(0, 1fr) auto;
+  }
+
   .hnews__row {
-    grid-template-columns: minmax(0, 1fr) auto;
     padding-inline: 0.4rem;
+  }
+
+  .hnews__thumb {
+    grid-column: auto;
   }
 
   .hnews__date {
     grid-column: 1 / -1;
+  }
+
+  .hnews__row--feature .nfeat {
+    padding-inline: 0.4rem;
   }
 }
 

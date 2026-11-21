@@ -19,14 +19,14 @@
   row-gap: 0.5rem;
   align-items: center;
   border-radius: var(--r-2);
-  color: var(--ink-2);
+  color: var(--nfeat-ink, var(--ink-2));
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 .nfeat:hover,
 .nfeat:focus {
-  color: var(--ink-2);
+  color: var(--nfeat-ink, var(--ink-2));
   text-decoration: none;
 }
 
@@ -153,6 +153,7 @@ html.js .nfeat:is(.is-filled, :focus-visible) .nfeat__open .icon {
 
 /* the outside first (the fill), the sheets a beat later */
 .nfeat.is-filled .nfeat__pic,
+.nfeat.is-peek .nfeat__pic,
 .nfeat:focus-visible .nfeat__pic {
   translate: 0 -4px;
   rotate: -2.5deg;
@@ -161,6 +162,7 @@ html.js .nfeat:is(.is-filled, :focus-visible) .nfeat__open .icon {
 }
 
 .nfeat.is-filled .nfeat__sheet,
+.nfeat.is-peek .nfeat__sheet,
 .nfeat:focus-visible .nfeat__sheet {
   translate: 5px -1px;
   rotate: 5deg;

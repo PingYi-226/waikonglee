@@ -46,6 +46,23 @@
     all(document, ".nfeat[data-expand]").forEach(prepare);
   });
 
+  /* once the row has arrived, the poster lifts off its sheet and settles again: a single hint that it opens */
+  var PEEK_AFTER = 700; // ms after the row's own entrance starts (own value: it has landed by then)
+  var PEEK_HOLD = 650; // ms lifted
+  document.addEventListener("kit:reveal", function (e) {
+    var row = e.target && e.target.querySelector ? e.target.querySelector(".nfeat") : null;
+    if (!row || row.hasAttribute("data-peeked") || Site.env.reduce || Site.env.static) return;
+    row.setAttribute("data-peeked", "");
+    var wait = ((e.detail && e.detail.delay) || 0) + PEEK_AFTER;
+    setTimeout(function () {
+      if (row.matches(".is-filled, :focus-within")) return;
+      row.classList.add("is-peek");
+      setTimeout(function () {
+        row.classList.remove("is-peek");
+      }, PEEK_HOLD * Site.tempo);
+    }, wait * Site.tempo);
+  });
+
   /* the view's inside, a beat after the panel */
   var timers = [];
   function later(ms, fn) {
