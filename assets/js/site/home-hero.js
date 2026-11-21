@@ -764,11 +764,11 @@
         var edge = function (ax, ay, bx, by) {
           var len = Math.sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay));
           var n = Math.max(1, Math.ceil(len / piece));
-          project(ax, ay, S0);
+          projectMoved(ax, ay, S0, now);
           for (var k = 1; k <= n; k++) {
             var px = ax + ((bx - ax) * k) / n;
             var py = ay + ((by - ay) * k) / n;
-            project(px, py, S1);
+            projectMoved(px, py, S1, now);
             var mx = px - ((bx - ax) * 0.5) / n;
             var my = py - ((by - ay) * 0.5) / n;
             var g = Math.exp(-((mx - tx) * (mx - tx) + (my - ty) * (my - ty)) / sg2);
@@ -812,10 +812,10 @@
         /* 2. the target's own cell: a faint wash, its two basis edges a little stronger */
         var ox = o[0] + fu * b1[0] + fv * b2[0];
         var oy = o[1] + fu * b1[1] + fv * b2[1];
-        var c0 = project(ox, oy, [0, 0, 1]);
-        var c1 = project(ox + b1[0], oy + b1[1], [0, 0, 1]);
-        var c2 = project(ox + b1[0] + b2[0], oy + b1[1] + b2[1], [0, 0, 1]);
-        var c3 = project(ox + b2[0], oy + b2[1], [0, 0, 1]);
+        var c0 = projectMoved(ox, oy, [0, 0, 1], now);
+        var c1 = projectMoved(ox + b1[0], oy + b1[1], [0, 0, 1], now);
+        var c2 = projectMoved(ox + b1[0] + b2[0], oy + b1[1] + b2[1], [0, 0, 1], now);
+        var c3 = projectMoved(ox + b2[0], oy + b2[1], [0, 0, 1], now);
         ctx.beginPath();
         ctx.moveTo(c0[0], c0[1]);
         ctx.lineTo(c1[0], c1[1]);
@@ -899,7 +899,7 @@
 
       /* 4. the error vector from the closest point to the target, the closest point ringed */
       if (marks > 0.01) {
-        project(ring.x.x, ring.y.x, P);
+        projectMoved(ring.x.x, ring.y.x, P, now);
         var e = [0, 0, 1];
         var R = 7.5;
         project(ring.x.x + R / P[2], ring.y.x, e);
@@ -936,6 +936,13 @@
 
     var S0 = [0, 0, 1];
     var S1 = [0, 0, 1];
+    var MV = [0, 0];
+    // a plane point as the click rings have moved it, on screen (the lines and the marks ripple with the dots)
+    function projectMoved(X, Y, out, now) {
+      if (!waves.length) return project(X, Y, out);
+      displace(X, Y, now, MV);
+      return project(MV[0], MV[1], out);
+    }
     function addDot(buckets, alpha, x, y, r) {
       var b = Math.max(1, Math.min(BUCKETS, Math.round(Math.sqrt(alpha) * BUCKETS)));
       var p = buckets[b] || (buckets[b] = new Path2D());
