@@ -264,7 +264,6 @@
         li.style.opacity = o < 0.002 ? "0" : util.round(o, 3);
         li.style.filter = blur > 0.05 ? "blur(" + util.round(blur, 2) + "px)" : "";
         li.style.zIndex = String(Math.round(lerp(depth * 20, 30, k)));
-        li.style.visibility = o < 0.002 ? "hidden" : "";
       }
       setFlat(tFlat >= 0.999);
 
@@ -317,7 +316,7 @@
       section.classList.remove("is-orbit", "is-flat");
       flat = null;
       items.forEach(function (li) {
-        li.style.transform = li.style.opacity = li.style.filter = li.style.zIndex = li.style.visibility = "";
+        li.style.transform = li.style.opacity = li.style.filter = li.style.zIndex = "";
       });
       banners.forEach(function (b) {
         b.style.transform = b.style.opacity = b.style.visibility = "";
@@ -351,20 +350,29 @@
     new MutationObserver(choose).observe(root, { attributes: true, attributeFilter: ["class"] });
     choose();
 
-    /* keyboard: a card reached with Tab while the ring turns takes the page to the grid */
-    list.addEventListener("focusin", function (e) {
-      if (!active || flat) return;
-      var visibleFocus = false;
+    /* keyboard: a card reached with Tab before the cards lie flat takes the page to the grid (also when the stepper's
+       own answer to the focus has landed on the ring) */
+    function keyFocus() {
+      var el = document.activeElement;
+      if (!el || !list.contains(el)) return false;
       try {
-        visibleFocus = e.target.matches(":focus-visible");
+        return el.matches(":focus-visible");
       } catch (err) {
-        visibleFocus = true;
+        return true;
       }
-      if (!visibleFocus) return;
-      var grid = Site.snap.stops.filter(function (s) {
-        return s.element === section;
+    }
+    function toGrid() {
+      if (!active || flat || !keyFocus()) return;
+      var mine = (Site.snap.stops || []).filter(function (st) {
+        return st.element === section;
       });
-      if (grid.length) Site.snap.go(grid[grid.length - 1].index);
+      if (mine.length && Site.snap.index !== mine[mine.length - 1].index) Site.snap.go(mine[mine.length - 1].index);
+    }
+    list.addEventListener("focusin", function () {
+      setTimeout(toGrid, 0);
+    });
+    section.addEventListener("kit:snap-arrive", function () {
+      setTimeout(toGrid, 0);
     });
 
     /* the stepper's hold on the grid: the cards wave, one after the other, so it shows they can be taken */
