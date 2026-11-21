@@ -355,3 +355,20 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* short landscape screens: the view keeps its buttons in sight */
+@media (max-height: 720px) and (min-width: 761px) {
+  .odetail__title {
+    font-size: var(--fs-d3);
+  }
+
+  .odetail__tag {
+    margin-bottom: 0.75rem;
+    font-size: 1.15rem;
+  }
+
+  .odetail__desc {
+    margin-bottom: 1.25rem;
+    font-size: var(--fs-small);
+  }
+}
