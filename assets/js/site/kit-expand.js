@@ -233,7 +233,8 @@
     /* ---- the rest of the page while the view is open ---- */
     function shutPage(on) {
       if (on) {
-        inerted = Array.prototype.filter.call(doc.body.children, (n) => n !== v.root && !n.inert && n.tagName !== "SCRIPT");
+        // (the kit's own floating layers stay usable: a lightbox, a toast or a tooltip may be opened from the view)
+        inerted = Array.prototype.filter.call(doc.body.children, (n) => n !== v.root && !n.inert && n.tagName !== "SCRIPT" && !n.matches(".k-lightbox, .k-toasts, .k-tip"));
         inerted.forEach((n) => (n.inert = true));
       } else {
         inerted.forEach((n) => (n.inert = false));
@@ -572,6 +573,7 @@
     }
     function onKey(e) {
       if (s.state === "closed" || s.state === "closing") return;
+      if (Site.modal && Site.modal.has("lightbox")) return; // a picture opened from the view answers first
       if (e.key === "Escape") {
         e.preventDefault();
         s.close();

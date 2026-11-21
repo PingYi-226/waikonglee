@@ -23,7 +23,7 @@
 .k-expand {
   position: fixed;
   inset: 0;
-  z-index: var(--z-overlay);
+  z-index: calc(var(--z-overlay) - 1); /* a lightbox opened from the view comes above it */
   display: grid;
   place-items: center;
   padding: var(--k-expand-inset, clamp(1rem, 4vw, 3rem));

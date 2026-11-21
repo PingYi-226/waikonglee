@@ -397,7 +397,7 @@ a.btn:visited {
 .btn--ghost {
   --btn-bg: transparent;
   --btn-fg: var(--ink);
-  --k-ripple-color: color-mix(in srgb, var(--ink) 22%, transparent);
+  --k-ripple-color: color-mix(in srgb, var(--ink) 18%, transparent);
   border-color: var(--line-strong);
 }
 
