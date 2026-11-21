@@ -67,6 +67,19 @@
     var se = document.scrollingElement || root;
     return Math.max(0, se.scrollHeight - window.innerHeight);
   }
+  /** An element's top edge on the page as it is laid out. Transforms do not count: a page that fades in with a small
+      shift, or a block moved by the rubber band, still has its stop where the layout puts it. */
+  function pageTop(el) {
+    var y = 0;
+    var node = el;
+    while (node && node !== document.body && node !== root) {
+      y += node.offsetTop;
+      var parent = node.offsetParent;
+      if (parent && parent !== document.body && parent !== root) y += parent.clientTop;
+      node = parent;
+    }
+    return y;
+  }
   function scrollToY(y) {
     window.scrollTo({ top: y, left: window.scrollX, behavior: "instant" });
   }
@@ -260,16 +273,14 @@
   P.measure = function () {
     var vh = (this.vh = window.innerHeight);
     var max = maxScroll();
-    var y0 = window.scrollY;
     var list = [];
     var zones = [];
     var els = this.wrap.querySelectorAll("[data-snap]");
     for (var i = 0; i < els.length; i++) {
       var el = els[i];
       if (!el.getClientRects().length) continue; // not rendered
-      var r = el.getBoundingClientRect();
-      var top = r.top + y0;
-      var h = el.offsetHeight || r.height;
+      var top = pageTop(el);
+      var h = el.offsetHeight || el.getBoundingClientRect().height;
       var pts = parsePoints(el.getAttribute("data-snap-points"));
       var hold = el.hasAttribute("data-snap-hold") ? (attrNum(el, "data-snap-hold") === null ? 1 : attrNum(el, "data-snap-hold")) : 0;
       var dur = attrNum(el, "data-snap-duration");

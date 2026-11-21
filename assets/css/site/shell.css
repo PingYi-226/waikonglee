@@ -371,6 +371,7 @@ main#main {
 .has-foot-reveal .foot {
   position: sticky;
   bottom: 0;
+  overflow: clip; /* its content is lowered while covered (below): that must not lengthen the page */
 }
 
 /* depth while the page lifts off: the content rises the last stretch and clears (--foot-p from shell.js) */
@@ -576,19 +577,16 @@ main#main {
   }
 }
 
-/* browsers without cross-document view transitions: the script fades the page out, this fades the next one in */
+/* browsers without cross-document view transitions: the script fades the page out, this fades the next one in.
+   Opacity only, and nothing left applied afterwards: a transform or a filter on main (even one that has finished but
+   still fills) would make it the containing block of the fixed layers inside it (the home lattice, side rails). */
 html.no-vt.js main#main {
-  animation: 560ms var(--ease-out) both page-in;
+  animation: 420ms var(--ease-out) backwards page-fade-in;
 }
 
 html.no-vt.is-leaving main#main {
   opacity: 0;
-  transform: translateY(-10px);
-  filter: blur(3px);
-  transition:
-    opacity 200ms var(--ease-leave),
-    transform 200ms var(--ease-leave),
-    filter 200ms var(--ease-leave);
+  transition: opacity 200ms var(--ease-leave);
 }
 
 /* ---------- from one theme to the other: the new one opens as a circle from the switch ---------- */
@@ -628,7 +626,7 @@ html[data-vt="theme"]::view-transition-new(root) {
   }
 
   html.no-vt.js main#main {
-    animation-name: page-fade-in;
+    animation-duration: 200ms;
   }
 
   .nav,
