@@ -1,7 +1,8 @@
 {%- comment -%}
   The news page's timeline: a rail (the year being read, in large figures that roll as the years hand over; the years;
   the filter) beside the items, which sit along a hairline that fills in as the page is read.
-  Items come from _news/ (newest first). An item with an `image` is a print (framed, opens large); the others are ruled rows.
+  Items come from _news/ (newest first). A featured item (featured: true, until its deadline) is a row that opens into a
+  detail view (news_feature.liquid); an item with an `image` is a print (framed, opens large); the others are ruled rows.
   Category, for the filter: `label` "Paper" -> papers, "Code" -> code, a label containing "call" -> calls, anything else
   (and no label) -> activities. Behaviour: assets/js/site/news.js; looks: assets/css/site/news.css.
 {%- endcomment -%}
@@ -21,6 +22,7 @@
   {%- endif -%}
 {%- endfor -%}
 {%- assign first_year = years.first -%}
+{%- assign now_s = site.time | date: '%s' | plus: 0 -%}
 
 <div class="ntl wrap" data-kit="news">
   <aside class="ntl__rail" aria-label="Years and filter" data-kit="reveal" data-reveal="fade" data-delay="640">
@@ -83,7 +85,16 @@
             {%- assign delay = '' -%}
             {%- if first_group and forloop.index0 < 3 -%}{%- assign delay = forloop.index0 | times: 90 | plus: 520 -%}{%- endif -%}
             {%- assign words = item.content | strip_html | strip | size -%}
-            {% include site/news_item.liquid item=item cat=cat delay=delay words=words %}
+            {%- comment -%} featured: until the end of its deadline's day, if it has one {%- endcomment -%}
+            {%- assign feat = false -%}
+            {%- if item.featured == true -%}
+              {%- assign feat = true -%}
+              {%- if item.deadline -%}
+                {%- assign until = item.deadline | date: '%s' | plus: 86400 -%}
+                {%- if until < now_s -%}{%- assign feat = false -%}{%- endif -%}
+              {%- endif -%}
+            {%- endif -%}
+            {% include site/news_item.liquid item=item cat=cat delay=delay words=words featured=feat %}
           {%- endfor %}
         </ol>
       </section>

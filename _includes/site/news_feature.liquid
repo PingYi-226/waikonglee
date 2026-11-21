@@ -1,0 +1,79 @@
+{%- comment -%}
+  A featured news item (front matter `featured: true`, see _news/2026-call-for-papers.md): one plain row that opens
+  into a detail view (kit expand). Used by the news page (news_item.liquid) and the home page's news block.
+  Parameters: item (a document of _news/), id (unique on the page, default from the item), delay (ms, optional).
+  The caller supplies the list item around it. Looks: assets/css/site/news-feature.css; behaviour: news-feature.js.
+  Without JavaScript the row is a link to the item's first link (or its poster).
+{%- endcomment -%}
+{%- assign f = include.item -%}
+{%- assign fid = include.id | default: f.id | slugify | prepend: 'nfeat-' -%}
+{%- assign f_main = f.links | first -%}
+{%- if f.image -%}{%- assign f_img = f.image | prepend: '/assets/img/' | relative_url -%}{%- endif -%}
+{%- assign f_alt = f.image_alt | default: f.label -%}
+{%- assign f_href = f_main.url | default: f_img -%}
+<a class="nfeat" href="{{ f_href }}" data-kit="expand hover-fill press" data-press="choice" data-expand="#{{ fid }}" data-expand-class="nfv-view" data-expand-label="{{ f.label | default: 'News' | escape }}" data-cursor="Open"{% if f.deadline %} data-deadline="{{ f.deadline | date: '%Y-%m-%d' }}"{% endif %}>
+  <span class="nfeat__meta">
+    <time class="nfeat__date" datetime="{{ f.date | date_to_xmlschema }}">{{ f.date | date: '%-d %b %Y' }}</time>
+    {%- if f.label %}
+    <span class="nfeat__label" data-shared="label" data-kit="shine-text" data-pause="4200">{{ f.label }}</span>
+    {%- endif -%}
+    {%- if f.date_label %}
+    <span class="nfeat__note">{{ f.date_label }}</span>
+    {%- endif %}
+  </span>
+  <span class="nfeat__text"><span class="nfeat__say" data-kit="shine-text" data-trigger="hover" data-pause="600">{{ f.summary | default: f.content | strip_html | strip }}</span></span>
+  <span class="nfeat__open" data-hover-show aria-hidden="true">{% include site/icon.liquid name="plus" %}</span>
+  {%- if f_img %}
+  <span class="nfeat__thumb" aria-hidden="true">
+    <span class="nfeat__sheet"></span>
+    <span class="nfeat__pic"><img class="nfeat__img" data-shared="poster" src="{{ f_img }}" alt="" width="1122" height="1588" loading="lazy" decoding="async"></span>
+  </span>
+  {%- endif %}
+</a>
+<template id="{{ fid }}">
+  <article class="nfv{% unless f_img %} nfv--text{% endunless %}">
+    {%- if f_img %}
+    <figure class="nfv__poster">
+      <a class="nfv__posterlink" href="{{ f_img }}" data-kit="lightbox" data-caption="{{ f_alt | escape }}" data-cursor="View" aria-label="View larger: {{ f_alt | escape }}">
+        <img class="nfv__img" data-shared="poster" src="{{ f_img }}" alt="{{ f_alt | escape }}" width="1122" height="1588" decoding="async">
+      </a>
+    </figure>
+    {%- endif %}
+    <div class="nfv__main">
+      {%- if f.label %}
+      <p class="nfv__label"><span data-shared="label" data-kit="shine-text" data-pause="4200">{{ f.label }}</span></p>
+      {%- endif %}
+      <div class="nfv__text" data-kit="split" data-split="words" data-effect="rise" data-stagger="0.012" data-trigger="manual">{{ f.content }}</div>
+      <dl class="nfv__facts">
+        {%- if f.deadline %}
+        <div class="nfv__fact nfv__fact--deadline" data-expand-item>
+          <dt>Deadline</dt>
+          <dd>
+            <time class="nfv__when" datetime="{{ f.deadline | date: '%Y-%m-%d' }}">{{ f.deadline | date: '%-d %B %Y' }}</time>
+            <span class="nfv__left" hidden><span class="nfv__days" data-kit="sliding-number" data-value="0" data-trigger="manual">0</span> <span class="nfv__unit">days</span></span>
+          </dd>
+        </div>
+        {%- endif -%}
+        {%- if f.topics %}
+        <div class="nfv__fact nfv__fact--topics" data-expand-item>
+          <dt>Topics</dt>
+          <dd>
+            <ul class="nfv__topics" data-kit="reveal-group" data-trigger="manual" data-reveal="fade" data-stagger="0.05">
+              {%- for t in f.topics %}
+              <li>{{ t }}</li>
+              {%- endfor %}
+            </ul>
+          </dd>
+        </div>
+        {%- endif %}
+      </dl>
+      {%- if f.links %}
+      <p class="nfv__actions">
+        {%- for l in f.links %}
+        <a class="btn{% unless forloop.first %} btn--ghost{% endunless %}" href="{{ l.url }}" target="_blank" rel="noopener" data-kit="reveal magnetic press ripple" data-reveal="wipe" data-trigger="manual" data-inner><span data-kit="sliding-text">{{ l.label }}</span>{% include site/icon.liquid name="arrow-up-right" %}</a>
+        {%- endfor %}
+      </p>
+      {%- endif %}
+    </div>
+  </article>
+</template>

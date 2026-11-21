@@ -1,6 +1,7 @@
 {%- comment -%}
   One news item of the timeline. Parameters: item (a document of _news/), cat (its filter category), delay (ms, optional:
-  the first rows follow the page head on load), words (length of its text: short texts beside a print are set large).
+  the first rows follow the page head on load), words (length of its text: short texts beside a print are set large),
+  featured (true: the item is drawn by news_feature.liquid, a row that opens into a detail view).
 {%- endcomment -%}
 {%- assign item = include.item -%}
 {%- capture meta -%}
@@ -10,7 +11,12 @@
     {%- if item.date_label %}<span class="nitem__note">{{ item.date_label }}</span>{% endif -%}
   </div>
 {%- endcapture -%}
-{%- if item.image -%}
+{%- if include.featured -%}
+  <li class="nitem nitem--feature" data-cat="{{ include.cat }}" data-reveal-item{% if include.delay != '' %} data-delay="{{ include.delay }}"{% endif %}>
+    <span class="nitem__node" aria-hidden="true"></span>
+    {% include site/news_feature.liquid item=item %}
+  </li>
+{%- elsif item.image -%}
   {%- assign src = item.image | prepend: '/assets/img/' | relative_url -%}
   {%- assign alt = item.image_alt | default: 'News photograph' -%}
   <li class="nitem nitem--print" data-cat="{{ include.cat }}">

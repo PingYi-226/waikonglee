@@ -2,8 +2,9 @@
  * 404 page: a small lattice that answers the pointer.
  * The pointer is the target, a point that is not on the lattice; the lattice point closest to it is ringed, joined to it
  * by the short error vector, and its cell (the points of the plane that round to it) is outlined, gliding from cell to
- * cell as the target moves. A click, or Enter on the focused plate, puts the target on the lattice. The arrow keys move
- * it. Without the pointer the target drifts slowly. Colours come from the tokens; the loop runs only while the plate can
+ * cell as the target moves. The drawing is annotated as a geometry figure would be: the closest point's coordinates
+ * beside its ring, the error's length (in basis lengths) along the vector. A click, or Enter on the focused plate, puts
+ * the target on the lattice. The arrow keys move it. Without the pointer the target drifts slowly. Colours come from the tokens; the loop runs only while the plate can
  * be seen, and not at all under reduced motion (the figure then answers the pointer directly).
  * Also: the address that was asked for is shown in the row under the rule.
  */
@@ -62,8 +63,7 @@
     var canvas = fig.querySelector("[data-nf-canvas]");
     var ctx = canvas && canvas.getContext ? canvas.getContext("2d") : null;
     if (!ctx) return;
-    var outPoint = fig.querySelector("[data-nf-point]");
-    var outDist = fig.querySelector("[data-nf-dist]");
+    var live = fig.querySelector("[data-nf-live]");
     var colors = {};
     var w = 0;
     var h = 0;
@@ -74,7 +74,6 @@
     var snapAt = null; // pointer position at a click: moving away from it lets go of the lattice
     var pulses = [];
     var shownAt = null; // the figure appears from its middle outwards
-    var lastText = "";
     var lastFrame = 0;
     var visible = false;
 
@@ -84,6 +83,8 @@
       colors.line = cssVar("--line-strong", "rgba(43,45,51,.24)");
       colors.accent = cssVar("--accent", "#2f5d54");
       colors.wash = cssVar("--accent-wash", "rgba(47,93,84,.05)");
+      colors.surface = cssVar("--surface", "#fbfaf7");
+      colors.mono = cssVar("--font-mono", "monospace");
     }
     function resize() {
       var r = canvas.getBoundingClientRect();
@@ -135,6 +136,24 @@
         }
       }
       return best;
+    }
+
+    /* a small label on a chip of the plate's own surface (so the points behind it do not cut it), set off from (x, y) in the
+       direction dx (left of it when dx < 0), kept inside the plate */
+    function label(text, x, y, dx, color, size) {
+      ctx.font = size + "px " + colors.mono;
+      var tw = ctx.measureText(text).width;
+      var left = dx < -0.2 ? x - tw : dx > 0.2 ? x : x - tw / 2;
+      left = Math.round(util.clamp(left, 5, w - tw - 5));
+      var top = Math.round(util.clamp(y, size, h - size));
+      var a = ctx.globalAlpha;
+      ctx.globalAlpha = a * 0.92;
+      ctx.fillStyle = colors.surface;
+      ctx.fillRect(left - 3, top - size * 0.72, tw + 6, size * 1.44);
+      ctx.globalAlpha = a;
+      ctx.fillStyle = color;
+      ctx.textAlign = "left";
+      ctx.fillText(text, left, top + 0.5);
     }
 
     function paint(time) {
@@ -254,13 +273,21 @@
       }
       ctx.globalAlpha = 1;
 
-      // the reading under the figure, in lattice units (one basis vector's length)
+      // the reading, written on the drawing: the closest point's coordinates beside its ring (on the side away from the
+      // target, so the vector never crosses it), the error's length in basis lengths along the vector
       var dist = best.d / g.s;
-      var text = "(" + signed(best.i) + ", " + signed(best.j) + ")|" + dist.toFixed(2);
-      if (text !== lastText) {
-        lastText = text;
-        if (outPoint) outPoint.textContent = "(" + signed(best.i) + ", " + signed(best.j) + ")";
-        if (outDist) outDist.textContent = dist.toFixed(2);
+      if (cellIn > 0) {
+        var on = dist < 0.005;
+        var ux = best.d > 2 ? (best.x - cur.x) / best.d : 0.71;
+        var uy = best.d > 2 ? (best.y - cur.y) / best.d : -0.71;
+        ctx.globalAlpha = cellIn;
+        ctx.textBaseline = "middle";
+        label("(" + signed(best.i) + ", " + signed(best.j) + ")", best.x + ux * 17, best.y + uy * 17, ux, on ? colors.accent : colors.ink2, 11);
+        if (best.d > 15) {
+          // beside the vector's middle, off to one side of it
+          label(dist.toFixed(2), (best.x + cur.x) / 2 + uy * 10, (best.y + cur.y) / 2 - ux * 10, uy, colors.accent, 10);
+        }
+        ctx.globalAlpha = 1;
       }
       fig.classList.toggle("is-on-lattice", dist < 0.005);
     }
@@ -293,6 +320,7 @@
       target.x = p.x;
       target.y = p.y;
       if (!Site.env.reduce) pulses.push({ x: p.x, y: p.y, t: performance.now() });
+      if (live) live.textContent = "On the lattice at (" + signed(p.i) + ", " + signed(p.j) + ").";
       once();
     }
     plate.addEventListener("pointermove", function (e) {
