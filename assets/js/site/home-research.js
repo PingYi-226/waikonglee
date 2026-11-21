@@ -322,6 +322,17 @@
       place(progress(), 0, performance.now());
       wake();
       Site.snap.refresh();
+      // switched on with the page inside the pinned range (a window turned to landscape): land on the nearer rest
+      setTimeout(function () {
+        if (!active || Site.snap.moving) return;
+        var q = progress();
+        if (q * range < -EPS || (1 - q) * range <= EPS || Math.abs(q - RING_AT) * range <= EPS) return;
+        var mine = (Site.snap.stops || []).filter(function (st) {
+          return st.element === section;
+        });
+        if (mine.length < 2) return;
+        Site.snap.go(mine[q < (RING_AT + 1) / 2 ? 0 : mine.length - 1].index);
+      }, 200);
     }
     function stop() {
       if (!active) return;
