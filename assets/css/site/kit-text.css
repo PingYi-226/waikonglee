@@ -168,6 +168,7 @@ html.js [data-kit~="sliding-number"]:not(.is-built) {
 }
 
 /* ---------- rolling-text ---------- */
+/* the script sets .is-rolling on the element while a roll plays (a hook for pages; nothing here depends on it) */
 .k-roll__w {
   display: inline-block;
   white-space: nowrap;
@@ -308,19 +309,19 @@ html.js [data-kit~="highlight-text"]:not(.is-in) {
    Between hover passes the clip is off, so text at rest is ordinary text (a clipped fill loses subpixel smoothing).
    The glint is light falling on the letters: toward the paper on the light theme, toward white on the dark one
    (a darker band there would read as a shadow). The text keeps its `color`; only the fill comes from here. */
-.k-shine {
-  --k-shine-base: currentColor;
-  --k-shine-glint: color-mix(in oklab, currentColor 22%, var(--paper));
+/* defaults are fallbacks, so a page may set --k-shine-base / --k-shine-glint on the element or any ancestor */
+:root {
+  --k-shine-light: var(--paper);
 }
 
-html[data-theme="dark"] .k-shine {
-  --k-shine-glint: color-mix(in oklab, currentColor 30%, #fff); /* the colour of the light itself, not a theme colour */
+html[data-theme="dark"] {
+  --k-shine-light: #fff; /* the colour of the light itself, not a theme colour */
 }
 
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   .k-shine.is-shining {
-    background-color: var(--k-shine-base);
-    background-image: linear-gradient(90deg, transparent, var(--k-shine-glint), transparent);
+    background-color: var(--k-shine-base, currentColor);
+    background-image: linear-gradient(90deg, transparent, var(--k-shine-glint, color-mix(in oklab, currentColor 25%, var(--k-shine-light))), transparent);
     background-repeat: no-repeat;
     background-size: var(--k-shine-band, 3.5em) 100%;
     background-position: calc(-1 * var(--k-shine-band, 3.5em)) 0;
