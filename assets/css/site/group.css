@@ -250,6 +250,27 @@ html.js .glyph[data-kit] .glyph__mono {
   }
 }
 
+/* it arrives last, after the students' marks have settled (group.js adds .is-in) */
+html.js .gband__add:not(.is-in) .gband__ring {
+  opacity: 0;
+  scale: 0.4;
+  rotate: -90deg;
+}
+
+.gband__add.is-in .gband__ring {
+  transition:
+    opacity var(--t-reveal),
+    scale var(--spring-check-pop),
+    rotate var(--spring-pop),
+    border-color var(--t-color),
+    color var(--t-color);
+}
+
+html.is-reduced .gband__add .gband__ring {
+  scale: none;
+  rotate: none;
+}
+
 .gband__add:focus-visible .gband__ring {
   border-style: solid;
   border-color: var(--accent);

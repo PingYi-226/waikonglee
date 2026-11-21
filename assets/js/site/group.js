@@ -776,8 +776,17 @@
      page glides there and the person lights up for a moment. Hovering a row, or the count under the rule, lets the
      other row recede. */
   var SWELL = { now: 0.26, past: 0.42, sigma: 1.15, lift: 0.3 };
+  var ADD_AT = 1150; // ms after ready: the "+" arrives once the students' marks have settled (people_band.liquid delays)
   function initBand(band) {
     var rows = all(band, "[data-band-row]");
+    var add = band.querySelector(".gband__add");
+    if (add) {
+      if (env.static) add.classList.add("is-in");
+      else
+        setTimeout(function () {
+          add.classList.add("is-in");
+        }, env.reduce ? 600 : ADD_AT);
+    }
     var stats = all(document, "[data-band-for]");
     function focusRow(key) {
       if (key) band.setAttribute("data-focus", key);
