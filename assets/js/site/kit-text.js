@@ -4,11 +4,13 @@
  *   split          text coming in by character, word or line (rise / arrive / fade)
  *   sliding-number digits rolling to their value like an odometer
  *   rotating-text  words taking turns inside a line; the neighbours glide
+ *   morph-text     words melting into one another inside a line (the "gooey" morph)
  *   rolling-text   letters rolling over like a flip board
  *   sliding-text   a label sliding out as a copy slides in (hover / focus of its link or button)
  *   swap-text      a label swapping in place through a light blur
  *   highlight-text a highlighter sweep behind inline text
  *   shimmer-text   a glint running across text
+ *   shine-text     a band of light travelling across text, wrapped lines included
  *   typing-text    text typed out with a caret
  *   scramble       short mono labels decrypting left to right
  *
@@ -811,11 +813,11 @@
   const MORPH_SLOPE = 8;
   const MORPH_CUT = 0.25;
   const MORPH_GOO = 2.5; // the threshold is fully on once no word is more than 60% there, and off at the ends
+  const MORPH_LEAD = 0.3; // presence below which a melting word no longer shows through the threshold (measured on 2x frames)
   const MORPH_SHRINK = 0.35; // a box that shrinks waits this share of the morph, so the leaving word is not overrun
   const MORPH_RESUME = 600; // ms: after a hold the next morph waits at least this long (it never answers the pointer leaving)
   const SVG_NS = "http://www.w3.org/2000/svg";
   let morphCount = 0;
-  const MT = (S.__mt = { blur: MORPH_BLUR, max: MORPH_BLUR_MAX, fade: MORPH_FADE, slope: MORPH_SLOPE, cut: MORPH_CUT, goo: MORPH_GOO, }); // TEMP tuning
 
   S.register("morph-text", function (el, opts) {
     const words = (Array.isArray(opts.words) ? opts.words : []).map(String).filter((w) => w.trim());
@@ -913,8 +915,8 @@
         s.filter = "";
         return;
       }
-      s.opacity = Math.pow(l.p, MT.fade).toFixed(3);
-      s.filter = "blur(" + Math.min(MT.blur * (1 / l.p - 1), MT.max).toFixed(4) + "em)";
+      s.opacity = Math.pow(l.p, MORPH_FADE).toFixed(3);
+      s.filter = "blur(" + Math.min(MORPH_BLUR * (1 / l.p - 1), MORPH_BLUR_MAX).toFixed(4) + "em)";
     }
 
     /** The threshold's strength follows the morph: none while one word is (nearly) whole, full in the middle. */
@@ -922,9 +924,9 @@
       if (soft) return;
       let top = 0;
       layers.forEach((l) => (top = Math.max(top, l.p)));
-      const g = S.util.clamp((1 - top) * MT.goo, 0, 1);
-      const a = 1 + g * (MT.slope - 1);
-      const b = -g * MT.slope * MT.cut;
+      const g = S.util.clamp((1 - top) * MORPH_GOO, 0, 1);
+      const a = 1 + g * (MORPH_SLOPE - 1);
+      const b = -g * MORPH_SLOPE * MORPH_CUT;
       matrix.setAttribute("values", "1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 " + a.toFixed(3) + " " + b.toFixed(3));
     }
 
@@ -936,7 +938,7 @@
       for (let i = layers.length - 1; i >= 0; i--) {
         const l = layers[i];
         if (l.p !== l.to) {
-          const t = MT.freeze != null && l.to !== l.from ? MT.freeze : (now - l.t0) / l.dur; // TEMP
+          const t = (now - l.t0) / l.dur;
           if (t >= 1) l.p = l.to;
           else if (t > 0) l.p = l.from + (l.to - l.from) * t; // linear: the blur and fade curves shape it (magicui)
           if (l.p !== l.to) busy = true;
@@ -1016,8 +1018,11 @@
       });
       const next = addLayer(word, 0);
       if (apart) {
-        tweenTo(next, 1, t0 + gone, D / 2);
-        jumpAt = t0 + gone || 1;
+        // under the threshold a word is invisible below about a third of its presence, so the box may jump and the
+        // next word begin before the last one is quite gone; a plain fade (reduced motion) waits for it
+        const lead = soft ? 0 : MORPH_LEAD;
+        jumpAt = t0 + gone * (1 - lead);
+        tweenTo(next, 1, jumpAt - (D / 2) * lead, D / 2);
       } else {
         tweenTo(next, 1, t0, D);
         jumpAt = 0;
@@ -1629,11 +1634,16 @@
       a.oncancel = over;
       if (!seen && trigger === "loop") a.pause();
     }
-    /** Let the pass in progress finish, then stop. */
+    /** Let the pass in progress finish, then stop (as the band leaves the text, not after the rest that follows). */
     function settle() {
       if (!running()) return;
       const t = anim.effect.getComputedTiming();
-      anim.effect.updateTiming({ iterations: (t.currentIteration || 0) + 1 });
+      const n = t.currentIteration || 0;
+      const repeating = anim.effect.getTiming().iterations !== 1;
+      if (!repeating) return;
+      const pass = duration / (duration + pause); // share of an iteration the band is on the text
+      if (t.progress != null && t.progress >= pass) anim.cancel();
+      else anim.effect.updateTiming({ iterations: n + pass });
     }
 
     let off = () => {};
