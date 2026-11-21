@@ -202,6 +202,11 @@
   transform: translateX(-0.45rem);
 }
 
+/* while the figures fly, the hover surface (which follows the links' new places at once) stays out of sight */
+.rfig.is-flying .rfig__list {
+  --k-highlight-bg: transparent;
+}
+
 .rfig.is-railed .rfig__link:focus-visible {
   outline-offset: 2px;
 }
@@ -347,7 +352,8 @@
     visibility: hidden;
   }
 
-  html.js:not(.is-static) .rarea.is-current {
+  html.js:not(.is-static) .rarea.is-current,
+  html.js:not(.is-static) .rarea.is-leaving {
     visibility: visible;
   }
 
@@ -466,6 +472,7 @@
 .rmat__scroll {
   position: relative; /* the hidden labels (absolute) stay inside the scroller */
   overflow-x: auto;
+  overflow-y: hidden; /* sideways only (phones): the wheel stays the page's (the stepper leaves vertical scrollers alone) */
   overscroll-behavior-x: contain;
 }
 

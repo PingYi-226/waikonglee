@@ -441,12 +441,15 @@
         plainIo.disconnect();
         plainIo = null;
       }
+      // the plate draws its figure again on a click; the cursor says so with a word
+      areas.forEach(function (a, k) {
+        if (pinned) fig(k).setAttribute("data-cursor", "Redraw");
+        else fig(k).removeAttribute("data-cursor");
+      });
       if (pinned) {
-        sec.classList.add("is-pinned");
         show(cur, 0, true);
         return;
       }
-      sec.classList.remove("is-pinned");
       // one after the other: everything shown; each figure draws when it is first seen
       areas.forEach(function (a, k) {
         a._rGen = (a._rGen || 0) + 1;
@@ -556,9 +559,15 @@
       },
       true,
     );
+    // a hash typed or set by a script: the browser jumps first (its scroll event comes a frame later), then we go
     window.addEventListener("hashchange", function () {
       var k = stepOfHash(window.location.hash);
-      if (pinned && k > -1) goStep(k, false);
+      if (!pinned || k < 0) return;
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          goStep(k, false);
+        });
+      });
     });
     function landOnHash() {
       var k = stepOfHash(window.location.hash);
