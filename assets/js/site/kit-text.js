@@ -236,14 +236,26 @@
       else order = pieces.map((p) => masks.indexOf(p.closest(".k-split__m")));
     }
 
+    // play() returns a promise that settles when the text has arrived (at once if it already has), so a page
+    // can sequence entrances: data-trigger="manual", then play() each part in turn
+    let arrived = null;
+    let arrive = () => {};
+    function whenDone() {
+      if (state === "done") return Promise.resolve();
+      if (!arrived) arrived = new Promise((r) => (arrive = r));
+      return arrived;
+    }
+
     function play() {
-      if (state !== "idle") return;
+      if (state !== "idle") return whenDone();
       state = "playing";
       el.classList.add("is-in");
       stopWait();
+      const p = whenDone();
       if (env.static || !M) {
         apply(REST);
-        return finish();
+        finish();
+        return p;
       }
       indexPieces();
       const step = opts.stagger != null ? Number(opts.stagger) : by === "chars" ? S.tokens.stagger.chars : S.tokens.stagger.words;
@@ -265,11 +277,16 @@
         apply(REST);
         finish();
       });
+      return p;
     }
 
     function finish() {
       state = "done";
       el.classList.add("is-done");
+      const r = arrive;
+      arrived = null;
+      arrive = () => {};
+      r();
       emit(el, "split-done", { by: by, effect: effect });
     }
 
@@ -768,8 +785,372 @@
       },
     };
   });
-  /* ------------------------------------------------- hover and focus hosts */
+  // the controls that own hover, focus and clicks of a kit inside them
   const HOST = "a, button, [role='button'], [role='link']";
+
+  /* =========================================================== morph-text */
+  /*
+   * Words melting into one another (the "gooey" morph, ROUND2_SPEC 4.6). Every word on show is a layer with a
+   * presence (1 = there, 0 = gone): its opacity is presence^0.4 and its blur grows as the presence falls, and an
+   * SVG alpha threshold over all layers turns the blurred letters into one liquid shape, so a word melts into the
+   * next. The threshold is eased in and out with the presences and the filter is taken off at rest: a word at rest
+   * is ordinary, sharp text. A click mid-morph retargets (the arriving word turns round from where it is).
+   * The box's width glides to the next word (spring.height); when the next word belongs on another line, the old
+   * word melts away first and the next one condenses on its own line, so nothing visible jumps. Reduced motion:
+   * the same without blur or threshold, and no glide (a fade out, then in).
+   * Timing: a fixed pause from the end of one morph to the start of the next, counted on the planned times so it
+   * never drifts; held while a fine pointer is over it, off screen and in hidden tabs.
+   */
+  const MORPH_DURATION = 1100; // ms, one morph (ROUND2_SPEC 4.6: "about 1.1 s")
+  const MORPH_INTERVAL = 3200; // ms from the end of a morph to the start of the next (the brief's default)
+  const MORPH_BLUR = 0.08; // em: blur = MORPH_BLUR * (1 / presence - 1); magicui MorphingText's 8px suits bold display type, a thin serif needs less
+  const MORPH_BLUR_MAX = 0.6; // em: the blur of a word almost gone
+  const MORPH_FADE = 0.4; // opacity = presence ^ 0.4 (magicui MorphingText)
+  // the threshold: alpha' = slope * (alpha - cut). magicui uses 255 and 0.55 on bold type; a thin serif needs a low cut
+  // (blurred hairlines keep enough alpha, so letters swell and flow instead of breaking up) and a soft slope (smooth edges)
+  const MORPH_SLOPE = 8;
+  const MORPH_CUT = 0.25;
+  const MORPH_GOO = 2.5; // the threshold is fully on once no word is more than 60% there, and off at the ends
+  const MORPH_SHRINK = 0.35; // a box that shrinks waits this share of the morph, so the leaving word is not overrun
+  const MORPH_RESUME = 600; // ms: after a hold the next morph waits at least this long (it never answers the pointer leaving)
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  let morphCount = 0;
+  const MT = (S.__mt = { blur: MORPH_BLUR, max: MORPH_BLUR_MAX, fade: MORPH_FADE, slope: MORPH_SLOPE, cut: MORPH_CUT, goo: MORPH_GOO, }); // TEMP tuning
+
+  S.register("morph-text", function (el, opts) {
+    const words = (Array.isArray(opts.words) ? opts.words : []).map(String).filter((w) => w.trim());
+    if (!words.length) return null; // no words: the element keeps its own text
+    const original = Array.prototype.slice.call(el.childNodes);
+    // screen readers hear the element's own text (the sentence written for no-JavaScript) once, not the cycle
+    const spoken = el.textContent.replace(/\s+/g, " ").trim() || words.join(", ");
+    const duration = Number(opts.duration) || MORPH_DURATION;
+    const interval = opts.interval != null && opts.interval !== "" && !isNaN(Number(opts.interval)) ? Number(opts.interval) : MORPH_INTERVAL;
+    // inside a link or button the click belongs to the control
+    const takesClicks = !(el.parentElement && el.parentElement.closest(HOST));
+
+    // Balanced or "pretty" wrapping re-breaks the earlier lines every time the box's width changes, so the words
+    // before it would jump between lines: the paragraph wraps plainly while the kit runs (put back on destroy).
+    let block = el.parentElement;
+    while (block && getComputedStyle(block).display.indexOf("inline") === 0) block = block.parentElement;
+    let unwrapped = null;
+    if (block) {
+      const cs = getComputedStyle(block);
+      const wrapStyle = cs.textWrapStyle || cs.textWrap || "";
+      if (/balance|pretty/.test(wrapStyle)) {
+        const prop = "textWrapStyle" in block.style ? "textWrapStyle" : "textWrap";
+        unwrapped = [prop, block.style[prop]];
+        block.style[prop] = prop === "textWrapStyle" ? "auto" : "wrap";
+      }
+    }
+
+    el.textContent = "";
+    el.classList.add("k-morph");
+    el.appendChild(srText(spoken));
+    const vis = span("k-morph__vis");
+    vis.setAttribute("aria-hidden", "true");
+    // the ghost (invisible, in the flow) gives the box its height and baseline; the layers sit on top of it
+    const ghost = span("k-morph__ghost", words[0]);
+    vis.appendChild(ghost);
+    el.appendChild(vis);
+
+    // the threshold filter, one per element (its strength changes with the morph)
+    const fid = "k-morph-" + ++morphCount;
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("class", "k-morph__defs");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    svg.setAttribute("width", "0");
+    svg.setAttribute("height", "0");
+    const filter = document.createElementNS(SVG_NS, "filter");
+    filter.setAttribute("id", fid);
+    // a generous region on top of the box's own bleed: ascenders, descenders, the italic overhang and the blur
+    filter.setAttribute("x", "-25%");
+    filter.setAttribute("y", "-50%");
+    filter.setAttribute("width", "150%");
+    filter.setAttribute("height", "200%");
+    filter.setAttribute("color-interpolation-filters", "sRGB");
+    const matrix = document.createElementNS(SVG_NS, "feColorMatrix");
+    matrix.setAttribute("type", "matrix");
+    filter.appendChild(matrix);
+    svg.appendChild(filter);
+    el.appendChild(svg);
+
+    let index = 0;
+    let soft = false; // this morph is a plain fade (reduced motion)
+    let morphing = false;
+    let jumpAt = 0; // planned time of the box's jump to another line (0: none)
+    let endAt = 0; // planned end of the morph
+    let target = { word: words[0], width: 0 };
+    let widthAnim = null;
+    const layers = []; // { el, word, p, from, to, t0, dur }
+
+    function addLayer(word, p) {
+      const l = { el: span("k-morph__w", word), word: word, p: p, from: p, to: p, t0: 0, dur: 1 };
+      vis.appendChild(l.el);
+      layers.push(l);
+      paint(l);
+      return l;
+    }
+    function tweenTo(l, to, t0, dur) {
+      l.from = l.p;
+      l.to = to;
+      l.t0 = t0;
+      l.dur = Math.max(1, dur);
+    }
+
+    function paint(l) {
+      const s = l.el.style;
+      if (l.p >= 1) {
+        s.opacity = s.filter = "";
+        return;
+      }
+      if (l.p <= 0) {
+        s.opacity = "0";
+        return;
+      }
+      if (soft) {
+        s.opacity = l.p.toFixed(3);
+        s.filter = "";
+        return;
+      }
+      s.opacity = Math.pow(l.p, MT.fade).toFixed(3);
+      s.filter = "blur(" + Math.min(MT.blur * (1 / l.p - 1), MT.max).toFixed(4) + "em)";
+    }
+
+    /** The threshold's strength follows the morph: none while one word is (nearly) whole, full in the middle. */
+    function paintGoo() {
+      if (soft) return;
+      let top = 0;
+      layers.forEach((l) => (top = Math.max(top, l.p)));
+      const g = S.util.clamp((1 - top) * MT.goo, 0, 1);
+      const a = 1 + g * (MT.slope - 1);
+      const b = -g * MT.slope * MT.cut;
+      matrix.setAttribute("values", "1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 " + a.toFixed(3) + " " + b.toFixed(3));
+    }
+
+    const loop = S.util.loop(tick);
+    function tick() {
+      const now = performance.now();
+      if (jumpAt && now >= jumpAt) jump();
+      let busy = jumpAt > 0;
+      for (let i = layers.length - 1; i >= 0; i--) {
+        const l = layers[i];
+        if (l.p !== l.to) {
+          const t = MT.freeze != null && l.to !== l.from ? MT.freeze : (now - l.t0) / l.dur; // TEMP
+          if (t >= 1) l.p = l.to;
+          else if (t > 0) l.p = l.from + (l.to - l.from) * t; // linear: the blur and fade curves shape it (magicui)
+          if (l.p !== l.to) busy = true;
+        }
+        if (l.p <= 0 && l.to <= 0) {
+          l.el.remove();
+          layers.splice(i, 1);
+          continue;
+        }
+        paint(l);
+      }
+      paintGoo();
+      if (!busy) settle();
+    }
+
+    /** The box takes the next word's width at once (the old word is gone, the next one not there yet). */
+    function jump() {
+      jumpAt = 0;
+      stop(widthAnim);
+      widthAnim = null;
+      el.style.width = target.width + "px";
+    }
+
+    function glide(w, shrinking) {
+      if (!M) {
+        el.style.width = w + "px";
+        return;
+      }
+      const a = M.animate(el, { width: w + "px" }, S.t("spring.height", { delay: shrinking ? (duration * MORPH_SHRINK) / 1000 : 0 }));
+      widthAnim = a;
+      a.finished.then(() => {
+        if (widthAnim !== a) return;
+        widthAnim = null;
+        release();
+      });
+    }
+    /** At rest the box is the word's own (no explicit width), so it follows fonts and resizes like text. */
+    function release() {
+      if (!morphing && !widthAnim) el.style.width = "";
+    }
+
+    function advance(t0) {
+      if (words.length < 2 || env.static) return;
+      index = (index + 1) % words.length;
+      const word = words[index];
+      soft = env.reduce || !M;
+      const D = duration * S.tempo;
+      // hold the box where it is while the ghost takes the next word, and see where that word would sit
+      const r0 = el.getBoundingClientRect();
+      stop(widthAnim);
+      widthAnim = null;
+      el.style.width = r0.width + "px";
+      ghost.textContent = word;
+      const w1 = ghost.getBoundingClientRect().width;
+      el.style.width = w1 + "px";
+      const moved = Math.abs(el.getBoundingClientRect().top - r0.top) > r0.height / 2;
+      el.style.width = r0.width + "px";
+      // while it morphs the ghost holds the widest word on show, so the filter's region covers every layer
+      let widest = word;
+      let wmax = w1;
+      layers.forEach((l) => {
+        const w = l.el.getBoundingClientRect().width;
+        if (w > wmax) {
+          wmax = w;
+          widest = l.word;
+        }
+      });
+      ghost.textContent = widest;
+      target = { word: word, width: w1 };
+      // apart: melt away, then condense (the word changes lines, or reduced motion, where nothing glides)
+      const apart = moved || soft;
+      let gone = 0;
+      layers.forEach((l) => {
+        const d = (apart ? D / 2 : D) * l.p;
+        tweenTo(l, 0, t0, d);
+        gone = Math.max(gone, d);
+      });
+      const next = addLayer(word, 0);
+      if (apart) {
+        tweenTo(next, 1, t0 + gone, D / 2);
+        jumpAt = t0 + gone || 1;
+      } else {
+        tweenTo(next, 1, t0, D);
+        jumpAt = 0;
+        glide(w1, w1 < r0.width);
+      }
+      endAt = Math.max(t0 + gone, next.t0 + next.dur);
+      morphing = true;
+      if (!soft) {
+        paintGoo();
+        vis.style.filter = "url(#" + fid + ")";
+      }
+      loop.start();
+      emit(el, "morph-change", { index: index, word: word });
+    }
+
+    function settle() {
+      loop.stop();
+      morphing = false;
+      vis.style.filter = "";
+      ghost.textContent = target.word;
+      layers.forEach(paint);
+      release();
+      emit(el, "morph-end", { index: index, word: target.word });
+      // the planned end, not the frame it was noticed on: the cadence never drifts
+      wait = Math.max(0, endAt + interval - performance.now());
+      arm();
+    }
+
+    /* ---- cadence */
+    let timer = null;
+    let due = 0;
+    let wait = interval + (Number(opts.delay) || 0); // ms left before the next morph
+    let hovered = false;
+    let seen = false;
+    let paused = opts.trigger === "manual";
+    const held = () => hovered || !seen || paused || morphing || env.static || words.length < 2;
+    function arm() {
+      clearTimeout(timer);
+      timer = null;
+      if (held()) return;
+      due = performance.now() + wait;
+      timer = setTimeout(fire, wait);
+    }
+    function hold() {
+      if (!timer) return;
+      clearTimeout(timer);
+      timer = null;
+      wait = Math.max(0, due - performance.now());
+    }
+    function resume() {
+      wait = Math.max(wait, MORPH_RESUME);
+      arm();
+    }
+    function fire() {
+      timer = null;
+      // start on the planned time (a late timer does not push the cadence), but never skip into a morph
+      advance(Math.max(due, performance.now() - 50));
+    }
+    function next() {
+      clearTimeout(timer);
+      timer = null;
+      advance(performance.now());
+    }
+
+    addLayer(words[0], 1);
+    const offVisible = S.util.visible(el, (v) => {
+      seen = v;
+      if (v) resume();
+      else hold();
+    });
+    const enter = (e) => {
+      if (e.pointerType === "touch" || !env.hover) return;
+      hovered = true;
+      hold();
+    };
+    const leave = () => {
+      if (!hovered) return;
+      hovered = false;
+      resume();
+    };
+    // one advance per click; quick clicks change the word and do not select it
+    const click = (e) => {
+      if (e.button === 0 && !env.static) next();
+    };
+    const down = (e) => {
+      if (e.detail > 1) e.preventDefault();
+    };
+    el.addEventListener("pointerenter", enter);
+    el.addEventListener("pointerleave", leave);
+    if (takesClicks) {
+      el.addEventListener("click", click);
+      el.addEventListener("mousedown", down);
+    }
+
+    return {
+      next: next,
+      pause: () => {
+        paused = true;
+        hold();
+      },
+      play: () => {
+        if (!paused) return;
+        paused = false;
+        resume();
+      },
+      get index() {
+        return index;
+      },
+      get word() {
+        return target.word;
+      },
+      get morphing() {
+        return morphing;
+      },
+      destroy: () => {
+        clearTimeout(timer);
+        loop.stop();
+        stop(widthAnim);
+        offVisible();
+        el.removeEventListener("pointerenter", enter);
+        el.removeEventListener("pointerleave", leave);
+        el.removeEventListener("click", click);
+        el.removeEventListener("mousedown", down);
+        el.classList.remove("k-morph");
+        el.style.width = "";
+        el.textContent = "";
+        original.forEach((n) => el.appendChild(n));
+        if (unwrapped) block.style[unwrapped[0]] = unwrapped[1];
+      },
+    };
+  });
+
+  /* ------------------------------------------------- hover and focus hosts */
 
   /**
    * on(true) while the element's host (its closest link or button, else the element) is hovered by a fine
@@ -863,23 +1244,37 @@
     el.appendChild(srText(text));
     el.appendChild(vis);
 
+    // One roll at a time: every trigger (hover, focus, a page's scroll gesture calling roll()) shares this promise,
+    // so a call while a roll plays is ignored and returns the roll in progress; two triggers never double it.
     let rolling = null;
+    let guard = null;
     function roll() {
-      if (rolling) return rolling; // a roll in progress plays through
+      if (rolling) return rolling;
       if (env.reduce || env.static || !M) return Promise.resolve();
       const anims = [];
       faces.forEach(([f, b], i) => {
         anims.push(S.animate(f, { transform: ["rotateX(0deg)", "rotateX(90deg)"] }, S.t(ROLL, { delay: i * step })));
         anims.push(S.animate(b, { transform: ["rotateX(90deg)", "rotateX(0deg)"] }, S.t(ROLL, { delay: i * step + ROLL_BACK })));
       });
-      rolling = Promise.all(anims.map((a) => a.finished || a)).then(() => {
+      let settled = false;
+      const done = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(guard);
         faces.forEach(([f, b]) => {
           f.style.transform = "rotateX(0deg)";
           b.style.transform = "rotateX(90deg)";
         });
         rolling = null;
+        el.classList.remove("is-rolling");
         emit(el, "rolling-done");
-      });
+      };
+      el.classList.add("is-rolling");
+      emit(el, "rolling-start");
+      rolling = Promise.all(anims.map((a) => a.finished || a)).then(done, done);
+      // if an animation is dropped without settling (element detached, tab discarded), the next roll is not locked out
+      const total = ((faces.length - 1) * step + ROLL_BACK + ROLL.duration) * S.tempo * 1000;
+      guard = setTimeout(done, total + 1000);
       return rolling;
     }
 
@@ -889,9 +1284,14 @@
 
     return {
       roll: roll,
+      /** true while a roll plays (from the first letter leaving to the last one landing) */
+      get rolling() {
+        return !!rolling;
+      },
       destroy: () => {
         off();
-        el.classList.remove("k-roll");
+        clearTimeout(guard);
+        el.classList.remove("k-roll", "is-rolling");
         el.textContent = text;
       },
     };

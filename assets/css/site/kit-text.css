@@ -6,8 +6,8 @@
 
 /* al-folio's main.css gives every span --global-text-color instead of letting it inherit: the spans these kits
    create, and the spans that host them, take the colour of the text around them (a class on the host still wins) */
-span:where([data-kit~="split"], [data-kit~="sliding-number"], [data-kit~="rotating-text"], [data-kit~="rolling-text"], [data-kit~="sliding-text"], [data-kit~="swap-text"], [data-kit~="highlight-text"], [data-kit~="shimmer-text"], [data-kit~="typing-text"], [data-kit~="scramble"]),
-:where(.k-split, .k-num, .k-rot, .k-roll, .k-slide, .k-swap, .k-shim, .k-type, .k-scr) span {
+span:where([data-kit~="split"], [data-kit~="sliding-number"], [data-kit~="rotating-text"], [data-kit~="morph-text"], [data-kit~="rolling-text"], [data-kit~="sliding-text"], [data-kit~="swap-text"], [data-kit~="highlight-text"], [data-kit~="shimmer-text"], [data-kit~="shine-text"], [data-kit~="typing-text"], [data-kit~="scramble"]),
+:where(.k-split, .k-num, .k-rot, .k-morph, .k-roll, .k-slide, .k-swap, .k-shim, .k-shine, .k-type, .k-scr) span {
   color: inherit;
 }
 
@@ -36,6 +36,11 @@ html.js [data-kit~="split"]:not(.k-split) {
   overflow-y: clip;
   padding-block: 0.2em;
   margin-block: -0.2em;
+}
+
+/* arrived: the lines stop clipping, so a nested unit's overhang (a morph-text, a focus ring) is never cut */
+.k-split--rise.is-done .k-split__m {
+  overflow-y: visible;
 }
 
 .k-split__vis {
@@ -120,6 +125,45 @@ html.js [data-kit~="sliding-number"]:not(.is-built) {
   top: 0;
   visibility: hidden;
   white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ---------- morph-text ---------- */
+/* An inline-block (the word wraps as a unit) that keeps the line's baseline: the ghost, invisible and in the flow,
+   gives the box its height and baseline, the words' layers lie on top of it. The bleed is room inside the
+   threshold filter's box for ascenders, descenders, the italic overhang and the blur; the negative margin keeps it
+   out of the layout. Nothing here looks like a control: the cursor, the colour and the decoration are the text's. */
+.k-morph {
+  --k-morph-bleed: 0.32em;
+  display: inline-block;
+  vertical-align: baseline;
+  white-space: nowrap;
+  text-indent: 0;
+}
+
+.k-morph__vis {
+  position: relative;
+  display: inline-block;
+  padding: var(--k-morph-bleed);
+  margin: calc(-1 * var(--k-morph-bleed));
+}
+
+.k-morph__ghost {
+  visibility: hidden;
+}
+
+.k-morph__w {
+  position: absolute;
+  left: var(--k-morph-bleed);
+  top: var(--k-morph-bleed);
+  white-space: nowrap;
+}
+
+.k-morph__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
   pointer-events: none;
 }
 
