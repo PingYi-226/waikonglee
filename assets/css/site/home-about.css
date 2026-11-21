@@ -1,8 +1,21 @@
 /* ==========================================================================
-   Home page, about block: the lede, the portrait, the strip of education and work.
+   Home page, about block: the lede, the portrait, the strip of education and work (one slide).
    ========================================================================== */
 
-/* ---------- about ---------- */
+/* ---------- the slide: where the page moves in steps it is exactly one screen, the header's room inside it ---------- */
+html.has-snap .home > .about {
+  display: grid;
+  align-content: center;
+  height: 100vh;
+  height: 100svh;
+  padding-block: calc(var(--nav-h) + clamp(0.5rem, 2vh, 1.5rem)) clamp(1rem, 4vh, 2.5rem);
+}
+
+html.has-snap .about .sechead {
+  margin-bottom: clamp(1.25rem, 4vh, 2.75rem);
+}
+
+/* ---------- lede and portrait ---------- */
 .about__grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -18,17 +31,17 @@
 .about__lede p {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.85rem, 3.35vw, 2.95rem);
+  font-size: clamp(1.85rem, min(3.35vw, 5.6vh), 2.95rem);
   line-height: 1.15;
   letter-spacing: -0.014em;
   color: var(--ink);
+  text-wrap: pretty;
 }
 
 .about__photo {
   grid-column: 10 / span 3;
-  grid-row: 1 / span 2;
   justify-self: end;
-  width: min(100%, 15.5rem);
+  width: min(100%, clamp(12rem, 31vh, 18rem));
   margin: 0.4rem 0 0;
 }
 
@@ -42,163 +55,302 @@
 }
 
 .about__frame img {
+  display: block;
   width: 100%;
+  height: auto;
   border-radius: 3px;
-  filter: saturate(0.96) contrast(1.02);
 }
 
-.about__body {
-  grid-column: 4 / span 5;
-  font-size: 1.06rem;
-  color: var(--ink-2);
+/* ---------- the strip: education and work, two lanes on one time axis ----------
+   Each bar sits at --l (start) with --w (length), in percent of the axis. The axis draws itself once: --strip-draw runs
+   from 0 to 100 (home-about.js) and every bar shows the part of itself that time has reached. */
+@property --strip-draw {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 100;
 }
 
-/* career strip */
-.career {
+.strip {
+  --strip-draw: 100;
+  --strip-bar: 0.8rem; /* the drawn bar; the button around it is taller, for the pointer */
+  --strip-lane: 1.75rem;
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(6rem, 2fr) minmax(0, 10fr);
-  gap: 0.6rem clamp(1rem, 2.2vw, 2rem);
+  grid-template-columns: minmax(5.5rem, 7.5rem) minmax(0, 1fr);
   align-items: center;
-  margin-top: clamp(3.5rem, 8vw, 6.5rem);
+  column-gap: clamp(1rem, 2.2vw, 2rem);
+  margin-top: clamp(2.5rem, 9vh, 5.5rem); /* room above the lanes for the plate */
 }
 
-.career__label {
+html.js .strip:not(.is-drawn) {
+  --strip-draw: 0;
+}
+
+.strip__name {
+  grid-column: 1;
   margin: 0;
 }
 
-.career__track {
+.strip__lane,
+.strip__years {
+  grid-column: 2;
   position: relative;
-  height: 2.75rem;
   margin: 0;
   padding: 0;
   list-style: none;
+  container-type: inline-size; /* 1cqw = 1% of the axis, for the shimmer */
 }
 
-.career__seg {
+.strip__lane {
+  height: var(--strip-lane);
+}
+
+.strip__seg {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--l);
-  width: var(--w);
-  min-width: 10px;
-  padding: 0 1.5px;
+  inset: 0 auto 0 calc(var(--l) * 1%);
+  width: max(calc(var(--w) * 1%), 0.5rem);
+  padding: 0 1px;
 }
 
-.career__bar {
-  display: block;
+.strip__bar {
+  display: flex;
+  align-items: center;
   width: 100%;
   height: 100%;
   padding: 0;
   border: 0;
-  border-radius: 3px;
-  background-color: var(--paper-3);
+  background: none;
   cursor: default;
-  transition: background-color var(--t-color);
 }
 
-.career__seg--faculty .career__bar {
-  background-color: color-mix(in srgb, var(--accent) 38%, var(--paper));
-}
-
-.career__seg--postdoc .career__bar {
-  background-color: color-mix(in srgb, var(--accent) 16%, var(--paper));
-  background-image: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--accent) 45%, transparent) 4px 5px);
-}
-
-.career__bar:focus-visible {
-  background-color: var(--accent);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .career__bar:hover {
-    background-color: var(--accent);
-  }
-}
-
-/* the bars draw in from the left, one after the other, when the strip comes into view */
-html.js .career:not(.is-in) .career__bar {
-  clip-path: inset(0 100% 0 0 round 3px);
-}
-
-.career__bar {
-  clip-path: inset(0 0 0 0 round 3px);
-}
-
-.career.is-in .career__bar {
+.strip__fill {
+  --strip-tone: color-mix(in srgb, var(--ink) 15%, var(--paper));
+  position: relative;
+  display: block;
+  width: 100%;
+  height: var(--strip-bar);
+  overflow: hidden;
+  border-radius: var(--r-1);
+  background: var(--strip-tone);
+  /* the part of the bar that the drawing has reached */
+  clip-path: inset(0 clamp(0%, calc((var(--l) + var(--w) - var(--strip-draw)) / var(--w) * 100%), 100%) 0 0 round var(--r-1));
   transition:
-    clip-path 900ms var(--ease-out) calc(200ms + var(--i) * 90ms),
+    opacity var(--t-color),
+    scale var(--spring-pop),
     background-color var(--t-color);
 }
 
-.career__years {
-  grid-column: 2;
-  position: relative;
-  height: 1.3rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+/* education: the same tone, hatched */
+.strip__lane--edu .strip__fill {
+  background:
+    repeating-linear-gradient(-55deg, transparent 0 3px, color-mix(in srgb, var(--ink) 20%, transparent) 3px 4px),
+    color-mix(in srgb, var(--ink) 7%, var(--paper));
 }
 
-.career__years li {
+/* what is going on now */
+.strip__seg.is-now .strip__fill {
+  --strip-tone: color-mix(in srgb, var(--accent) 62%, var(--paper));
+}
+
+/* the light that travels along the bars now and then (home-about.js moves it, in axis units) */
+.strip__glint {
   position: absolute;
-  left: var(--l);
-  top: 0;
-  padding-left: 0.4rem;
+  inset: 0 auto 0 0;
+  width: 9cqw;
+  background: linear-gradient(100deg, transparent, var(--strip-light) 50%, transparent);
+  translate: -200cqw 0;
+  pointer-events: none;
+}
+
+.strip {
+  --strip-light: color-mix(in srgb, var(--surface) 85%, transparent);
+}
+
+html[data-theme="dark"] .strip {
+  --strip-light: color-mix(in srgb, var(--ink) 34%, transparent);
+}
+
+/* a bar under the pointer or the keyboard: it thickens a little, the others recede */
+.strip.is-picking .strip__seg:not(.is-active) .strip__fill {
+  opacity: 0.3;
+}
+
+.strip__seg.is-active .strip__fill {
+  scale: 1 1.4;
+}
+
+.strip__bar:focus-visible {
+  outline: none;
+}
+
+.strip__bar:focus-visible .strip__fill {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* the years under the axis: a tick each year, a figure every fifth; they come in as the drawing passes them */
+.strip__years {
+  height: 1.4rem;
+  margin-top: 0.3rem;
   font-size: 0.72rem;
-  border-left: 1px solid var(--line-strong);
+  color: var(--muted);
 }
 
-.career__legend {
-  grid-column: 2;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 1.4rem;
-  margin: 0.5rem 0 0;
-  padding: 0;
-  list-style: none;
-  font-size: 0.78rem;
+.strip__tick {
+  position: absolute;
+  top: 0;
+  left: calc(var(--l) * 1%);
+  width: 1px;
+  height: 0.3rem;
+  background: var(--line-strong);
+  opacity: clamp(0, calc((var(--strip-draw) - var(--l)) / 3), 1);
 }
 
-.career__key::before {
-  content: "";
-  display: inline-block;
-  width: 0.9rem;
+.strip__tick--label {
   height: 0.5rem;
-  margin-right: 0.5rem;
-  border-radius: 2px;
-  background-color: var(--paper-3);
 }
 
-.career__key--faculty::before {
-  background-color: color-mix(in srgb, var(--accent) 38%, var(--paper));
+.strip__tick span {
+  position: absolute;
+  top: 0.55rem;
+  left: 0;
+  translate: -50% 0;
+  line-height: 1;
 }
 
-.career__key--postdoc::before {
-  background-color: color-mix(in srgb, var(--accent) 16%, var(--paper));
-  background-image: repeating-linear-gradient(135deg, transparent 0 3px, color-mix(in srgb, var(--accent) 45%, transparent) 3px 4px);
+/* the details of a bar: kept in the markup (screen readers have the button's label). With the script they show on a plate
+   that springs up from the bar; without it, simply above the bar on hover or focus. */
+.strip__detail {
+  display: none;
 }
 
+html:not(.js) .strip__seg:is(:hover, :focus-within) .strip__detail {
+  position: absolute;
+  bottom: calc(100% + 0.4rem);
+  left: 0;
+  z-index: 2;
+  display: grid;
+  gap: 0.1rem;
+  width: max-content;
+  max-width: 20rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  box-shadow: var(--shadow-1);
+}
+
+/* the plate (built by home-about.js): a pin rides to the bar's top; the plate stands on a short stem above it */
+.strip__pin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.strip__stem {
+  position: absolute;
+  bottom: 0;
+  left: -0.5px;
+  width: 1px;
+  height: 1px; /* scaled to its length by the script */
+  background: var(--line-strong);
+  transform-origin: 50% 100%;
+}
+
+.strip__lift {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.strip__plate {
+  position: relative;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.7rem 0.95rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  box-shadow: var(--shadow-1);
+  white-space: nowrap;
+}
+
+.strip__plate span,
+.strip__detail span {
+  display: block;
+}
+
+.strip__what {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  line-height: 1.15;
+  color: var(--ink);
+}
+
+.strip__where {
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.strip__when {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+html.js .strip__pin:not(.is-shown) {
+  visibility: hidden;
+}
+
+/* ---------- small screens: one column, the portrait first ---------- */
 @media (max-width: 760px) {
-  .about__lede,
-  .about__body {
+  .about__lede {
     grid-column: 1 / -1;
   }
 
   .about__photo {
     grid-column: 1 / -1;
-    grid-row: auto;
+    grid-row: 1;
     justify-self: start;
     width: 11.5rem;
-    order: -1;
   }
 
-  .career {
+  .strip {
     grid-template-columns: 1fr;
+    row-gap: 0.35rem;
   }
 
-  .career__years,
-  .career__legend {
+  .strip__name,
+  .strip__lane,
+  .strip__years {
     grid-column: 1;
+  }
+
+  .strip__plate {
+    white-space: normal;
+    width: max-content;
+    max-width: calc(100vw - 2 * var(--gutter));
   }
 }
 
+/* ---------- reduced motion: the strip simply fades in ---------- */
+html.is-reduced .strip {
+  transition: opacity var(--t-arrive);
+}
+
+html.js.is-reduced .strip:not(.is-drawn) {
+  --strip-draw: 100;
+  opacity: 0;
+}
+
+@media print {
+  .strip {
+    --strip-draw: 100 !important;
+  }
+}
