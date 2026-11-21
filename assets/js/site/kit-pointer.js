@@ -31,6 +31,15 @@
   // internal/momentum.ts: how far past its range a speed carried over may take a curve
   const SLACK = 0.002;
 
+  /* Springs of this file's own, addressed by name like the tokens ("own.release"). They are not Animate UI roles:
+     the owner asked for them in round 2 (_work/ROUND2_SPEC.md, section 2, point 4 and the list of effects). */
+  const OWN = {
+    // a press let go: back past its rest by about a third of the press depth, a small dip after, settled in ~0.7 s
+    // (damping ratio 0.33: "spring overshoot on click", visible but small)
+    "own.release": { type: "spring", stiffness: 380, damping: 13 },
+  };
+  const tokenOf = (name) => Site.t(OWN[name] || name);
+
   /* ------------------------------------------------------------------- helpers */
   const px = (v) => parseFloat(v) || 0;
   const NONE = (v) => !v || v === "none";
@@ -46,7 +55,7 @@
   function css(path) {
     const key = path + "|" + Site.tempo;
     let t = timings.get(key);
-    if (!t) timings.set(key, (t = Site.css(path)));
+    if (!t) timings.set(key, (t = Site.css(OWN[path] || path)));
     return t;
   }
 
@@ -83,7 +92,7 @@
   function curveOf(token, initial) {
     const key = token + "|" + Site.tempo;
     if (!initial && restCurves.has(key)) return restCurves.get(key);
-    const transition = Site.t(token);
+    const transition = tokenOf(token);
     const shape = shapeOf(transition, initial || 0);
     let curve;
     if (!shape) {
@@ -131,7 +140,7 @@
     });
     const speed = length < 0.25 ? 0 : -along / length;
     if (speed <= 0) return 0;
-    const transition = Site.t(token);
+    const transition = tokenOf(token);
     const rest = shapeOf(transition, 0);
     if (!rest) return 0;
     // as much of the speed as never takes the curve past where it would go from rest
@@ -318,6 +327,8 @@
    * One numeric CSS property of one element on a spring that keeps its speed when retargeted (the press scale,
    * a popup's scale and opacity). The value rests at `rest` with no animation left on the element; any other value
    * is held by the animation that brought it there. Movement is dropped under reduced motion; a fade (`always`) stays.
+   * prop "transform" plays scale(v) composited onto whatever transform the element already has (a tilt written
+   * inline, a page's own transform), so it never replaces it.
    */
   class Spring1 {
     constructor(el, prop, token, rest, always) {
@@ -328,6 +339,8 @@
       this.value = rest;
       this.always = !!always; // a fade: it also plays under reduced motion
       this.run = null; // { animation, offset, curve, to }
+      this.format = prop === "transform" ? (v) => "scale(" + v + ")" : String;
+      this.composite = prop === "transform" ? "add" : "replace";
     }
 
     current() {
@@ -336,7 +349,8 @@
       return r.to + r.offset * (1 - r.curve.at(timeOf(r.animation)));
     }
 
-    to(value) {
+    /** Go to value, on this spring's token or on another one for this move (a release that overshoots). */
+    to(value, token) {
       const r = this.run;
       const moving = !!r && running(r.animation);
       const from = this.current();
@@ -360,11 +374,11 @@
       }
       // a scale is far below one unit: measure the carried speed against the distance, not in pixels
       const unit = 1 / Math.abs(offset);
-      const curve = curveFrom(this.token, [offset * unit], [velocity * unit]);
+      const curve = curveFrom(token || this.token, [offset * unit], [velocity * unit]);
       const frames = [{}, {}];
-      frames[0][this.prop] = String(from);
-      frames[1][this.prop] = String(value);
-      const animation = this.el.animate(frames, { duration: curve.duration, easing: curve.easing, fill: "both" });
+      frames[0][this.prop] = this.format(from);
+      frames[1][this.prop] = this.format(value);
+      const animation = this.el.animate(frames, { duration: curve.duration, easing: curve.easing, fill: "both", composite: this.composite });
       animation.startTime = startTime;
       if (r) r.animation.cancel();
       const run = { animation: animation, offset: offset, curve: curve, to: value };
@@ -432,7 +446,7 @@
       node.setAttribute("aria-hidden", "true");
       if (tag === "li") node.setAttribute("role", "presentation");
       el.appendChild(node);
-      return { node: node, glider: new Glider(node, token), scale: new Spring1(node, "scale", "spring.press", 1), item: null, pressed: null };
+      return { node: node, glider: new Glider(node, token), scale: new Spring1(node, "scale", "spring.press", 1), item: null, pressed: null, grow: 1 };
     }
     // the selection first: the hover surface paints above it
     const sel = mode !== "hover" ? makeSurface("selection", "spring.selection") : null;
@@ -477,12 +491,12 @@
       return null;
     }
     function syncHover() {
-      if (!hov) return;
+      if (!hov) return syncGrow();
       let item = wanted();
       if (item && sel && sel.item === item && !sel.glider.moving) item = null;
       const node = hov.node;
       if (item) {
-        if (hov.item === item) return;
+        if (hov.item === item) return syncGrow();
         const showing = shown(node);
         shapeLike(hov, item);
         const box = boxOf(item, node);
@@ -495,6 +509,27 @@
         hov.item = null;
         node.classList.remove("is-lit", "is-resuming");
       }
+      syncGrow();
+    }
+
+    /* Buttons and chips grow under the pointer and the keyboard focus (CSS `scale`, --k-grow in base.css): the
+       surface lying under the item that grows grows with it (the same 300 ms ease-out), so the two stay one object. */
+    function grown(item) {
+      if (!item || env.reduce) return 1;
+      const v = parseFloat(getComputedStyle(item).getPropertyValue("--k-grow"));
+      if (!(v > 0) || v === 1) return 1;
+      return focusVisible(item) || (env.hover && item.matches(":hover")) ? v : 1;
+    }
+    function syncGrow() {
+      const lit = wanted();
+      [sel, hov].forEach((s) => {
+        if (!s) return;
+        const g = s.item && s.item === lit ? grown(s.item) : 1;
+        if (g === s.grow) return;
+        s.grow = g;
+        if (g === 1) s.node.style.removeProperty("--k-surface-grow");
+        else s.node.style.setProperty("--k-surface-grow", String(g));
+      });
     }
 
     /* selection */
@@ -546,6 +581,7 @@
       else sel.glider.to(box);
       sel.item = next;
       node.classList.add("is-lit");
+      syncGrow();
     }
     if (sel) sel.glider.onSettle = syncHover;
 
@@ -588,7 +624,7 @@
           s.scale.to(e.detail.scale);
         } else if (!e.detail.down && s.pressed === item) {
           s.pressed = null;
-          s.scale.to(1);
+          s.scale.to(1, "own.release");
         }
       });
     };
@@ -657,20 +693,43 @@
   /* --------------------------------------------------------------------- press
    * Animate UI's press (primitives/buttons/button, recipes/press.md, recipes/card.md): the element scales to
    * scale.press (a whole card or row: scale.choice) on spring.press while the pointer or Space / Enter is down.
-   * Never on hover. It uses the `scale` property, so it composes with other kits' transforms (magnetic, tilt).
+   * Never on hover. Let go, it comes back on own.release, past its size once (the owner's "spring overshoot on
+   * click"). It plays on `transform`, composited onto the element's own transform (a tilt, a page's transform), so
+   * it composes with the hover growth of buttons (`scale`, base.css) and the magnetic pull (`translate`).
    */
   const INTERACTIVE = 'a[href], button, input, select, textarea, summary, label, [role="button"], [data-kit~="press"]';
+  // ms: a click quicker than this is held down until then, so the press nearly reaches its depth and the
+  // release has something to spring back from (spring.press is ~85% there after this long; site value)
+  const PRESS_HOLD = 120;
 
   Site.register("press", function (el, opts) {
-    const pressed = opts.press === "choice" ? tokens.scale.choice : tokens.scale.press;
-    const spring = new Spring1(el, "scale", "spring.press", 1);
+    const spring = new Spring1(el, "transform", "spring.press", 1);
     let down = false;
+    let since = 0;
+    let pending = 0;
+    let pressed = 1;
 
+    /** The depth: --k-press-scale from CSS (base.css sets it for buttons), else the token for the kind. */
+    function depth() {
+      const own = parseFloat(getComputedStyle(el).getPropertyValue("--k-press-scale"));
+      if (own > 0 && own <= 1) return own;
+      return opts.press === "choice" ? tokens.scale.choice : tokens.scale.press;
+    }
     function set(next) {
+      clearTimeout(pending);
+      pending = 0;
       if (next === down) return;
       if (next && (el.disabled || el.getAttribute("aria-disabled") === "true")) return;
+      if (!next && performance.now() - since < PRESS_HOLD) {
+        pending = setTimeout(() => set(false), PRESS_HOLD - (performance.now() - since));
+        return;
+      }
       down = next;
-      spring.to(next ? pressed : 1);
+      if (next) {
+        since = performance.now();
+        pressed = depth();
+      }
+      spring.to(next ? pressed : 1, next ? "spring.press" : "own.release");
       emit(el, "kit:press", { down: next, scale: pressed });
     }
     /* only the innermost control answers: a button inside a pressable row does not press the row */
@@ -701,6 +760,7 @@
 
     return {
       destroy() {
+        clearTimeout(pending);
         events.forEach((pair) => el.removeEventListener(pair[0], pair[1]));
         spring.stop();
       },
@@ -1013,6 +1073,18 @@
   const UNTIL_FOUND = "onbeforematch" in doc.documentElement;
   const disclosureGroups = new Map(); // data-group name -> Set of controllers
 
+  /* The "unfold" variant (data-effect="unfold"), for long text panels (an abstract, a BibTeX plate) in long lists:
+   * the height opens on spring.height; the content comes in line by line under a soft-edged mask sweeping down
+   * (one animation for the whole block: a 250-word abstract costs what one line does, nothing is split) while it
+   * clears from blur.disclosure; a hairline draws down the panel's start edge; the chevron turns on a spring (CSS).
+   * The content never moves, so it never fights the height spring. Closing is quick and plain: the height folds on
+   * transition.collapse while the content fades on transition.swap. Turned round on the way, the content goes on
+   * from where it is (the sweep is paused, not restarted). Reduced motion: the plain variant's fade. */
+  const UNFOLD_LINE = 26; // ms between two lines of the sweep (site value)
+  const UNFOLD_SPAN = [300, 820]; // ms: the shortest and the longest sweep (site values)
+  const UNFOLD_EDGE = 1.6; // line heights: the soft edge of the sweep (site value)
+  const MASK_PROPS = ["maskImage", "maskSize", "maskRepeat", "webkitMaskImage", "webkitMaskSize", "webkitMaskRepeat"];
+
   Site.register("disclosure", function (el, opts) {
     const panel = doc.getElementById(el.getAttribute("aria-controls") || "");
     if (!panel) return null;
@@ -1020,8 +1092,11 @@
     const native = /^(BUTTON|A|SUMMARY)$/.test(el.tagName);
     let open = el.getAttribute("aria-expanded") === "true";
     let animation = null;
+    const unfold = opts.effect === "unfold";
+    let sweep = null; // unfold: { content, anims (mask, blur), fade }
 
     panel.setAttribute("data-disclosure-panel", "");
+    if (unfold) panel.classList.add("k-unfold");
     if (el.tagName === "BUTTON" && !el.hasAttribute("type")) el.type = "button";
     if (!native) {
       if (!el.hasAttribute("role")) el.setAttribute("role", "button");
@@ -1041,11 +1116,12 @@
       return { open: ownMargin, shut: ownMargin - gap };
     }
 
-    /** The state at rest, nothing left on the panel. */
+    /** The state at rest, nothing left on the panel. (An unfolding sweep still on its way ends by itself.) */
     function settle() {
       if (animation) animation.cancel();
       animation = null;
-      panel.classList.remove("is-moving");
+      if (!open) clearSweep();
+      panel.classList.remove("is-moving", "is-unfolding");
       panel.style.removeProperty("--k-disclosure-content");
       panel.style.marginTop = "";
       panel.inert = false;
@@ -1075,9 +1151,13 @@
       panel.removeAttribute("hidden");
       panel.style.marginTop = "";
       panel.inert = !open;
-      if (instant || env.static || !canAnimate(panel)) return settle();
+      if (instant || env.static || !canAnimate(panel)) {
+        clearSweep();
+        return settle();
+      }
 
       const natural = panel.getBoundingClientRect().height;
+      if (unfold && !env.reduce) return runUnfold(from, natural, m);
       const first = { opacity: from.opacity, filter: from.filter };
       const last = open ? { opacity: "1", filter: "blur(0px)" } : { opacity: "0", filter: blur("disclosure") };
       if (!env.reduce) {
@@ -1099,6 +1179,89 @@
         },
         () => {},
       );
+    }
+
+    /* ---- unfold ---- */
+    const contentOf = () => (panel.children.length === 1 ? panel.firstElementChild : panel);
+
+    function clearSweep() {
+      if (!sweep) return;
+      sweep.anims.forEach((a) => a.cancel());
+      if (sweep.fade) sweep.fade.cancel();
+      MASK_PROPS.forEach((p) => (sweep.content.style[p] = ""));
+      sweep = null;
+    }
+    /** The content's opacity toward `value`, from where it is. */
+    function fadeContent(content, value, token) {
+      const t = css(token);
+      const from = getComputedStyle(content).opacity;
+      const a = content.animate([{ opacity: from }, { opacity: value }], { duration: t.duration, easing: t.easing, fill: "both" });
+      if (sweep.fade) sweep.fade.cancel();
+      sweep.fade = a;
+    }
+    /** Lines come in from the top: a mask with a soft edge slides down over the block while it clears from the blur. */
+    function startSweep(content) {
+      clearSweep();
+      const h = Math.max(1, content.getBoundingClientRect().height);
+      const line = px(getComputedStyle(content).lineHeight) || 24;
+      const edge = Math.round(line * UNFOLD_EDGE);
+      const duration = Site.util.clamp((h / line) * UNFOLD_LINE + 240, UNFOLD_SPAN[0], UNFOLD_SPAN[1]) * Site.tempo;
+      const image = "linear-gradient(to bottom, #000 " + h + "px, transparent " + (h + edge) + "px)";
+      const size = "100% " + (2 * h + edge) + "px";
+      Object.assign(content.style, { maskImage: image, webkitMaskImage: image, maskSize: size, webkitMaskSize: size, maskRepeat: "no-repeat", webkitMaskRepeat: "no-repeat" });
+      const start = "0px " + -(h + edge) + "px";
+      const enter = "cubic-bezier(" + tokens.ease.enter.join(",") + ")";
+      const out = "cubic-bezier(" + tokens.ease.out.join(",") + ")";
+      const mask = content.animate(
+        [
+          { maskPosition: start, webkitMaskPosition: start },
+          { maskPosition: "0px 0px", webkitMaskPosition: "0px 0px" },
+        ],
+        { duration: duration, easing: enter, fill: "both" },
+      );
+      const clear = content.animate([{ filter: blur("disclosure") }, { filter: "blur(0px)" }], { duration: duration, easing: out, fill: "both" });
+      const mine = (sweep = { content: content, anims: [mask, clear], fade: null });
+      mask.finished.then(
+        () => {
+          if (sweep === mine && open) clearSweep();
+        },
+        () => {},
+      );
+      // the hairline draws down the start edge with it
+      try {
+        panel.animate([{ scale: "1 0" }, { scale: "1 1" }], { duration: duration, easing: out, pseudoElement: "::before" });
+      } catch (e) {
+        /* pseudo-element animations unsupported: the line is simply there */
+      }
+    }
+    function runUnfold(from, natural, m) {
+      const content = contentOf();
+      const first = { height: from.height + "px" };
+      const last = { height: (open ? natural : 0) + "px" };
+      if (m.open !== m.shut) {
+        first.marginTop = from.marginTop + "px";
+        last.marginTop = (open ? m.open : m.shut) + "px";
+      }
+      const curve = open ? curveOf("spring.height", 0) : css("transition.collapse");
+      panel.classList.add("is-unfolding");
+      const mine = (animation = panel.animate([first, last], { duration: curve.duration, easing: curve.easing, fill: "both" }));
+      mine.finished.then(
+        () => {
+          if (animation === mine) settle();
+        },
+        () => {},
+      );
+      if (open) {
+        if (sweep && sweep.content === content) {
+          // turned round while folding: it comes back from where it is
+          sweep.anims.forEach((a) => a.playState === "paused" && a.play());
+          fadeContent(content, 1, "transition.reveal");
+        } else startSweep(content);
+      } else {
+        if (!sweep) sweep = { content: content, anims: [], fade: null };
+        sweep.anims.forEach((a) => running(a) && a.pause());
+        fadeContent(content, 0, "transition.swap");
+      }
     }
 
     function set(next, instant) {
@@ -1125,9 +1288,10 @@
         if (group) group.delete(api);
         if (animation) animation.cancel();
         animation = null;
+        clearSweep();
         open = true; // without the kit every panel is visible
         settle();
-        panel.classList.remove("is-on");
+        panel.classList.remove("is-on", "k-unfold");
       },
     };
     let group = null;
@@ -1760,6 +1924,283 @@
     };
   });
 
+  /** A layer the kit puts inside a card, under its content: the card becomes its stacking context (k-layered). */
+  function layerIn(host, className) {
+    const node = doc.createElement("span");
+    node.className = className;
+    node.setAttribute("aria-hidden", "true");
+    if (getComputedStyle(host).position === "static") {
+      host.style.position = "relative";
+      host.setAttribute("data-k-positioned", "");
+    }
+    host.classList.add("k-layered");
+    host.appendChild(node);
+    return node;
+  }
+  function unlayer(host, node) {
+    node.remove();
+    if (host.querySelector(":scope > .k-spot__light, :scope > .k-fill")) return;
+    host.classList.remove("k-layered");
+    if (host.hasAttribute("data-k-positioned")) {
+      host.style.position = "";
+      host.removeAttribute("data-k-positioned");
+    }
+  }
+  /** The pointer in an element's own (untransformed) coordinates, from its drawn box. */
+  function localPoint(el, rect, x, y) {
+    const sx = rect.width ? el.offsetWidth / rect.width : 1;
+    const sy = rect.height ? el.offsetHeight / rect.height : 1;
+    return { x: (x - rect.left) * sx, y: (y - rect.top) * sy };
+  }
+
+  /* ----------------------------------------------------------------- spotlight
+   * The owner's "pointer spotlight" on a group of cards: soft light on the card under the pointer, and the borders
+   * of its neighbours lighting up as the pointer comes near. Every item gets, in its own box, the pointer's place
+   * (--spot-x, --spot-y, px), a strength that falls off with the pointer's distance from the item's box
+   * (--spot-o: 1 inside, 0 at data-radius px) and whether the pointer is inside (--spot-in, 0 or 1). The kit's
+   * default look (.k-spot__light in kit-pointer.css: a fill light and a border ring) draws from them; data-spot="vars"
+   * keeps only the variables for a page's own drawing. Item boxes are read once and kept (read again after a scroll,
+   * a resize, a layout change or refresh(); every frame with data-live), so a pointer move costs no layout.
+   * Fine pointers only; keyboard focus lights the focused item from its centre.
+   */
+  const SPOT_RADIUS = 240; // px from an item's box at which its border no longer catches the light (site value)
+
+  Site.register("spotlight", function (el, opts) {
+    const selector = typeof opts.items === "string" && opts.items ? opts.items : ":scope > *";
+    const radius = Number(opts.radius) > 0 ? Number(opts.radius) : SPOT_RADIUS;
+    const draw = opts.spot !== "vars";
+    const live = opts.live === true;
+    let items = [];
+    let dirty = true;
+    let at = null; // { x, y } in the viewport, from the pointer or the focus
+    let queued = false;
+
+    function collect() {
+      const now = Array.prototype.filter.call(el.querySelectorAll(selector), (n) => !n.classList.contains("k-spot__light"));
+      items.forEach((it) => {
+        if (now.indexOf(it.el) < 0) release(it);
+      });
+      items = now.map((n) => items.find((it) => it.el === n) || { el: n, light: draw ? layerIn(n, "k-spot__light") : null, rect: null, o: -1, inside: -1 });
+      items.forEach((it) => it.el.classList.add("k-spot"));
+      dirty = true;
+    }
+    function release(it) {
+      if (it.light) unlayer(it.el, it.light);
+      it.el.classList.remove("k-spot", "is-spot");
+      ["--spot-x", "--spot-y", "--spot-o", "--spot-in"].forEach((p) => it.el.style.removeProperty(p));
+    }
+    function measure() {
+      items.forEach((it) => (it.rect = it.el.getBoundingClientRect()));
+      dirty = false;
+    }
+    function paint() {
+      queued = false;
+      if (dirty || live) measure();
+      items.forEach((it) => {
+        const r = it.rect;
+        let o = 0;
+        let inside = 0;
+        if (at && r) {
+          const dx = Math.max(r.left - at.x, 0, at.x - r.right);
+          const dy = Math.max(r.top - at.y, 0, at.y - r.bottom);
+          const d = Math.hypot(dx, dy);
+          o = d >= radius ? 0 : 1 - d / radius;
+          o = o * o * (3 - 2 * o); // a soft shoulder rather than a cone
+          inside = dx === 0 && dy === 0 ? 1 : 0;
+          if (o > 0) {
+            const p = localPoint(it.el, r, at.x, at.y);
+            it.el.style.setProperty("--spot-x", p.x.toFixed(1) + "px");
+            it.el.style.setProperty("--spot-y", p.y.toFixed(1) + "px");
+          }
+        }
+        if (Math.abs(o - it.o) > 0.004) it.el.style.setProperty("--spot-o", o.toFixed(3));
+        if (inside !== it.inside) {
+          it.el.style.setProperty("--spot-in", String(inside));
+          it.el.classList.toggle("is-spot", inside === 1);
+        }
+        it.o = o;
+        it.inside = inside;
+      });
+    }
+    const schedule = () => {
+      if (queued) return;
+      queued = true;
+      frame(paint);
+    };
+    const enabled = () => env.hover && !env.static;
+    const onEnter = (e) => {
+      if (!enabled() || e.pointerType === "touch") return;
+      collect();
+    };
+    const onMove = (e) => {
+      if (!enabled() || e.pointerType === "touch") return;
+      if (!items.length) collect();
+      at = { x: e.clientX, y: e.clientY };
+      schedule();
+    };
+    const onLeave = () => {
+      at = null;
+      schedule();
+    };
+    const onFocusIn = (e) => {
+      if (env.static || !focusVisible(e.target)) return;
+      if (!items.length) collect();
+      const it = items.find((i) => i.el.contains(e.target));
+      if (!it) return;
+      const r = it.el.getBoundingClientRect();
+      dirty = true;
+      at = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      schedule();
+    };
+    const onFocusOut = (e) => {
+      if (e.relatedTarget && el.contains(e.relatedTarget)) return;
+      onLeave();
+    };
+    const onScroll = () => {
+      dirty = true;
+      if (at) schedule();
+    };
+    el.addEventListener("pointerenter", onEnter);
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerleave", onLeave);
+    el.addEventListener("focusin", onFocusIn);
+    el.addEventListener("focusout", onFocusOut);
+    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    const offResize = Site.on("resize", onScroll);
+    const resize = new ResizeObserver(onScroll);
+    resize.observe(el);
+    if (draw && env.hover && !env.static) collect(); // the light layers exist before the first move
+
+    return {
+      /** Read the items and their boxes again (items added, or moved by something the kit cannot see). */
+      refresh() {
+        collect();
+        schedule();
+      },
+      destroy() {
+        el.removeEventListener("pointerenter", onEnter);
+        el.removeEventListener("pointermove", onMove);
+        el.removeEventListener("pointerleave", onLeave);
+        el.removeEventListener("focusin", onFocusIn);
+        el.removeEventListener("focusout", onFocusOut);
+        window.removeEventListener("scroll", onScroll, { capture: true });
+        offResize();
+        resize.disconnect();
+        items.forEach(release);
+        items = [];
+      },
+    };
+  });
+
+  /* ---------------------------------------------------------------- hover-fill
+   * The owner's "hover reveal": a fill (--k-fill-bg) spreads from the point where the pointer came in and withdraws
+   * toward the point where it left (a circle clip on a layer under the card's content, on transition.fill); coming
+   * back on the way, it grows again from where it is. Children marked data-hover-show come in a beat later (CSS,
+   * --k-fill-delay). Keyboard focus fills from the centre and shows them too; without hover (touch) there is no
+   * fill and they are simply visible. Reduced motion: the fill fades instead of spreading.
+   */
+  const CIRCLE = /circle\(\s*([\d.]+)px\s+at\s+([-\d.]+)px\s+([-\d.]+)px\s*\)/;
+
+  Site.register("hover-fill", function (el) {
+    let layer = null;
+    let anim = null;
+    let filled = false;
+    let byFocus = false;
+
+    function ensure() {
+      if (!layer) layer = layerIn(el, "k-fill");
+      return layer;
+    }
+    function pointOf(e) {
+      const r = el.getBoundingClientRect();
+      const p = e ? localPoint(el, r, e.clientX, e.clientY) : { x: el.offsetWidth / 2, y: el.offsetHeight / 2 };
+      return { x: Site.util.clamp(p.x, 0, el.offsetWidth), y: Site.util.clamp(p.y, 0, el.offsetHeight) };
+    }
+    const reach = (p) => Math.hypot(Math.max(p.x, el.offsetWidth - p.x), Math.max(p.y, el.offsetHeight - p.y)) + 1;
+    const circle = (r, p) => "circle(" + r.toFixed(1) + "px at " + p.x.toFixed(1) + "px " + p.y.toFixed(1) + "px)";
+
+    function to(on, p) {
+      const node = ensure();
+      const t = css("transition.fill");
+      const previous = anim;
+      if (env.reduce || env.static) {
+        // a fade, from wherever the last one was
+        const from = getComputedStyle(node).opacity;
+        node.style.clipPath = "none";
+        anim = env.static ? null : node.animate([{ opacity: from }, { opacity: on ? 1 : 0 }], { duration: css("transition.fade").duration, easing: css("transition.fade").easing, fill: "both" });
+        if (!anim) node.style.opacity = on ? "1" : "0";
+      } else {
+        node.style.opacity = "";
+        node.style.clipPath = "";
+        const now = CIRCLE.exec(getComputedStyle(node).clipPath || "");
+        // from the circle on screen (held by the last animation, finished or not), else from nothing at p
+        const from = now && previous ? now[0] : circle(0, p);
+        const target = on ? circle(reach(p), p) : circle(0, p);
+        anim = node.animate([{ clipPath: from, opacity: 1 }, { clipPath: target, opacity: 1 }], { duration: t.duration, easing: t.easing, fill: "both" });
+      }
+      if (previous) previous.cancel();
+      const mine = anim;
+      if (mine && !on)
+        mine.finished.then(
+          () => {
+            if (anim === mine) {
+              mine.cancel();
+              anim = null;
+            }
+          },
+          () => {},
+        );
+    }
+    function set(on, p) {
+      if (on === filled) return;
+      filled = on;
+      el.classList.toggle("is-filled", on);
+      to(on, p);
+    }
+    const onEnter = (e) => {
+      if (!env.hover || e.pointerType === "touch") return;
+      byFocus = false;
+      set(true, pointOf(e));
+    };
+    const onLeave = (e) => {
+      if (e.pointerType === "touch" || byFocus) return;
+      set(false, pointOf(e));
+    };
+    const onFocusIn = (e) => {
+      if (!focusVisible(e.target) || filled) return;
+      byFocus = true;
+      set(true, pointOf(null));
+    };
+    const onFocusOut = (e) => {
+      if (!byFocus || (e.relatedTarget && el.contains(e.relatedTarget))) return;
+      byFocus = false;
+      if (env.hover && el.matches(":hover")) return;
+      set(false, pointOf(null));
+    };
+    el.addEventListener("pointerenter", onEnter);
+    el.addEventListener("pointerleave", onLeave);
+    el.addEventListener("focusin", onFocusIn);
+    el.addEventListener("focusout", onFocusOut);
+    el.classList.add("k-fillable");
+
+    return {
+      /** Fill (true) or empty (false) from the centre, as keyboard focus does. */
+      set: (on) => set(!!on, pointOf(null)),
+      get filled() {
+        return filled;
+      },
+      destroy() {
+        el.removeEventListener("pointerenter", onEnter);
+        el.removeEventListener("pointerleave", onLeave);
+        el.removeEventListener("focusin", onFocusIn);
+        el.removeEventListener("focusout", onFocusOut);
+        if (anim) anim.cancel();
+        if (layer) unlayer(el, layer);
+        el.classList.remove("k-fillable", "is-filled");
+      },
+    };
+  });
+
   /* ---------------------------------------------------------------- Site.toast
    * A small message rising from the bottom edge (recipes/toast.md, recipes/css-driven.md, primitives/base-ui/toast):
    * it rises its own height from scale.toast out of blur.surface on spring.toast; the newest is in front, the ones
@@ -1888,6 +2329,63 @@
     const toast = toasts.add(text, options);
     return { element: toast.el, dismiss: () => toasts.dismiss(toast) };
   };
+
+  /* ---------------------------------------------------------------- Site.modal
+   * html.is-modal while any modal view is open (the lightbox, an expanded detail view, the menu sheet), so page-wide
+   * listeners (the snap stepper) leave input alone. Each view says when it opens and when it has gone, under its
+   * own key; the class goes only when no view is left (an [aria-modal="true"] element still on screen counts too,
+   * for a view that sets the class without this API). { lock: true } also stops the page from scrolling behind the
+   * view without a layout shift: the scrollbar's room is kept (scrollbar-gutter, else a padding of its width).
+   */
+  const modal = (function () {
+    const views = new Map(); // key -> { lock }
+    let saved = null; // the root's inline styles before the lock
+    const html = doc.documentElement;
+
+    function lock() {
+      const st = getComputedStyle(html);
+      const bar = window.innerWidth - html.clientWidth; // 0 for overlay scrollbars
+      saved = { overflow: html.style.overflow, gutter: html.style.scrollbarGutter, padding: html.style.paddingRight };
+      if (bar > 0 && !/stable/.test(st.scrollbarGutter || "")) {
+        if (window.CSS && CSS.supports && CSS.supports("scrollbar-gutter", "stable")) html.style.scrollbarGutter = "stable";
+        else html.style.paddingRight = px(st.paddingRight) + bar + "px";
+      }
+      html.style.overflow = "hidden";
+      html.classList.add("is-scroll-locked");
+    }
+    function unlock() {
+      html.style.overflow = saved.overflow;
+      html.style.scrollbarGutter = saved.gutter;
+      html.style.paddingRight = saved.padding;
+      html.classList.remove("is-scroll-locked");
+      saved = null;
+    }
+    const onScreen = () => Array.prototype.some.call(doc.querySelectorAll('[aria-modal="true"]'), (n) => n.getClientRects().length > 0);
+    function sync() {
+      const was = html.classList.contains("is-modal");
+      const now = views.size > 0 || onScreen();
+      html.classList.toggle("is-modal", now);
+      let locking = false;
+      views.forEach((v) => (locking = locking || v.lock));
+      if (locking && !saved) lock();
+      else if (!locking && saved) unlock();
+      if (was !== now) Site.emit("modal", now);
+    }
+    return {
+      open(key, options) {
+        views.set(key, { lock: !!(options && options.lock) });
+        sync();
+      },
+      close(key) {
+        if (views.delete(key)) sync();
+      },
+      has: (key) => views.has(key),
+      get isOpen() {
+        return html.classList.contains("is-modal");
+      },
+    };
+  })();
+  Site.modal = modal;
 
   /* ------------------------------------------------------------------ lightbox
    * An image opening into a larger, centred view and closing back to its place (interactions/expanding-card.md,
@@ -2088,6 +2586,7 @@
       state = "closed";
       source = null;
       scrollAt = null;
+      modal.close("lightbox");
     }
 
     function open(src) {
@@ -2105,6 +2604,7 @@
         caption.hidden = !text;
         root.setAttribute("aria-label", text || "Image");
         root.hidden = false;
+        modal.open("lightbox");
         const geo = geometry(src);
         rest = openBox(geo, src, !!text);
         Object.assign(frame.style, { left: rest.left + "px", top: rest.top + "px", width: rest.width + "px", height: rest.height + "px" });

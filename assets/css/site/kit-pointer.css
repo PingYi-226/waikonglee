@@ -30,11 +30,14 @@
   background: var(--k-highlight-bg, var(--hover));
   /* the corners of the item it lies under, unless the page sets a radius */
   border-radius: var(--k-highlight-radius, var(--k-item-radius, var(--r-2)));
+  /* under a button or chip that grows on hover (base.css), the surface grows with it, on the same timing */
+  transform: scale(var(--k-surface-grow, 1));
   /* showing up from nothing and going: never a cut (transition.color) */
   transition:
     opacity var(--t-color),
     background-color var(--t-color),
-    border-radius var(--t-color);
+    border-radius var(--t-color),
+    transform var(--t-reveal);
 }
 
 .k-highlight > .k-highlight__surface--selection {
@@ -50,7 +53,8 @@
   transition:
     opacity var(--t-fade),
     background-color var(--t-color),
-    border-radius var(--t-color);
+    border-radius var(--t-color),
+    transform var(--t-reveal);
 }
 
 /* the frame it is first placed in: nothing animates on page load */
@@ -184,6 +188,42 @@ html.is-reduced [data-kit~="disclosure"] [data-disclosure-icon] {
   transition: none;
 }
 
+/* unfold (data-effect="unfold" on the trigger; the script marks the panel .k-unfold): a hairline down the panel's
+   start edge, drawn as it opens and there at rest (--k-unfold-rule: transparent hides it, --k-unfold-rule-x moves it);
+   clipped while the height moves, without the plain variant's edge fade (the content's own sweep is softer) */
+.k-unfold {
+  position: relative;
+}
+
+.k-unfold::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  inset-inline-start: var(--k-unfold-rule-x, 0);
+  width: 1px;
+  background: var(--k-unfold-rule, var(--line-strong));
+  transform-origin: top;
+  pointer-events: none;
+}
+
+[data-disclosure-panel].is-unfolding {
+  overflow: hidden;
+}
+
+/* the chevron turns on a spring as the panel opens, and back quickly */
+[data-kit~="disclosure"][data-effect="unfold"] [data-disclosure-icon] {
+  transition: rotate var(--t-swap);
+}
+
+[data-kit~="disclosure"][data-effect="unfold"][aria-expanded="true"] [data-disclosure-icon] {
+  transition: rotate var(--spring-check-pop);
+}
+
+html.is-reduced [data-kit~="disclosure"][data-effect="unfold"] [data-disclosure-icon] {
+  transition: none;
+}
+
 /* ---------- flip ---------- */
 /* the copy of a removed item, fading out where the item was */
 [data-flip-ghost] {
@@ -313,6 +353,102 @@ html.is-reduced .k-swap > :nth-child(n) {
   border-radius: 50%;
   background: var(--k-ripple-color, color-mix(in srgb, currentColor 45%, transparent));
   pointer-events: none;
+}
+
+/* ---------- layers inside cards (spotlight, hover-fill) ----------
+   The kit appends its layers to the card, under its content (z-index -1): the card is their stacking context.
+   They take the card's corners and lie inside its border. */
+.k-layered {
+  isolation: isolate;
+}
+
+.k-spot__light,
+.k-fill {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* ---------- spotlight ----------
+   ::before: the soft light on the card under the pointer (--spot-in); ::after: the border ring lit near the pointer,
+   on this card and its neighbours (--spot-o). Hooks: --k-spot-fill, --k-spot-ring (colours), --k-spot-size,
+   --k-spot-ring-size (radii of the two lights), --k-spot-ring-width. Subtle on paper, clearer on dark surfaces. */
+:root {
+  --k-spot-fill: color-mix(in srgb, var(--accent) 6%, transparent);
+  --k-spot-ring: color-mix(in srgb, var(--ink) 30%, transparent);
+}
+
+html[data-theme="dark"] {
+  --k-spot-fill: color-mix(in srgb, var(--ink) 8%, transparent);
+  --k-spot-ring: color-mix(in srgb, var(--ink) 58%, transparent);
+}
+
+.k-spot__light::before,
+.k-spot__light::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.k-spot__light::before {
+  background: radial-gradient(var(--k-spot-size, 280px) circle at var(--spot-x, 50%) var(--spot-y, 50%), var(--k-spot-fill), transparent 72%);
+  opacity: var(--spot-in, 0);
+  transition: opacity var(--t-fade);
+}
+
+.k-spot__light::after {
+  padding: var(--k-spot-ring-width, 1px);
+  background: radial-gradient(var(--k-spot-ring-size, 220px) circle at var(--spot-x, 50%) var(--spot-y, 50%), var(--k-spot-ring), transparent 72%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  opacity: var(--spot-o, 0);
+  transition: opacity var(--t-fade);
+}
+
+/* ---------- hover-fill ----------
+   The fill (--k-fill-bg) is a circle clip on a layer under the content, animated by the script. */
+.k-fill {
+  z-index: -2; /* under the spotlight's light when both are on one card */
+  background: var(--k-fill-bg, var(--hover));
+  clip-path: circle(0px at 50% 50%);
+  opacity: 0;
+}
+
+/* data-hover-show: for hover-capable pointers it waits until the card fills (or has keyboard focus), then rises a
+   beat later (--k-fill-delay); without hover (touch) it is simply there, and so it is without JavaScript */
+@media (hover: hover) and (pointer: fine) {
+  html.js [data-kit~="hover-fill"] [data-hover-show] {
+    opacity: 0;
+    translate: 0 var(--k-fill-rise, 6px);
+    filter: blur(2px);
+    transition:
+      opacity var(--t-swap),
+      translate var(--t-swap),
+      filter var(--t-swap);
+  }
+
+  html.js [data-kit~="hover-fill"]:is(.is-filled, :focus-visible, :focus-within) [data-hover-show] {
+    opacity: 1;
+    translate: none;
+    filter: none;
+    transition:
+      opacity var(--t-reveal) var(--k-fill-delay, 90ms),
+      translate var(--spring-pop) var(--k-fill-delay, 90ms),
+      filter var(--t-reveal) var(--k-fill-delay, 90ms);
+  }
+
+  html.js.is-reduced [data-kit~="hover-fill"] [data-hover-show] {
+    translate: none;
+  }
 }
 
 /* ---------- toast ----------
