@@ -31,6 +31,15 @@
   // internal/momentum.ts: how far past its range a speed carried over may take a curve
   const SLACK = 0.002;
 
+  /* Springs of this file's own, addressed by name like the tokens ("own.release"). They are not Animate UI roles:
+     the owner asked for them in round 2 (_work/ROUND2_SPEC.md, section 2, point 4 and the list of effects). */
+  const OWN = {
+    // a press let go: back past its rest by about a third of the press depth, a small dip after, settled in ~0.7 s
+    // (damping ratio 0.33: "spring overshoot on click", visible but small)
+    "own.release": { type: "spring", stiffness: 380, damping: 13 },
+  };
+  const tokenOf = (name) => Site.t(OWN[name] || name);
+
   /* ------------------------------------------------------------------- helpers */
   const px = (v) => parseFloat(v) || 0;
   const NONE = (v) => !v || v === "none";
@@ -46,7 +55,7 @@
   function css(path) {
     const key = path + "|" + Site.tempo;
     let t = timings.get(key);
-    if (!t) timings.set(key, (t = Site.css(path)));
+    if (!t) timings.set(key, (t = Site.css(OWN[path] || path)));
     return t;
   }
 
@@ -83,7 +92,7 @@
   function curveOf(token, initial) {
     const key = token + "|" + Site.tempo;
     if (!initial && restCurves.has(key)) return restCurves.get(key);
-    const transition = Site.t(token);
+    const transition = tokenOf(token);
     const shape = shapeOf(transition, initial || 0);
     let curve;
     if (!shape) {
@@ -131,7 +140,7 @@
     });
     const speed = length < 0.25 ? 0 : -along / length;
     if (speed <= 0) return 0;
-    const transition = Site.t(token);
+    const transition = tokenOf(token);
     const rest = shapeOf(transition, 0);
     if (!rest) return 0;
     // as much of the speed as never takes the curve past where it would go from rest
@@ -318,6 +327,8 @@
    * One numeric CSS property of one element on a spring that keeps its speed when retargeted (the press scale,
    * a popup's scale and opacity). The value rests at `rest` with no animation left on the element; any other value
    * is held by the animation that brought it there. Movement is dropped under reduced motion; a fade (`always`) stays.
+   * prop "transform" plays scale(v) composited onto whatever transform the element already has (a tilt written
+   * inline, a page's own transform), so it never replaces it.
    */
   class Spring1 {
     constructor(el, prop, token, rest, always) {
@@ -328,6 +339,8 @@
       this.value = rest;
       this.always = !!always; // a fade: it also plays under reduced motion
       this.run = null; // { animation, offset, curve, to }
+      this.format = prop === "transform" ? (v) => "scale(" + v + ")" : String;
+      this.composite = prop === "transform" ? "add" : "replace";
     }
 
     current() {
@@ -336,7 +349,8 @@
       return r.to + r.offset * (1 - r.curve.at(timeOf(r.animation)));
     }
 
-    to(value) {
+    /** Go to value, on this spring's token or on another one for this move (a release that overshoots). */
+    to(value, token) {
       const r = this.run;
       const moving = !!r && running(r.animation);
       const from = this.current();
@@ -360,11 +374,11 @@
       }
       // a scale is far below one unit: measure the carried speed against the distance, not in pixels
       const unit = 1 / Math.abs(offset);
-      const curve = curveFrom(this.token, [offset * unit], [velocity * unit]);
+      const curve = curveFrom(token || this.token, [offset * unit], [velocity * unit]);
       const frames = [{}, {}];
-      frames[0][this.prop] = String(from);
-      frames[1][this.prop] = String(value);
-      const animation = this.el.animate(frames, { duration: curve.duration, easing: curve.easing, fill: "both" });
+      frames[0][this.prop] = this.format(from);
+      frames[1][this.prop] = this.format(value);
+      const animation = this.el.animate(frames, { duration: curve.duration, easing: curve.easing, fill: "both", composite: this.composite });
       animation.startTime = startTime;
       if (r) r.animation.cancel();
       const run = { animation: animation, offset: offset, curve: curve, to: value };
@@ -432,7 +446,7 @@
       node.setAttribute("aria-hidden", "true");
       if (tag === "li") node.setAttribute("role", "presentation");
       el.appendChild(node);
-      return { node: node, glider: new Glider(node, token), scale: new Spring1(node, "scale", "spring.press", 1), item: null, pressed: null };
+      return { node: node, glider: new Glider(node, token), scale: new Spring1(node, "scale", "spring.press", 1), item: null, pressed: null, grow: 1 };
     }
     // the selection first: the hover surface paints above it
     const sel = mode !== "hover" ? makeSurface("selection", "spring.selection") : null;
@@ -477,12 +491,12 @@
       return null;
     }
     function syncHover() {
-      if (!hov) return;
+      if (!hov) return syncGrow();
       let item = wanted();
       if (item && sel && sel.item === item && !sel.glider.moving) item = null;
       const node = hov.node;
       if (item) {
-        if (hov.item === item) return;
+        if (hov.item === item) return syncGrow();
         const showing = shown(node);
         shapeLike(hov, item);
         const box = boxOf(item, node);
@@ -495,6 +509,27 @@
         hov.item = null;
         node.classList.remove("is-lit", "is-resuming");
       }
+      syncGrow();
+    }
+
+    /* Buttons and chips grow under the pointer and the keyboard focus (CSS `scale`, --k-grow in base.css): the
+       surface lying under the item that grows grows with it (the same 300 ms ease-out), so the two stay one object. */
+    function grown(item) {
+      if (!item || env.reduce) return 1;
+      const v = parseFloat(getComputedStyle(item).getPropertyValue("--k-grow"));
+      if (!(v > 0) || v === 1) return 1;
+      return focusVisible(item) || (env.hover && item.matches(":hover")) ? v : 1;
+    }
+    function syncGrow() {
+      const lit = wanted();
+      [sel, hov].forEach((s) => {
+        if (!s) return;
+        const g = s.item && s.item === lit ? grown(s.item) : 1;
+        if (g === s.grow) return;
+        s.grow = g;
+        if (g === 1) s.node.style.removeProperty("--k-surface-grow");
+        else s.node.style.setProperty("--k-surface-grow", String(g));
+      });
     }
 
     /* selection */
@@ -546,6 +581,7 @@
       else sel.glider.to(box);
       sel.item = next;
       node.classList.add("is-lit");
+      syncGrow();
     }
     if (sel) sel.glider.onSettle = syncHover;
 
@@ -588,7 +624,7 @@
           s.scale.to(e.detail.scale);
         } else if (!e.detail.down && s.pressed === item) {
           s.pressed = null;
-          s.scale.to(1);
+          s.scale.to(1, "own.release");
         }
       });
     };
@@ -657,20 +693,43 @@
   /* --------------------------------------------------------------------- press
    * Animate UI's press (primitives/buttons/button, recipes/press.md, recipes/card.md): the element scales to
    * scale.press (a whole card or row: scale.choice) on spring.press while the pointer or Space / Enter is down.
-   * Never on hover. It uses the `scale` property, so it composes with other kits' transforms (magnetic, tilt).
+   * Never on hover. Let go, it comes back on own.release, past its size once (the owner's "spring overshoot on
+   * click"). It plays on `transform`, composited onto the element's own transform (a tilt, a page's transform), so
+   * it composes with the hover growth of buttons (`scale`, base.css) and the magnetic pull (`translate`).
    */
   const INTERACTIVE = 'a[href], button, input, select, textarea, summary, label, [role="button"], [data-kit~="press"]';
+  // ms: a click quicker than this is held down until then, so the press nearly reaches its depth and the
+  // release has something to spring back from (spring.press is ~85% there after this long; site value)
+  const PRESS_HOLD = 120;
 
   Site.register("press", function (el, opts) {
-    const pressed = opts.press === "choice" ? tokens.scale.choice : tokens.scale.press;
-    const spring = new Spring1(el, "scale", "spring.press", 1);
+    const spring = new Spring1(el, "transform", "spring.press", 1);
     let down = false;
+    let since = 0;
+    let pending = 0;
+    let pressed = 1;
 
+    /** The depth: --k-press-scale from CSS (base.css sets it for buttons), else the token for the kind. */
+    function depth() {
+      const own = parseFloat(getComputedStyle(el).getPropertyValue("--k-press-scale"));
+      if (own > 0 && own <= 1) return own;
+      return opts.press === "choice" ? tokens.scale.choice : tokens.scale.press;
+    }
     function set(next) {
+      clearTimeout(pending);
+      pending = 0;
       if (next === down) return;
       if (next && (el.disabled || el.getAttribute("aria-disabled") === "true")) return;
+      if (!next && performance.now() - since < PRESS_HOLD) {
+        pending = setTimeout(() => set(false), PRESS_HOLD - (performance.now() - since));
+        return;
+      }
       down = next;
-      spring.to(next ? pressed : 1);
+      if (next) {
+        since = performance.now();
+        pressed = depth();
+      }
+      spring.to(next ? pressed : 1, next ? "spring.press" : "own.release");
       emit(el, "kit:press", { down: next, scale: pressed });
     }
     /* only the innermost control answers: a button inside a pressable row does not press the row */
@@ -701,6 +760,7 @@
 
     return {
       destroy() {
+        clearTimeout(pending);
         events.forEach((pair) => el.removeEventListener(pair[0], pair[1]));
         spring.stop();
       },
@@ -1889,6 +1949,63 @@
     return { element: toast.el, dismiss: () => toasts.dismiss(toast) };
   };
 
+  /* ---------------------------------------------------------------- Site.modal
+   * html.is-modal while any modal view is open (the lightbox, an expanded detail view, the menu sheet), so page-wide
+   * listeners (the snap stepper) leave input alone. Each view says when it opens and when it has gone, under its
+   * own key; the class goes only when no view is left (an [aria-modal="true"] element still on screen counts too,
+   * for a view that sets the class without this API). { lock: true } also stops the page from scrolling behind the
+   * view without a layout shift: the scrollbar's room is kept (scrollbar-gutter, else a padding of its width).
+   */
+  const modal = (function () {
+    const views = new Map(); // key -> { lock }
+    let saved = null; // the root's inline styles before the lock
+    const html = doc.documentElement;
+
+    function lock() {
+      const st = getComputedStyle(html);
+      const bar = window.innerWidth - html.clientWidth; // 0 for overlay scrollbars
+      saved = { overflow: html.style.overflow, gutter: html.style.scrollbarGutter, padding: html.style.paddingRight };
+      if (bar > 0 && !/stable/.test(st.scrollbarGutter || "")) {
+        if (window.CSS && CSS.supports && CSS.supports("scrollbar-gutter", "stable")) html.style.scrollbarGutter = "stable";
+        else html.style.paddingRight = px(st.paddingRight) + bar + "px";
+      }
+      html.style.overflow = "hidden";
+      html.classList.add("is-scroll-locked");
+    }
+    function unlock() {
+      html.style.overflow = saved.overflow;
+      html.style.scrollbarGutter = saved.gutter;
+      html.style.paddingRight = saved.padding;
+      html.classList.remove("is-scroll-locked");
+      saved = null;
+    }
+    const onScreen = () => Array.prototype.some.call(doc.querySelectorAll('[aria-modal="true"]'), (n) => n.getClientRects().length > 0);
+    function sync() {
+      const was = html.classList.contains("is-modal");
+      const now = views.size > 0 || onScreen();
+      html.classList.toggle("is-modal", now);
+      let locking = false;
+      views.forEach((v) => (locking = locking || v.lock));
+      if (locking && !saved) lock();
+      else if (!locking && saved) unlock();
+      if (was !== now) Site.emit("modal", now);
+    }
+    return {
+      open(key, options) {
+        views.set(key, { lock: !!(options && options.lock) });
+        sync();
+      },
+      close(key) {
+        if (views.delete(key)) sync();
+      },
+      has: (key) => views.has(key),
+      get isOpen() {
+        return html.classList.contains("is-modal");
+      },
+    };
+  })();
+  Site.modal = modal;
+
   /* ------------------------------------------------------------------ lightbox
    * An image opening into a larger, centred view and closing back to its place (interactions/expanding-card.md,
    * recipes/modal.md). The picture itself travels: a frame laid out at its final size starts on the thumbnail
@@ -2088,6 +2205,7 @@
       state = "closed";
       source = null;
       scrollAt = null;
+      modal.close("lightbox");
     }
 
     function open(src) {
@@ -2105,6 +2223,7 @@
         caption.hidden = !text;
         root.setAttribute("aria-label", text || "Image");
         root.hidden = false;
+        modal.open("lightbox");
         const geo = geometry(src);
         rest = openBox(geo, src, !!text);
         Object.assign(frame.style, { left: rest.left + "px", top: rest.top + "px", width: rest.width + "px", height: rest.height + "px" });

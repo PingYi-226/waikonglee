@@ -63,6 +63,13 @@
     #kit-pointer .pd-avatar img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 20%; }
     #kit-pointer .pd-thumb { display: block; width: 11rem; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--r-2); }
     #kit-pointer .pd-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    /* buttons */
+    #kit-pointer .pd-combos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2.5rem 1.5rem; max-width: 52rem; }
+    #kit-pointer .pd-combo { display: flex; flex-direction: column; align-items: flex-start; gap: 0.7rem; }
+    #kit-pointer .pd-combo .pd-note { margin: 0; }
+    #kit-pointer .pd-btncard { display: block; width: 15rem; padding: 1rem 1.1rem 1.15rem; }
+    #kit-pointer .pd-btncard__t { display: block; margin-top: 0.35rem; font-family: var(--font-display); font-size: 1.35rem; line-height: 1.15; }
+    @media (max-width: 560px) { #kit-pointer .pd-combos { grid-template-columns: 1fr 1fr; } }
   </style>
 
   <article class="kitdemo__item" id="demo-highlight">
@@ -122,6 +129,44 @@
           <a href="#demo-highlight">Funding</a>
           <a href="#demo-highlight">Open positions</a>
         </nav>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-buttons">
+    <header>
+      <h3>buttons: grow, press, release, pull, ripple</h3>
+      <p>Hover: the control grows (CSS <code>scale</code>, 300 ms ease-out) and its icon moves a beat later. Press: it shrinks back (<code>press</code>, on <code>transform</code>). Let go: it springs once past its size. The magnetic pull (<code>translate</code>) and the ripple add to it. Tab to a control: it grows too. The card tilts (<code>tilt</code>, also on <code>transform</code>) and presses at the same time.</p>
+    </header>
+    <div class="kitdemo__stage pd-stack">
+      <div class="pd-combos">
+        <div class="pd-combo">
+          <a class="btn" href="#demo-buttons" data-kit="magnetic press ripple" id="pd-b-primary"><span data-kit="sliding-text">Publications</span>{% include site/icon.liquid name="arrow-right" %}</a>
+          <span class="pd-note">primary: magnetic press ripple</span>
+        </div>
+        <div class="pd-combo">
+          <a class="btn btn--ghost" href="#demo-buttons" data-kit="magnetic press ripple" id="pd-b-ghost"><span data-kit="sliding-text">Research</span>{% include site/icon.liquid name="arrow-right" %}</a>
+          <span class="pd-note">ghost: magnetic press ripple</span>
+        </div>
+        <div class="pd-combo">
+          <button type="button" class="btn btn--ghost btn--small" data-kit="press" id="pd-b-small">{% include site/icon.liquid name="download" %}<span data-kit="sliding-text">Download CV</span></button>
+          <span class="pd-note">small ghost: press</span>
+        </div>
+        <div class="pd-combo">
+          <button type="button" class="chip" data-kit="press" id="pd-b-chip">GPU</button>
+          <span class="pd-note">chip: press</span>
+        </div>
+        <div class="pd-combo">
+          <a class="icon-btn" href="#demo-buttons" data-kit="magnetic press tooltip" data-tip="GitHub" aria-label="GitHub" id="pd-b-icon">{% include site/icon.liquid name="github" %}</a>
+          <span class="pd-note">icon button: magnetic press tooltip</span>
+        </div>
+        <div class="pd-combo">
+          <a class="card pd-btncard" href="#demo-buttons" data-kit="tilt press" data-press="choice" data-shine id="pd-b-card">
+            <span class="t-label">Post-quantum</span>
+            <span class="pd-btncard__t">Lattice signatures on GPUs</span>
+          </a>
+          <span class="pd-note">card: tilt press</span>
+        </div>
       </div>
     </div>
   </article>

@@ -30,11 +30,14 @@
   background: var(--k-highlight-bg, var(--hover));
   /* the corners of the item it lies under, unless the page sets a radius */
   border-radius: var(--k-highlight-radius, var(--k-item-radius, var(--r-2)));
+  /* under a button or chip that grows on hover (base.css), the surface grows with it, on the same timing */
+  transform: scale(var(--k-surface-grow, 1));
   /* showing up from nothing and going: never a cut (transition.color) */
   transition:
     opacity var(--t-color),
     background-color var(--t-color),
-    border-radius var(--t-color);
+    border-radius var(--t-color),
+    transform var(--t-reveal);
 }
 
 .k-highlight > .k-highlight__surface--selection {
@@ -50,7 +53,8 @@
   transition:
     opacity var(--t-fade),
     background-color var(--t-color),
-    border-radius var(--t-color);
+    border-radius var(--t-color),
+    transform var(--t-reveal);
 }
 
 /* the frame it is first placed in: nothing animates on page load */
