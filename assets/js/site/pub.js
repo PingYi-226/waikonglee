@@ -186,7 +186,10 @@
     list.addEventListener("kit:disclosure-change", onPanel);
   });
 
-  /* Citation counts roll up the first time they come into view (the kit is attached just before, one at a time). */
+  /* Citation counts roll up the first time they come into view (the kit is attached just before, one at a time). Only
+     the last steps roll (at most ROLL_SPAN): a count of 600 spinning up from 0 takes seconds and pulls the eye off
+     the titles; a short roll says "live figure" and is done by the time the row is read. */
+  var ROLL_SPAN = 12;
   var counts = doc.querySelectorAll(".pub__cites .pub__n");
   if (counts.length && window.IntersectionObserver && !S.env.static) {
     var near = new IntersectionObserver(
@@ -196,7 +199,9 @@
           near.unobserve(en.target);
           var n = en.target;
           n.setAttribute("data-kit", "sliding-number");
-          n.setAttribute("data-value", n.textContent.trim());
+          var v = parseInt(n.textContent.replace(/\D/g, ""), 10) || 0;
+          n.setAttribute("data-value", String(v));
+          n.setAttribute("data-from", String(Math.max(0, v - ROLL_SPAN)));
           n.setAttribute("data-delay", "260");
           S.init(n);
         });
