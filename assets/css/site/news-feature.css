@@ -1,0 +1,377 @@
+/* ==========================================================================
+   A featured news item (news_feature.liquid): a plain row that opens into a detail view.
+   The row: meta (date, label, note) | sentence | a small icon | the poster's thumbnail. Its grid columns, padding and
+   type size come from the page that holds it (news.css, home-news.css) through the hooks below.
+   The view: the poster at full height beside the text (.k-expand.nfv-view; kit-expand.css has the frame).
+   Behaviour: kits expand, hover-fill, press, shine-text (markup) and assets/js/site/news-feature.js.
+   ========================================================================== */
+
+/* ---------- the row ---------- */
+.nfeat {
+  --k-fill-bg: var(--surface);
+  --k-fill-delay: 110ms;
+  --nfeat-thumb: 5.5rem; /* the thumbnail's width */
+  --nfeat-cols: 8.25rem minmax(0, 1fr) auto auto;
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--nfeat-cols);
+  column-gap: clamp(1.25rem, 2.4vw, 2.25rem);
+  row-gap: 0.5rem;
+  align-items: center;
+  border-radius: var(--r-2);
+  color: var(--ink-2);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nfeat:hover,
+.nfeat:focus {
+  color: var(--ink-2);
+  text-decoration: none;
+}
+
+.nfeat:focus-visible {
+  outline-offset: 3px;
+}
+
+.nfeat__meta {
+  display: grid;
+  justify-items: start;
+  align-self: start;
+  gap: 0.15rem;
+  padding-top: 0.1rem;
+}
+
+.nfeat__date {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+/* the label: the one coloured word of the row (an open call is live), with light running over it now and then */
+.nfeat__label,
+.nfv__label > span {
+  --k-shine-glint: color-mix(in oklab, var(--accent) 30%, var(--k-shine-light, var(--paper)));
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.nfeat__label {
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+
+.nfeat__note {
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.nfeat__text {
+  max-width: 60ch;
+  font-size: var(--nfeat-fs, 1.04rem);
+  line-height: 1.55;
+  text-wrap: pretty;
+  color: inherit;
+}
+
+.nfeat__say {
+  color: inherit;
+  transition: color var(--t-color);
+}
+
+.nfeat.is-filled .nfeat__say,
+.nfeat:focus-visible .nfeat__say {
+  color: var(--ink);
+}
+
+/* the small icon that comes with the fill: a plus in a hairline ring, turning a quarter as it arrives */
+.nfeat__open {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  color: var(--ink);
+}
+
+.nfeat__open .icon {
+  --icon-size: 1rem;
+  transition: rotate var(--spring-pop);
+}
+
+html.js .nfeat:is(.is-filled, :focus-visible) .nfeat__open .icon {
+  rotate: 90deg;
+  transition: rotate var(--spring-check-pop) calc(var(--k-fill-delay) + 60ms);
+}
+
+/* the poster's thumbnail, with a second sheet under it that fans out when the row is under the pointer */
+.nfeat__thumb {
+  position: relative;
+  display: block;
+  width: var(--nfeat-thumb);
+  aspect-ratio: 1122 / 1588;
+}
+
+.nfeat__sheet,
+.nfeat__pic {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-1);
+}
+
+.nfeat__sheet {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  transform-origin: 30% 100%;
+  transition:
+    rotate var(--spring-pop),
+    translate var(--spring-pop);
+}
+
+/* the picture turns about its foot; the image inside is plain (it is the one that flies into the view) */
+.nfeat__pic {
+  box-shadow: 0 0 0 1px var(--line);
+  transform-origin: 50% 100%;
+  transition:
+    rotate var(--spring-pop),
+    translate var(--spring-pop),
+    box-shadow var(--t-reveal);
+}
+
+.nfeat__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--r-1);
+}
+
+/* the outside first (the fill), the sheets a beat later */
+.nfeat.is-filled .nfeat__pic,
+.nfeat:focus-visible .nfeat__pic {
+  translate: 0 -4px;
+  rotate: -2.5deg;
+  box-shadow: var(--shadow-1);
+  transition-delay: var(--k-fill-delay);
+}
+
+.nfeat.is-filled .nfeat__sheet,
+.nfeat:focus-visible .nfeat__sheet {
+  translate: 5px -1px;
+  rotate: 5deg;
+  transition-delay: calc(var(--k-fill-delay) + 50ms);
+}
+
+html.is-reduced .nfeat__pic,
+html.is-reduced .nfeat__sheet,
+html.is-reduced .nfeat__open .icon {
+  translate: none !important;
+  rotate: none !important;
+}
+
+/* phones: the icon would only crowd the row */
+@media (max-width: 700px) {
+  .nfeat {
+    --nfeat-cols: minmax(0, 1fr) auto;
+    --nfeat-thumb: 3.6rem;
+  }
+
+  .nfeat__meta {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.1rem 0.9rem;
+  }
+
+  .nfeat__open {
+    display: none;
+  }
+}
+
+/* ---------- the view ---------- */
+.k-expand.nfv-view {
+  --k-expand-inset: clamp(1rem, 4vw, 3rem);
+  --k-expand-pad: 0px;
+  /* the poster fills the panel's height; the panel is as wide as the poster plus the text column */
+  --nfv-h: min(calc(100dvh - 2 * var(--k-expand-inset) - 2px), 70rem);
+  --nfv-col: clamp(28rem, 42vw, 46rem);
+  --k-expand-width: calc(var(--nfv-h) * 0.7066 + var(--nfv-col));
+}
+
+.nfv {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 100%;
+}
+
+.nfv__poster {
+  margin: 0;
+  background: var(--paper-2);
+}
+
+.nfv__posterlink {
+  display: block;
+  cursor: zoom-in;
+}
+
+.nfv__posterlink:focus-visible {
+  outline-offset: -4px;
+}
+
+.nfv__img {
+  display: block;
+  width: auto;
+  height: var(--nfv-h);
+  max-width: none;
+  aspect-ratio: 1122 / 1588;
+}
+
+.nfv__main {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.1rem, 2.6vh, 1.9rem);
+  min-width: 0;
+  padding: clamp(1.5rem, 4.4vh, 3rem) clamp(3.25rem, 4vw, 4rem) clamp(1.5rem, 4.4vh, 3rem) clamp(1.5rem, 3vw, 3rem);
+}
+
+.nfv__label {
+  margin: 0;
+  font-size: var(--fs-small);
+  line-height: 1.4;
+}
+
+.nfv__text {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, min(2vw, 3.5vh), 2.15rem);
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+}
+
+.nfv__text p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+.nfv__text em {
+  font-style: italic;
+}
+
+/* the facts: a label column and its values, on hairlines */
+.nfv__facts {
+  display: grid;
+  margin: 0;
+}
+
+.nfv__fact {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 0.25rem 1rem;
+  align-items: baseline;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.nfv__fact dt {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.nfv__fact dd {
+  margin: 0;
+  color: var(--ink-2);
+}
+
+.nfv__fact--deadline dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 1.1rem;
+}
+
+.nfv__when {
+  font-family: var(--font-display);
+  font-size: var(--fs-d4);
+  line-height: 1.2;
+  color: var(--ink);
+}
+
+.nfv__left {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+.nfv__left[hidden] {
+  display: none;
+}
+
+.nfv__days {
+  color: var(--ink-2);
+}
+
+.nfv__topics {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-small);
+  line-height: 1.45;
+}
+
+.nfv__topics li {
+  color: var(--ink-2);
+}
+
+.nfv__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: auto 0 0;
+  padding-top: 0.25rem;
+}
+
+/* portrait screens and phones: one column, the poster on top */
+@media (max-width: 760px), (orientation: portrait) {
+  .k-expand.nfv-view {
+    --k-expand-width: 40rem;
+  }
+
+  .nfv {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nfv__poster {
+    padding: 3.25rem 1.25rem 0;
+    background: none;
+  }
+
+  .nfv__posterlink {
+    width: min(100%, 17rem);
+    margin-inline: auto;
+  }
+
+  .nfv__img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--r-1);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+
+  .nfv__main {
+    padding: 1.5rem 1.25rem 1.75rem;
+  }
+
+  .nfv__fact {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
