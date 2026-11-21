@@ -35,8 +35,8 @@
   var SCENE = { w: 1280, h: 760, max: 1.2, side: 24, bottom: 20 }; // max: full size on wide screens, never larger (own)
   var CARD = { w: 288, h: 192, gap: 20 }; // the card box of .ocard in the scene (home-research.css)
   var ROWS = [4, 3]; // the grid: four cards, then three, centred
-  var GRID_Y = 8; // the grid's centre below the scene's centre (the title is above it)
-  var RING = { y: 36, rx: 440, ry: 212, far: 0.7, turn: 22, blur: 1.4 }; // centre below the scene's, ellipse radii, scale at the back, rotateY at the sides (deg), blur at the back (px)
+  var GRID_Y = 34; // the grid's centre below the scene's centre (the title is above it)
+  var RING = { y: 46, rx: 440, ry: 212, far: 0.7, turn: 22, blur: 1.4 }; // centre below the scene's, ellipse radii, scale at the back, rotateY at the sides (deg), blur at the back (px)
   var SPIN = 0.15; // rad/s: the ring at rest turns once in about 42 s (own: a slow carousel)
   var SPIN_LAG = 0.55; // s: time constant of the spin starting and stopping (own)
   var SWIRL = 1.5; // rad the ring turns while the cards spread out of the core (own)
@@ -246,6 +246,7 @@
       var base = spin - SWIRL * (1 - form);
       if (tFlat <= 0 || target === null) target = home + TAU * Math.round((base - home) / TAU);
 
+      var rest = tFlat >= 0.999; // the grid, at rest
       for (var i = 0; i < count; i++) {
         var k = land((tFlat - i * STAGGER) / (1 - (count - 1) * STAGGER));
         var angle = lerp(base, target, k);
@@ -259,13 +260,16 @@
         var o = clamp(lerp((0.5 + 0.5 * depth) * form, 1, k), 0, 1);
         var blur = Math.max(0, ((1 - depth) * RING.blur + (1 - form) * 6) * (1 - k));
         var li = items[i];
+        // lying flat in its slot a card is placed in the plane (no 3D, whole pixels), so its text stays sharp
         li.style.transform =
-          "perspective(1000px) translate(" + util.round(x, 1) + "px, " + util.round(y, 1) + "px) scale(" + util.round(s, 4) + ") rotateY(" + util.round(ry, 2) + "deg)";
+          rest
+            ? "translate(" + Math.round(slots[i].x) + "px, " + Math.round(slots[i].y) + "px)"
+            : "perspective(1000px) translate(" + util.round(x, 1) + "px, " + util.round(y, 1) + "px) scale(" + util.round(s, 4) + ") rotateY(" + util.round(ry, 2) + "deg)";
         li.style.opacity = o < 0.002 ? "0" : util.round(o, 3);
         li.style.filter = blur > 0.05 ? "blur(" + util.round(blur, 2) + "px)" : "";
         li.style.zIndex = String(Math.round(lerp(depth * 20, 30, k)));
       }
-      setFlat(tFlat >= 0.999);
+      setFlat(rest);
 
       // the banners come out from the sides as the cards flatten
       var out = slide(map(tFlat, 0.3, 1, 0, 1));

@@ -14,7 +14,7 @@ site_css: [kit-demo]
     <div class="partsdemo__bars" data-inview aria-hidden="true">
       {%- for h in (1..12) -%}<i style="--h: {{ h | times: 37 | modulo: 100 | plus: 12 | divided_by: 112.0 }}; --i: {{ forloop.index0 }}"></i>{%- endfor -%}
     </div>
-    <figcaption class="figcap"><span class="figcap__no">Fig. 1</span><span>A figure beside the title</span></figcaption>
+    <figcaption class="figcap">A figure beside the title</figcaption>
   </figure>
 {% endcapture %}
 {% capture head_meta %}

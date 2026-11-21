@@ -51,3 +51,18 @@ html.has-snap .home > .contact {
   min-height: 100svh;
   padding-block: calc(var(--nav-h) + 1.25rem) 2rem;
 }
+
+
+/* the footer is the deck's last slide: one whole screen, so the page lifts off it completely */
+html.has-snap .layout-home .foot__inner {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-top: calc(var(--nav-h) + clamp(2rem, 7vh, 4.5rem));
+}
+
+html.has-snap .layout-home .foot__mark {
+  margin-top: auto;
+  padding-top: 2rem;
+}

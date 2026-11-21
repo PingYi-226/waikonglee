@@ -43,7 +43,7 @@ site_js: [diagrams, diagrams-demo]
     <figure class="dgdemo__row" id="plate-{{ a.key }}">
       <div class="dgdemo__plate">{% include site/diagrams/{{ a.key }}.liquid live="always" detail="full" %}</div>
       <figcaption class="dgdemo__cap">
-        <p class="figcap"><span class="figcap__no">Fig. {{ forloop.index }}</span><span>{{ a.tagline }}</span></p>
+        <p class="figcap">{{ a.tagline }}</p>
         <h3 class="dgdemo__name">{{ a.title }}</h3>
         <div class="dgdemo__ctl">
           <button type="button" class="btn btn--ghost btn--small" data-kit="press" data-dg-act="play">Replay</button>

@@ -373,6 +373,12 @@ main#main {
   bottom: 0;
 }
 
+/* depth while the page lifts off: the content rises the last stretch and clears (--foot-p from shell.js) */
+.has-foot-reveal .foot__inner {
+  opacity: calc(0.25 + 0.75 * var(--foot-p, 1));
+  translate: 0 calc((1 - var(--foot-p, 1)) * 4.5rem);
+}
+
 .foot__inner {
   width: min(100% - 2 * var(--gutter), 1480px);
   margin-inline: auto;

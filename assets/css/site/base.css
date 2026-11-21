@@ -364,6 +364,7 @@ img {
   --btn-fg: var(--paper);
   --k-ripple-color: color-mix(in srgb, var(--btn-fg) 70%, transparent);
   position: relative;
+  margin: 0; /* the template gives .btn a margin of its own */
   display: inline-flex;
   align-items: center;
   justify-content: center;

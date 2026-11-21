@@ -30,16 +30,3 @@ emails: [wklee@utar.edu.my, waikong.lee@gmail.com]
 joining: >-
   Prospective MSc and PhD students interested in cryptographic engineering, GPU computing or
   hardware design are welcome to get in touch by email.
-
-# journals and conferences shown as a moving strip on the home page (all taken from the publication list)
-venues:
-  - IEEE Transactions on Computers
-  - IEEE Transactions on Parallel and Distributed Systems
-  - IEEE Transactions on Circuits and Systems I
-  - IEEE Transactions on Computer-Aided Design
-  - IEEE Transactions on VLSI Systems
-  - IEEE Internet of Things Journal
-  - IEEE Transactions on Emerging Topics in Computing
-  - IEEE Transactions on Services Computing
-  - ACM Transactions on Embedded Computing Systems
-  - IEEE Embedded Systems Letters

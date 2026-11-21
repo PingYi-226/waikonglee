@@ -13,18 +13,17 @@ Edit a file (directly on github.com is fine), commit, and the site rebuilds itse
 | Add or correct a paper                            | `_bibliography/papers.bib`             |
 | Add a news item                                   | a new file in `_news/`                 |
 | Students and alumni                               | `_data/people.yml`                     |
-| Text on the home page                             | `_pages/about.md`                      |
-| Role, address, citation figures, "joining" text   | `_data/profile.yml`                    |
+| The paragraph in the home page's About block      | `_pages/about.md`                      |
+| Role, statement and the words that take turns in it, address, citation figures, "joining" text | `_data/profile.yml` |
 | Research areas                                    | `_data/research.yml`                   |
-| Selected results (the large figures)              | `_data/highlights.yml`                 |
 | Open-source code list                             | `_data/software.yml`                   |
 | Funded projects                                   | `_data/grants.yml`                     |
-| CV                                                | `_data/cv.yml`                         |
+| CV (its Education and Experience entries also draw the strip in the home page's About block) | `_data/cv.yml` |
 | Profile links (Scholar, ORCID, GitHub, email)     | `_data/socials.yml`                    |
 | Portrait                                          | replace `assets/img/prof_pic.jpg`      |
 | Group photograph (Group page)                     | `group_photo:` in `_data/people.yml`   |
 | A student's photograph                            | `photo: file.jpg` on that person in `_data/people.yml` (file in `assets/img/people/`) |
-| Journals in the moving strip on the home page     | `venues:` in `_data/profile.yml`       |
+| Venue names on the two banners behind the home page's research cards | the `abbr` of each paper in `_bibliography/papers.bib` (journals on one, conferences on the other) |
 
 ### Adding a paper
 
@@ -41,15 +40,15 @@ Paste the BibTeX entry into `_bibliography/papers.bib`, below the comment block 
   theme       = {pqc},              % a key from _data/research.yml
   pubtype     = {journal},          % journal | conference
   bibtex_show = {true},
-  selected    = {true},             % optional: also list it on the home page
+  selected    = {true},             % optional: marks the paper with a dot in the list
   code        = {https://github.com/benlwk/...},   % optional link buttons: code, pdf, slides, poster
   abstract    = {...},              % optional
   google_scholar_id = {...}         % optional: enables the citation count
 }
 ```
 
-Papers are grouped by year and shown in the order they appear in the file. The charts, the filters and every paper count on the site
-(home page, research areas, publications) update on their own.
+Papers are grouped by year and shown in the order they appear in the file. The charts, the filters, the table of areas by years on
+the Research page and every paper count on the site update on their own; a new `abbr` appears on the home page's banners.
 Journal papers carry the year of the issue they appeared in. `pubtype` decides which filter a paper appears under.
 Write the author's own name as `Lee, Wai-Kong` so that it is emphasised.
 
@@ -76,6 +75,22 @@ One or two sentences. Markdown links work.
 The home page shows the four newest items that are not marked `derived: true`; the News page shows everything. The "Paper" and "Code"
 items now in `_news/` were written from the publication list and the code list; add such an item by hand when a new paper or
 repository should appear in the timeline.
+
+An item can be featured: it becomes a row that opens into a detail view, first on the home page and on the News page. Add to its
+front matter (see `_news/2026-call-for-papers.md`):
+
+```yaml
+featured: true
+summary: "One plain sentence for the row (no links)."
+deadline: 2027-07-22        # optional: the item is an ordinary one again from the first build after this day
+topics: [First topic, Second topic]   # optional
+links:                      # buttons in the detail view; the first is the main one
+  - label: Submit to the collection
+    url: https://example.org/
+```
+
+The text under the front matter is what the detail view shows. The days left are counted in the visitor's browser; the switch back
+to an ordinary item needs a rebuild (any commit, or "Run workflow" on the deploy action).
 
 ### Pictures still to be supplied
 
@@ -117,16 +132,24 @@ Everything that is not the template lives in a few places:
 | `assets/css/site/tokens.css` | every colour, type size, radius, duration, curve and spring, for both themes |
 | `assets/css/site/base.css`, `parts.css`, `shell.css` | element defaults and controls; the page head, section header and other shared parts; header, footer, page and theme transitions |
 | `assets/js/site/core.js` | `window.Site`: the same motion tokens for scripts, environment flags, the component registry |
-| `assets/js/site/kit-*.js`, `icons.js` (+ the CSS of the same names) | the motion kit: components attached with `data-kit="..."` (text effects, rolling numbers, gliding highlight, tabs, disclosure, tooltips, copy, toast, lightbox, reveal, scroll-driven pieces, magnetic, tilt, cursor label ...) |
-| `assets/js/site/shell.js` | header, menu, theme switch, back-to-top ring, footer clock, `data-inview` |
-| `assets/css/site/<page>.css`, `assets/js/site/<page>.js` | one pair per page (`home`, `pub`, `research`, `group`, `cv`, `news`, `notfound`, `diagrams`), listed in the page's front matter as `site_css` / `site_js` |
+| `assets/js/site/kit-*.js`, `icons.js` (+ the CSS of the same names) | the motion kit: components attached with `data-kit="..."` (text effects such as morphing and shining text, rolling numbers, gliding highlight, tabs, disclosure, tooltips, copy, toast, lightbox, reveal, scroll-driven pieces, magnetic, tilt, spotlight, hover fill, the pointer's dot and ring ...) |
+| `assets/js/site/kit-snap.js` | the scroll stepper (`data-kit="snap"`): the page moves from stop to stop (`data-snap` on each block). `deck` mode on the home page, `soft` mode on the Research page |
+| `assets/js/site/kit-expand.js` | a card or row that opens into a detail view, with parts of it flying over (`data-kit="expand"`, the view is a `<template>`) |
+| `assets/js/site/kit-hearts.js` | the hearts on the portraits (`data-kit="hearts"`) |
+| `assets/js/site/shell.js` | header, menu, theme switch, back-to-top ring, footer (clock, the large name), `data-inview` |
+| `assets/css/site/<page>.css`, `assets/js/site/<page>.js` | one pair per page (`pub`, `research`, `group`, `cv`, `news`, `notfound`) or shared piece (`diagrams`, `news-feature`), listed in the page's front matter as `site_css` / `site_js` |
+| `home.css` + `home-hero`, `home-about`, `home-research`, `home-news` (CSS and JS) | the home page, one pair per block; the markup of each block is in `_includes/site/home/` |
 | `_layouts/home.liquid`, `_includes/site/` | the markup: home page, header, footer, page head, icons, the seven research diagrams, the parts of each page |
+| `_layouts/bib_abbr.liquid` | prints each paper's venue label for the home page's banners (not a page layout) |
 | `assets/js/thirdparty/motion.js` | the Motion animation library (the only one) |
 
 - Pages are plain files in `_pages/` with `layout: default`; `bare: true` drops the header and footer.
-- Demo pages (not linked, not indexed): `/kit/` (every kit component), `/kit/parts/` (shared parts), `/kit/diagrams/` (the diagrams).
+- Demo pages (not linked, not indexed): `/kit/` (every kit component), `/kit/parts/` (shared parts), `/kit/diagrams/` (the diagrams),
+  `/kit/snap/` (the stepper).
+- The stepper and the home page's turning ring run with a mouse or trackpad on landscape screens at least 760 px wide. Phones,
+  tablets, portrait windows, reduced-motion settings and `?static` get ordinary scrolling and plain layouts of the same content.
 - Local overrides of template files (recorded in `.al-folio-overrides.yml`): `_layouts/default.liquid`, `_layouts/bib.liquid`.
-  After editing either, run `bundle exec al-folio upgrade overrides audit` and commit the manifest.
+  After editing either, run `bundle exec al-folio upgrade overrides accept --all` (`audit` only reports) and commit the manifest.
 - Web fonts are set in `_config.yml` under `third_party_libraries.google_fonts`.
 - Adding `?static` to any address shows the page in its final state without animation. Reduced-motion settings of the visitor are
   respected (movement is dropped, fades stay), and every page shows its content without JavaScript.

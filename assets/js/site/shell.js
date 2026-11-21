@@ -31,7 +31,10 @@
       if (Math.abs(y - lastY) < 6) return;
       // out of the way while reading down; back as soon as the page moves up
       // (not while the page moves in steps: there the header is part of every slide)
-      setHidden(y > lastY && y > 520 && !sheetOpen && !nav.contains(document.activeElement) && !root.classList.contains("has-snap"));
+      // nor under reduced motion, where the header stays put and pages read the class to place their sticky bars
+      setHidden(
+        y > lastY && y > 520 && !sheetOpen && !Site.env.reduce && !nav.contains(document.activeElement) && !root.classList.contains("has-snap"),
+      );
       lastY = y;
     });
     window.addEventListener("scroll", update, { passive: true });
@@ -224,12 +227,31 @@
     var foot = document.querySelector(".foot");
     if (!foot) return;
     // the "page lifts off the footer" effect only works when the whole footer fits on screen
+    // (on the home deck the footer is one whole screen: the page lifts off it completely)
     function measure() {
-      root.classList.toggle("has-foot-reveal", foot.offsetHeight <= window.innerHeight - 40 && !Site.env.static);
+      root.classList.toggle("has-foot-reveal", foot.offsetHeight <= window.innerHeight + 1 && !Site.env.static);
+      depth();
+    }
+    // while the page lifts off, the footer's content comes up the last stretch and clears (shell.css reads --foot-p:
+    // 0 covered, 1 in full view)
+    var lastP = -1;
+    function depth() {
+      var p = 1;
+      if (root.classList.contains("has-foot-reveal") && !Site.env.reduce) {
+        var h = foot.offsetHeight || 1;
+        p = util.clamp((window.scrollY + window.innerHeight - (document.documentElement.scrollHeight - h)) / h, 0, 1);
+      }
+      p = Math.round(p * 1000) / 1000;
+      if (p === lastP) return;
+      lastP = p;
+      foot.style.setProperty("--foot-p", String(p));
     }
     measure();
     Site.on("resize", measure);
+    window.addEventListener("scroll", depth, { passive: true });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
+    // the footer's own height changes when the stepper switches on or off (home deck)
+    if (window.ResizeObserver) new ResizeObserver(measure).observe(foot);
 
     initMark(foot);
 

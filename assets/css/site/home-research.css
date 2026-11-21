@@ -185,7 +185,7 @@
 /* the title: large, above the ring and the grid alike */
 .orbit.is-orbit .orbit__head {
   position: absolute;
-  inset: 0 0 auto;
+  inset: 26px 0 auto; /* air under the fixed header */
   z-index: 40;
   display: block;
   margin: 0;
@@ -201,7 +201,7 @@
 .orbit.is-orbit .orbit__title {
   font-family: var(--font-display);
   font-style: normal;
-  font-size: 88px;
+  font-size: 78px;
   line-height: 1;
   letter-spacing: -0.024em;
   color: var(--ink);
@@ -210,7 +210,7 @@
 /* the lattice in the middle of the ring */
 .orbit.is-orbit .orbit__core {
   position: absolute;
-  top: calc(50% + 36px); /* RING.y */
+  top: calc(50% + 46px); /* RING.y */
   left: 50%;
   z-index: 10;
   display: block;
@@ -244,6 +244,11 @@
   pointer-events: none;
 }
 
+/* at rest on the grid the cards give their layers back, so the text is drawn at the scene's real scale (sharp) */
+.orbit.is-orbit.is-flat .orbit__card {
+  will-change: auto;
+}
+
 .orbit.is-orbit.is-flat .orbit__cards,
 .orbit.is-orbit.is-flat .orbit__card {
   pointer-events: auto;
@@ -259,7 +264,7 @@
 
 .orbit__banner {
   position: absolute;
-  top: calc(50% + 114px); /* the grid's lower row (GRID_Y + (CARD.h + CARD.gap) / 2): the banners cross behind it */
+  top: calc(50% + 140px); /* the grid's lower row (GRID_Y + (CARD.h + CARD.gap) / 2): the banners cross behind it */
   right: 0;
   left: 0;
   display: flex;
