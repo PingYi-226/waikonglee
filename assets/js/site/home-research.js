@@ -44,6 +44,7 @@
   var LIFT = 0.05; // the cards grow by this much half-way between ring and grid (own)
   var SLANT = 4; // deg: the two banners lean this way and the other
   var WAVE = { rise: 14, grow: 0.025 }; // px and scale of the cards' wave on the stepper's hold
+  var EPS = 2; // px: "at a stop" (kit-snap's own tolerance)
 
   /* ------------------------------------------------------------------ time
    * The stepper carries the page from stop to stop on ease.inOut (kit-snap, deck mode), which puts most of the way in
@@ -176,9 +177,10 @@
     /* scroll position -> progress: 0 when the section's top meets the viewport's top, 1 at the end of its pinned range;
        negative while it comes up from below */
     var from = -0.5; // progress at the stop before the ring (where the way in starts)
+    var range = 1; // px of the pinned range
     function progress() {
       var r = section.getBoundingClientRect();
-      var range = Math.max(1, r.height - window.innerHeight);
+      range = Math.max(1, r.height - window.innerHeight);
       var stops = Site.snap.stops || [];
       for (var i = 1; i < stops.length; i++) {
         if (stops[i].element === section) {
@@ -217,17 +219,26 @@
       }
     }
 
+    /** Share of the way from progress a to b, exact at either end when the page is within EPS px of it (the
+        inverse curve is steep there: a sub-pixel miss would read as a visible share of the time). */
+    function way(q, a, b) {
+      var len = (b - a) * range;
+      var at = (q - a) * range;
+      if (at <= EPS) return 0;
+      if (len - at <= EPS) return 1;
+      return at / len;
+    }
     function place(q, dt, time) {
       // the way in: the stage comes up with the page; once it is pinned (q >= 0, where the page never rests) the
       // lattice grows, and a beat later the cards spread out of it into the ring
-      var tIn = timeAt(map(q, from, RING_AT, 0, 1));
-      var t0 = timeAt(map(0, from, RING_AT, 0, 1));
-      var tFlat = timeAt(map(q, RING_AT, 1, 0, 1)); // ring to grid
+      var tIn = timeAt(way(q, from, RING_AT));
+      var t0 = timeAt(way(0, from, RING_AT));
+      var tFlat = timeAt(way(q, RING_AT, 1)); // ring to grid
       var coreIn = q <= 0 ? 0 : smooth(map(tIn, t0, lerp(t0, 1, 0.55), 0, 1));
       var form = q <= 0 ? 0 : land(map(tIn, lerp(t0, 1, 0.15), 1, 0, 1));
 
       // the ring turns by itself only while the page rests on it
-      var resting = Math.abs(q - RING_AT) < 0.002 && !Site.snap.moving && !document.hidden;
+      var resting = Math.abs(q - RING_AT) * range <= EPS && !Site.snap.moving && !document.hidden;
       var want = resting ? SPIN : 0;
       omega += (want - omega) * (1 - Math.exp(-dt / SPIN_LAG));
       if (Math.abs(omega) < 1e-4 && want === 0) omega = 0;
@@ -362,7 +373,7 @@
       var up = Site.css("transition.swap");
       var back = Site.css("spring.bounce");
       var total = up.duration + back.duration;
-      var step = Site.t("stagger.words") * 1000;
+      var step = Site.tokens.stagger.words * 1000 * Site.tempo;
       items.forEach(function (li, i) {
         if (typeof li.animate !== "function") return;
         li.animate(
