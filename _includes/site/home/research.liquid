@@ -1,66 +1,99 @@
 {%- comment -%}
-  Home page, research block. Without the script (or where the scene does not run) this is a plain list of cards;
-  home-research.js turns it into the scroll-driven piece: the cards circle a lattice and settle into a grid.
+  Home page, research block: one card per area of _data/research.yml (variable `areas`, assigned in _layouts/home.liquid).
+  Without the script, or where the deck does not run (touch, portrait, narrow, reduced motion), this is a plain grid of
+  cards. home-research.js turns it into the pinned piece: the cards circle a small lattice (the ring stop), then lie flat
+  in a grid of 4 + 3 (the grid stop) while two banners of venue abbreviations are pulled out beneath them.
+  A card opens the area's detail view (kit expand, from the <template> after the list); its href is the area on the
+  research page, for modified clicks and no JavaScript.
+  The banners read the bibliography: every entry's abbr, by pubtype (_layouts/bib_abbr.liquid), each venue once.
+  Styles: home-research.css. Script: home-research.js.
 {%- endcomment -%}
-<section class="orbit" id="research" data-orbit data-snap data-snap-points="0.4 1" data-snap-hold="1" data-snap-duration="1500" aria-labelledby="orbit-title">
+{%- capture rs_raw -%}{% bibliography --template bib_abbr --group_by none %}{%- endcapture -%}
+{%- assign rs_items = rs_raw | strip_html | split: "|" -%}
+{%- assign rs_journals = "" -%}
+{%- assign rs_confs = "" -%}
+{%- for it in rs_items -%}
+  {%- assign rs_pair = it | split: "~" -%}
+  {%- if rs_pair.size == 2 -%}
+    {%- assign rs_type = rs_pair[0] | strip -%}
+    {%- assign rs_abbr = rs_pair[1] | strip -%}
+    {%- if rs_abbr != "" -%}
+      {%- if rs_type contains "journal" -%}
+        {%- assign rs_journals = rs_journals | append: rs_abbr | append: "|" -%}
+      {%- else -%}
+        {%- assign rs_confs = rs_confs | append: rs_abbr | append: "|" -%}
+      {%- endif -%}
+    {%- endif -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign rs_journals = rs_journals | split: "|" | uniq -%}
+{%- assign rs_confs = rs_confs | split: "|" | uniq -%}
+{%- assign rs_research = '/research/' | relative_url -%}
+{%- assign rs_pubs = '/publications/' | relative_url -%}
+
+<section class="orbit" id="research" data-orbit data-snap data-snap-points="0.4 1" data-snap-hold="1" data-snap-duration="1600" aria-labelledby="orbit-title">
   <div class="orbit__stage">
     <div class="orbit__scene" data-orbit-scene>
-      <header class="orbit__head">
-        <h2 class="orbit__title t-d1" id="orbit-title" data-orbit-title="0">Research</h2>
-        <p class="orbit__title orbit__title--alt t-d2" data-orbit-title="1" aria-hidden="true">{{ count_words[areas.size] | default: areas.size }} areas. Pick one.</p>
+      <header class="orbit__head sechead" data-inview>
+        <h2 class="orbit__title sechead__title" id="orbit-title">Research</h2>
       </header>
+
+      <div class="orbit__banners" aria-hidden="true">
+        <div class="orbit__banner orbit__banner--journals" data-orbit-banner="-1">
+          <div class="orbit__strip" data-kit="marquee" data-speed="150" data-direction="left" data-boost="0">
+            {%- for v in rs_journals %}<span class="orbit__venue">{{ v }}</span>{% endfor -%}
+          </div>
+        </div>
+        <div class="orbit__banner orbit__banner--confs" data-orbit-banner="1">
+          <div class="orbit__strip" data-kit="marquee" data-speed="150" data-direction="right" data-boost="0">
+            {%- for v in rs_confs %}<span class="orbit__venue">{{ v }}</span>{% endfor -%}
+          </div>
+        </div>
+      </div>
 
       <canvas class="orbit__core" data-orbit-core aria-hidden="true"></canvas>
 
-      <ul class="orbit__cards">
+      <ul class="orbit__cards" data-kit="spotlight" data-items=".ocard" data-orbit-cards>
         {%- for a in areas -%}
+          {%- capture n -%}{% bibliography_count --query @*[theme={{ a.key }}] %}{%- endcapture -%}
+          {%- assign n = n | strip -%}
           <li class="orbit__card" data-orbit-card>
-            <a class="ocard" href="{{ '/research/' | relative_url }}#{{ a.key }}" data-kit="press" data-press="choice">
-              <span class="ocard__fig">{% include site/diagrams/{{ a.key }}.liquid %}</span>
-              <span class="ocard__foot">
-                <span class="ocard__title">{{ a.short | default: a.title }}</span>
-                <span class="ocard__meta t-data">{% bibliography_count --query @*[theme={{ a.key }}] %} papers</span>
-              </span>
+            <a
+              class="ocard"
+              href="{{ rs_research }}#{{ a.key }}"
+              data-kit="expand tilt hover-fill press"
+              data-expand="#odetail-{{ a.key }}"
+              data-expand-class="odetail"
+              data-press="choice"
+              data-max="6"
+              data-shine="true"
+            >
+              <span class="ocard__fig" aria-hidden="true"><span class="ocard__art" data-shared="figure">{% include site/diagrams/{{ a.key }}.liquid %}</span></span>
+              <span class="ocard__title" data-shared="title">{{ a.short | default: a.title }}</span>
+              <span class="ocard__more" data-hover-show><span><span class="t-data">{{ n }}</span> {% if n == "1" %}paper{% else %}papers{% endif %}</span>{% include site/icon.liquid name="plus" %}</span>
             </a>
           </li>
         {%- endfor -%}
-        <li class="orbit__card" data-orbit-card>
-          <a class="ocard ocard--pubs" href="{{ '/publications/' | relative_url }}" data-kit="press" data-press="choice">
-            <span class="ocard__fig ocard__bars" aria-hidden="true">
-              {%- assign peak = 1 -%}
-              {%- capture counts -%}
-                {%- for y in (2014..year_now) -%}{% bibliography_count --query @*[year={{ y }}] %}{% unless forloop.last %},{% endunless %}{%- endfor -%}
-              {%- endcapture -%}
-              {%- assign counts = counts | strip | split: ',' -%}
-              {%- for c in counts -%}{%- assign n = c | plus: 0 -%}{%- if n > peak -%}{%- assign peak = n -%}{%- endif -%}{%- endfor -%}
-              {%- for c in counts -%}
-                {%- assign n = c | plus: 0 -%}
-                <i style="--h: {{ n | times: 1.0 | divided_by: peak | round: 3 }}; --i: {{ forloop.index0 }}"></i>
-              {%- endfor -%}
-            </span>
-            <span class="ocard__foot">
-              <span class="ocard__title">All publications</span>
-              <span class="ocard__meta t-data">{% bibliography_count %} papers</span>
-            </span>
-          </a>
-        </li>
-        <li class="orbit__card" data-orbit-card>
-          <a class="ocard ocard--code" href="{{ '/research/' | relative_url }}#software" data-kit="press" data-press="choice">
-            <span class="ocard__fig ocard__term" aria-hidden="true">
-              <span class="ocard__prompt">$</span>
-              {%- capture repos -%}
-                {%- for g in site.data.software -%}{%- for s in g.items -%}git clone {{ s.repo | split: '/' | last }}|{%- endfor -%}{%- endfor -%}
-              {%- endcapture -%}
-              {%- assign repos = repos | strip | split: '|' -%}
-              <span data-kit="typing-text" data-strings='{{ repos | jsonify }}' data-loop="true">{{ repos | first }}</span>
-            </span>
-            <span class="ocard__foot">
-              <span class="ocard__title">Open-source code</span>
-              <span class="ocard__meta t-data">{{ repos | size }} repositories</span>
-            </span>
-          </a>
-        </li>
       </ul>
     </div>
   </div>
+
+  {%- for a in areas -%}
+    {%- capture n -%}{% bibliography_count --query @*[theme={{ a.key }}] %}{%- endcapture -%}
+    {%- assign n = n | strip -%}
+    <template id="odetail-{{ a.key }}">
+      <article class="odetail__body">
+        <div class="odetail__fig" data-shared="figure">{% include site/diagrams/{{ a.key }}.liquid live="always" trigger="manual" detail="full" %}</div>
+        <div class="odetail__text">
+          <h2 class="odetail__title" data-shared="title">{{ a.title }}</h2>
+          <p class="odetail__tag">{{ a.tagline }}</p>
+          <p class="odetail__desc">{{ a.description }}</p>
+          <p class="odetail__actions">
+            <a class="btn" href="{{ rs_pubs }}#area={{ a.key }}" data-kit="magnetic press ripple" data-inner><span data-kit="sliding-text">{{ n }} {% if n == "1" %}paper{% else %}papers{% endif %}</span>{% include site/icon.liquid name="arrow-right" %}</a>
+            <a class="btn btn--ghost" href="{{ rs_research }}#{{ a.key }}" data-kit="magnetic press ripple" data-inner><span data-kit="sliding-text">On the research page</span></a>
+          </p>
+        </div>
+      </article>
+    </template>
+  {%- endfor -%}
 </section>

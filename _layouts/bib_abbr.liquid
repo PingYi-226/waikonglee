@@ -1,0 +1,10 @@
+---
+---
+{%- comment -%}
+  One publication as "pubtype~abbreviation|", nothing else: read by the home page's research block
+  ({% bibliography --template bib_abbr --group_by none %} in _includes/site/home/research.liquid) to list the venues
+  on its two banners. pubtype as in bib.liquid: the field, else journal for @article and conference otherwise.
+{%- endcomment -%}
+{%- assign pubtype = entry.pubtype -%}
+{%- unless pubtype -%}{%- if entry.type == 'article' -%}{%- assign pubtype = 'journal' -%}{%- else -%}{%- assign pubtype = 'conference' -%}{%- endif -%}{%- endunless -%}
+{%- if entry.abbr -%}{{ pubtype }}~{{ entry.abbr }}|{%- endif -%}

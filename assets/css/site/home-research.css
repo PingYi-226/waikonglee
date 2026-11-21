@@ -1,8 +1,11 @@
 /* ==========================================================================
-   Home page, research block: a plain list first; the ring and the grid when the script adds .is-orbit.
+   Home page, research block (_includes/site/home/research.liquid, home-research.js).
+   A plain grid of cards first; the pinned scene (ring, grid, banners) when the script adds .is-orbit, which it does
+   where the deck runs (html.has-snap). The scene is laid out at 1280 x 760 px and scaled to fit (--orbit-scale);
+   the sizes inside it are scene px and must match the values at the top of home-research.js.
    ========================================================================== */
 
-/* ---------- research: plain grid first; the orbit when home.js adds .is-orbit ---------- */
+/* ---------- the plain grid ---------- */
 .orbit {
   padding-block: var(--s-10);
 }
@@ -12,36 +15,31 @@
   margin-inline: auto;
 }
 
-.orbit__head {
-  margin-bottom: clamp(2rem, 5vw, 3.75rem);
-}
-
-.orbit__title {
-  margin: 0;
-}
-
-.orbit__title--alt,
+.orbit__banners,
 .orbit__core {
   display: none;
 }
 
 .orbit__cards {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
   gap: 1rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* ---------- a card ----------
+   The drawing, the name, and a line that the pointer (or keyboard focus) reveals: the count and an icon. */
 .ocard,
 .ocard:visited {
+  position: relative;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  gap: 0.5rem;
-  height: 188px;
-  padding: 0.9rem 1rem 0.85rem;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  height: 192px; /* CARD.h in home-research.js */
+  padding: 0.85rem 1rem 0.7rem;
   color: var(--ink);
+  text-decoration: none;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-2);
@@ -50,96 +48,74 @@
 }
 
 .ocard__fig {
-  display: grid;
-  place-items: center;
+  position: relative;
   min-height: 0;
+  margin-bottom: 0.45rem;
   color: var(--ink-2);
 }
 
-.ocard__fig .diagram {
+/* the drawing's own box (16:9, as in the view): what flies into the detail view */
+.ocard__art {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: block;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  translate: -50% 0;
+}
+
+.ocard__art .diagram {
+  display: block;
   width: 100%;
   height: 100%;
 }
 
-.ocard__foot {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
 .ocard__title {
+  min-width: 0;
   font-family: var(--font-display);
   font-size: 1.32rem;
   line-height: 1.1;
   letter-spacing: -0.008em;
-  transition: color var(--t-color);
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.ocard__meta {
-  flex: none;
-  font-size: 0.72rem;
+.ocard__more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 1.2rem;
+  margin-top: 0.15rem;
+  font-size: var(--fs-label);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.ocard__more .t-data {
+  color: inherit;
+}
+
+.ocard__more .icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--ink);
 }
 
 .ocard:focus-visible {
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .ocard:hover {
-    border-color: var(--ink-2);
+    border-color: var(--line-strong);
   }
 }
 
-/* the "all papers" card: one bar per year */
-.ocard__bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 5px;
-  padding: 0.5rem 0.25rem 0.4rem;
-}
-
-.ocard__bars i {
-  flex: 1 1 0;
-  height: calc(var(--h) * 100%);
-  min-height: 2px;
-  border-radius: 2px 2px 0 0;
-  background: var(--line-strong);
-  transition: background-color var(--t-color) calc(var(--i) * 18ms);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .ocard:hover .ocard__bars i {
-    background: var(--ink-2);
-  }
-}
-
-/* the "code" card: a prompt */
-.ocard__term {
-  display: flex;
-  place-items: initial;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.6rem;
-  padding: 0 0.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--ink-2);
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.ocard__prompt {
-  color: var(--accent);
-}
-
-@media (max-width: 900px) {
-  .orbit__cards {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-/* small screens: a ruled list, the figure as a thumbnail beside the name */
+/* small screens: a ruled list, the drawing as a thumbnail beside the name */
 @media (max-width: 560px) {
   .orbit__cards {
     grid-template-columns: 1fr;
@@ -162,101 +138,220 @@
   }
 
   .ocard__fig {
+    grid-row: 1 / span 2;
     height: 3.25rem;
+    margin: 0;
   }
 
-  .ocard__foot {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.15rem;
+  .ocard__title,
+  .ocard__more {
+    grid-column: 2;
   }
 
-  .ocard__term {
-    font-size: 0.6rem;
-    gap: 0.3rem;
-    padding: 0;
-  }
-
-  .ocard__bars {
-    gap: 2px;
-    padding: 0.2rem 0;
+  .ocard__more {
+    justify-content: flex-start;
   }
 }
 
-/* the scroll-driven piece */
+/* ==========================================================================
+   The scene (.is-orbit): a pinned stage, 330vh of scroll; the stepper rests on the ring and on the grid.
+   ========================================================================== */
 .orbit.is-orbit {
   height: 330vh;
   padding: 0;
+  align-content: normal; /* a block container would still centre its content (Chrome 123+) */
 }
 
 .orbit.is-orbit .orbit__stage {
   position: sticky;
   top: 0;
-  display: grid;
-  place-items: center;
   height: 100vh;
   height: 100svh;
+  padding-top: var(--nav-h); /* the fixed header's room */
   overflow: clip;
 }
 
 .orbit.is-orbit .orbit__scene {
-  position: relative;
-  flex: none;
-  width: 1200px;
-  height: 780px;
+  position: absolute;
+  top: calc(var(--nav-h) + (100% - var(--nav-h) - 20px) / 2);
+  left: 50%;
+  width: 1280px;
+  height: 760px;
   margin: 0;
-  transform: scale(var(--orbit-scale, 1));
+  translate: -50% -50%;
+  scale: var(--orbit-scale, 1);
 }
 
+/* the title: large, above the ring and the grid alike */
 .orbit.is-orbit .orbit__head {
   position: absolute;
-  inset: 0 0 auto 0;
+  inset: 0 0 auto;
+  z-index: 40;
+  display: block;
   margin: 0;
+  padding: 0;
   text-align: center;
+  pointer-events: none;
+}
+
+.orbit.is-orbit .orbit__head::before {
+  display: none;
 }
 
 .orbit.is-orbit .orbit__title {
-  position: absolute;
-  inset: 12px 0 auto 0;
-  display: block;
-  margin: 0;
-  will-change: transform, opacity, filter;
+  font-family: var(--font-display);
+  font-style: normal;
+  font-size: 88px;
+  line-height: 1;
+  letter-spacing: -0.024em;
+  color: var(--ink);
 }
 
-.orbit.is-orbit .orbit__title--alt {
-  inset: 30px 0 auto 0;
-}
-
+/* the lattice in the middle of the ring */
 .orbit.is-orbit .orbit__core {
   position: absolute;
-  top: 50%;
+  top: calc(50% + 36px); /* RING.y */
   left: 50%;
   z-index: 10;
   display: block;
   width: 520px;
   height: 520px;
-  margin: -240px 0 0 -260px;
+  margin: -260px 0 0 -260px;
   pointer-events: none;
 }
 
+/* the cards: placed by the script (transform, opacity, filter, z-index on each li); the list makes no stacking
+   context, so the cards pass in front of and behind the core */
 .orbit.is-orbit .orbit__cards {
   position: absolute;
   inset: 0;
   display: block;
+  pointer-events: none;
 }
 
 .orbit.is-orbit .orbit__card {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 300px;
-  height: 188px;
-  margin: -94px 0 0 -150px;
+  width: 288px; /* CARD.w, CARD.h */
+  height: 192px;
+  margin: -96px 0 0 -144px;
   opacity: 0;
   will-change: transform, opacity, filter;
 }
 
-.orbit.is-orbit:not(.is-settled) .orbit__card {
+.orbit.is-orbit:not(.is-flat) .orbit__card {
   pointer-events: none;
 }
 
+.orbit.is-orbit.is-flat .orbit__cards,
+.orbit.is-orbit.is-flat .orbit__card {
+  pointer-events: auto;
+}
+
+/* the two banners: beneath the cards, leaning opposite ways, wider than any screen; pulled out by the script */
+.orbit.is-orbit .orbit__banners {
+  position: absolute;
+  inset: 0 -100%;
+  display: block;
+  pointer-events: none;
+}
+
+.orbit__banner {
+  position: absolute;
+  top: calc(50% + 114px); /* the grid's lower row (GRID_Y + (CARD.h + CARD.gap) / 2): the banners cross behind it */
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: 66px;
+  margin-top: -33px;
+  background: var(--paper-2);
+  border-block: 1px solid var(--line);
+  visibility: hidden;
+}
+
+.orbit__strip {
+  --k-marquee-gap: 2.6rem;
+  --k-marquee-fade: 0%;
+  width: 100%;
+}
+
+.orbit__venue {
+  font-family: var(--font-display);
+  font-size: 38px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--faint-text);
+  white-space: nowrap;
+}
+
+.orbit__banner--confs .orbit__venue {
+  font-style: italic;
+}
+
+/* ==========================================================================
+   The detail view (kit expand; data-expand-class="odetail" lands on .k-expand)
+   ========================================================================== */
+.k-expand.odetail {
+  --k-expand-width: 1120px;
+}
+
+.odetail__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+}
+
+.odetail__fig {
+  aspect-ratio: 16 / 9;
+  color: var(--ink-2);
+}
+
+.odetail__fig .diagram {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.odetail__title {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-d2);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.odetail__tag {
+  margin: 0 0 1rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--fs-d4);
+  line-height: 1.25;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.odetail__desc {
+  max-width: var(--measure);
+  margin: 0 0 1.75rem;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.odetail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .odetail__body {
+    grid-template-columns: 1fr;
+  }
+}
