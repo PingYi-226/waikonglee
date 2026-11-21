@@ -188,6 +188,42 @@ html.is-reduced [data-kit~="disclosure"] [data-disclosure-icon] {
   transition: none;
 }
 
+/* unfold (data-effect="unfold" on the trigger; the script marks the panel .k-unfold): a hairline down the panel's
+   start edge, drawn as it opens and there at rest (--k-unfold-rule: transparent hides it, --k-unfold-rule-x moves it);
+   clipped while the height moves, without the plain variant's edge fade (the content's own sweep is softer) */
+.k-unfold {
+  position: relative;
+}
+
+.k-unfold::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  inset-inline-start: var(--k-unfold-rule-x, 0);
+  width: 1px;
+  background: var(--k-unfold-rule, var(--line-strong));
+  transform-origin: top;
+  pointer-events: none;
+}
+
+[data-disclosure-panel].is-unfolding {
+  overflow: hidden;
+}
+
+/* the chevron turns on a spring as the panel opens, and back quickly */
+[data-kit~="disclosure"][data-effect="unfold"] [data-disclosure-icon] {
+  transition: rotate var(--t-swap);
+}
+
+[data-kit~="disclosure"][data-effect="unfold"][aria-expanded="true"] [data-disclosure-icon] {
+  transition: rotate var(--spring-check-pop);
+}
+
+html.is-reduced [data-kit~="disclosure"][data-effect="unfold"] [data-disclosure-icon] {
+  transition: none;
+}
+
 /* ---------- flip ---------- */
 /* the copy of a removed item, fading out where the item was */
 [data-flip-ghost] {

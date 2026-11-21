@@ -1073,6 +1073,18 @@
   const UNTIL_FOUND = "onbeforematch" in doc.documentElement;
   const disclosureGroups = new Map(); // data-group name -> Set of controllers
 
+  /* The "unfold" variant (data-effect="unfold"), for long text panels (an abstract, a BibTeX plate) in long lists:
+   * the height opens on spring.height; the content comes in line by line under a soft-edged mask sweeping down
+   * (one animation for the whole block: a 250-word abstract costs what one line does, nothing is split) while it
+   * clears from blur.disclosure; a hairline draws down the panel's start edge; the chevron turns on a spring (CSS).
+   * The content never moves, so it never fights the height spring. Closing is quick and plain: the height folds on
+   * transition.collapse while the content fades on transition.swap. Turned round on the way, the content goes on
+   * from where it is (the sweep is paused, not restarted). Reduced motion: the plain variant's fade. */
+  const UNFOLD_LINE = 26; // ms between two lines of the sweep (site value)
+  const UNFOLD_SPAN = [300, 820]; // ms: the shortest and the longest sweep (site values)
+  const UNFOLD_EDGE = 1.6; // line heights: the soft edge of the sweep (site value)
+  const MASK_PROPS = ["maskImage", "maskSize", "maskRepeat", "webkitMaskImage", "webkitMaskSize", "webkitMaskRepeat"];
+
   Site.register("disclosure", function (el, opts) {
     const panel = doc.getElementById(el.getAttribute("aria-controls") || "");
     if (!panel) return null;
@@ -1080,8 +1092,11 @@
     const native = /^(BUTTON|A|SUMMARY)$/.test(el.tagName);
     let open = el.getAttribute("aria-expanded") === "true";
     let animation = null;
+    const unfold = opts.effect === "unfold";
+    let sweep = null; // unfold: { content, anims (mask, blur), fade }
 
     panel.setAttribute("data-disclosure-panel", "");
+    if (unfold) panel.classList.add("k-unfold");
     if (el.tagName === "BUTTON" && !el.hasAttribute("type")) el.type = "button";
     if (!native) {
       if (!el.hasAttribute("role")) el.setAttribute("role", "button");
@@ -1101,11 +1116,12 @@
       return { open: ownMargin, shut: ownMargin - gap };
     }
 
-    /** The state at rest, nothing left on the panel. */
+    /** The state at rest, nothing left on the panel. (An unfolding sweep still on its way ends by itself.) */
     function settle() {
       if (animation) animation.cancel();
       animation = null;
-      panel.classList.remove("is-moving");
+      if (!open) clearSweep();
+      panel.classList.remove("is-moving", "is-unfolding");
       panel.style.removeProperty("--k-disclosure-content");
       panel.style.marginTop = "";
       panel.inert = false;
@@ -1135,9 +1151,13 @@
       panel.removeAttribute("hidden");
       panel.style.marginTop = "";
       panel.inert = !open;
-      if (instant || env.static || !canAnimate(panel)) return settle();
+      if (instant || env.static || !canAnimate(panel)) {
+        clearSweep();
+        return settle();
+      }
 
       const natural = panel.getBoundingClientRect().height;
+      if (unfold && !env.reduce) return runUnfold(from, natural, m);
       const first = { opacity: from.opacity, filter: from.filter };
       const last = open ? { opacity: "1", filter: "blur(0px)" } : { opacity: "0", filter: blur("disclosure") };
       if (!env.reduce) {
@@ -1159,6 +1179,89 @@
         },
         () => {},
       );
+    }
+
+    /* ---- unfold ---- */
+    const contentOf = () => (panel.children.length === 1 ? panel.firstElementChild : panel);
+
+    function clearSweep() {
+      if (!sweep) return;
+      sweep.anims.forEach((a) => a.cancel());
+      if (sweep.fade) sweep.fade.cancel();
+      MASK_PROPS.forEach((p) => (sweep.content.style[p] = ""));
+      sweep = null;
+    }
+    /** The content's opacity toward `value`, from where it is. */
+    function fadeContent(content, value, token) {
+      const t = css(token);
+      const from = getComputedStyle(content).opacity;
+      const a = content.animate([{ opacity: from }, { opacity: value }], { duration: t.duration, easing: t.easing, fill: "both" });
+      if (sweep.fade) sweep.fade.cancel();
+      sweep.fade = a;
+    }
+    /** Lines come in from the top: a mask with a soft edge slides down over the block while it clears from the blur. */
+    function startSweep(content) {
+      clearSweep();
+      const h = Math.max(1, content.getBoundingClientRect().height);
+      const line = px(getComputedStyle(content).lineHeight) || 24;
+      const edge = Math.round(line * UNFOLD_EDGE);
+      const duration = Site.util.clamp((h / line) * UNFOLD_LINE + 240, UNFOLD_SPAN[0], UNFOLD_SPAN[1]) * Site.tempo;
+      const image = "linear-gradient(to bottom, #000 " + h + "px, transparent " + (h + edge) + "px)";
+      const size = "100% " + (2 * h + edge) + "px";
+      Object.assign(content.style, { maskImage: image, webkitMaskImage: image, maskSize: size, webkitMaskSize: size, maskRepeat: "no-repeat", webkitMaskRepeat: "no-repeat" });
+      const start = "0px " + -(h + edge) + "px";
+      const enter = "cubic-bezier(" + tokens.ease.enter.join(",") + ")";
+      const out = "cubic-bezier(" + tokens.ease.out.join(",") + ")";
+      const mask = content.animate(
+        [
+          { maskPosition: start, webkitMaskPosition: start },
+          { maskPosition: "0px 0px", webkitMaskPosition: "0px 0px" },
+        ],
+        { duration: duration, easing: enter, fill: "both" },
+      );
+      const clear = content.animate([{ filter: blur("disclosure") }, { filter: "blur(0px)" }], { duration: duration, easing: out, fill: "both" });
+      const mine = (sweep = { content: content, anims: [mask, clear], fade: null });
+      mask.finished.then(
+        () => {
+          if (sweep === mine && open) clearSweep();
+        },
+        () => {},
+      );
+      // the hairline draws down the start edge with it
+      try {
+        panel.animate([{ scale: "1 0" }, { scale: "1 1" }], { duration: duration, easing: out, pseudoElement: "::before" });
+      } catch (e) {
+        /* pseudo-element animations unsupported: the line is simply there */
+      }
+    }
+    function runUnfold(from, natural, m) {
+      const content = contentOf();
+      const first = { height: from.height + "px" };
+      const last = { height: (open ? natural : 0) + "px" };
+      if (m.open !== m.shut) {
+        first.marginTop = from.marginTop + "px";
+        last.marginTop = (open ? m.open : m.shut) + "px";
+      }
+      const curve = open ? curveOf("spring.height", 0) : css("transition.collapse");
+      panel.classList.add("is-unfolding");
+      const mine = (animation = panel.animate([first, last], { duration: curve.duration, easing: curve.easing, fill: "both" }));
+      mine.finished.then(
+        () => {
+          if (animation === mine) settle();
+        },
+        () => {},
+      );
+      if (open) {
+        if (sweep && sweep.content === content) {
+          // turned round while folding: it comes back from where it is
+          sweep.anims.forEach((a) => a.playState === "paused" && a.play());
+          fadeContent(content, 1, "transition.reveal");
+        } else startSweep(content);
+      } else {
+        if (!sweep) sweep = { content: content, anims: [], fade: null };
+        sweep.anims.forEach((a) => running(a) && a.pause());
+        fadeContent(content, 0, "transition.swap");
+      }
     }
 
     function set(next, instant) {
@@ -1185,9 +1288,10 @@
         if (group) group.delete(api);
         if (animation) animation.cancel();
         animation = null;
+        clearSweep();
         open = true; // without the kit every panel is visible
         settle();
-        panel.classList.remove("is-on");
+        panel.classList.remove("is-on", "k-unfold");
       },
     };
     let group = null;

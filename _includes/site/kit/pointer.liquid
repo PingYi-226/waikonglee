@@ -85,6 +85,11 @@
     #kit-pointer .pd-person__deg { font-size: var(--fs-xs); color: var(--muted); }
     @media (max-width: 1000px) { #kit-pointer .pd-rgrid { grid-template-columns: repeat(2, minmax(0, 300px)); } #kit-pointer .pd-people { grid-template-columns: repeat(2, minmax(0, 15rem)); } }
     @media (max-width: 560px) { #kit-pointer .pd-rgrid, #kit-pointer .pd-people { grid-template-columns: minmax(0, 1fr); } }
+    /* unfold */
+    #kit-pointer #pd-unfold { max-width: 50rem; }
+    #kit-pointer .pd-uabs { padding: 0.2rem 0 1.3rem 1.25rem; max-width: 44rem; }
+    #kit-pointer .pd-uabs p { margin: 0; font-size: var(--fs-small); line-height: 1.65; color: var(--ink-2); }
+    #kit-pointer .pd-ubib { padding: 0.2rem 0 1.3rem 1.25rem; }
   </style>
 
   <article class="kitdemo__item" id="demo-highlight">
@@ -327,6 +332,50 @@
         </div>
         <p class="t-xs t-muted" style="margin:0">The paragraph after the panel.</p>
       </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-unfold">
+    <header>
+      <h3>disclosure, data-effect="unfold"</h3>
+      <p>For abstracts and BibTeX in a long list. The height opens on the spring, the lines come in from the top through a light blur, a hairline draws down the edge, the chevron turns on a spring. Closing is quick. Click twice quickly: the content goes on from where it was. One open at a time across both papers.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <ul class="pd-pubs" id="pd-unfold">
+        {%- assign pd_abs = "Lattice-based cryptography is among the most promising candidates for post-quantum security, and the NIST standardization process has selected Falcon for its compact signatures and fast verification. Its signing procedure, however, relies on floating-point Gaussian sampling over a tree of the secret basis, which makes it hard to implement efficiently and in constant time. Mitaka was proposed as a simpler alternative with a hybrid sampler that avoids the tree and is easier to parallelize. In this work we present the first high-throughput implementations of both schemes on graphics processors. We map the fast Fourier transform, the sampler and the number-theoretic transform onto the thread hierarchy of the GPU, keep the intermediate polynomials in shared memory, and batch thousands of independent signatures so that every streaming multiprocessor is occupied. On an NVIDIA A100 our Falcon implementation signs and verifies tens of thousands of messages per second, and Mitaka is faster still for signing. We compare the two in throughput, latency, memory footprint and numerical behaviour, discuss how their samplers map to the hardware, and identify where each is preferable for servers that must authenticate many clients at once, such as certificate authorities and content-delivery networks." -%}
+        {%- for k in (1..2) -%}
+        <li>
+          <div class="pd-pub">
+            <span>{% if k == 1 %}High Throughput Lattice-Based Signatures on GPUs: Comparing Falcon and Mitaka{% else %}Parallel Implementation of Kyber and Saber on GPUs{% endif %}</span>
+            <span class="cluster" style="--cluster:0.4rem;flex:none">
+              <button class="chip" data-kit="disclosure press" data-effect="unfold" data-group="pd-unfold" aria-controls="pd-uabs-{{ k }}" aria-expanded="false" id="pd-unf-abs-{{ k }}">Abstract <svg class="pd-chev" data-disclosure-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              <button class="chip" data-kit="disclosure press" data-effect="unfold" data-group="pd-unfold" aria-controls="pd-ubib-{{ k }}" aria-expanded="false" id="pd-unf-bib-{{ k }}">BibTeX <svg class="pd-chev" data-disclosure-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+            </span>
+          </div>
+          <div id="pd-uabs-{{ k }}" data-disclosure-panel>
+            <div class="pd-uabs"><p>{{ pd_abs }}</p></div>
+          </div>
+          <div id="pd-ubib-{{ k }}" data-disclosure-panel>
+            <div class="pd-ubib">
+              <div class="pd-bib"><pre id="pd-ubib-pre-{{ k }}">@article{lee2023falcon,
+  title     = {High Throughput Lattice-Based Signatures
+               on GPUs: Comparing Falcon and Mitaka},
+  author    = {Lee, Wai-Kong and Dong, Jun and
+               Hwang, Seong Oun and Zhang, Jiahao},
+  journal   = {IEEE Transactions on Parallel and
+               Distributed Systems},
+  volume    = {35},
+  number    = {4},
+  pages     = {675--692},
+  year      = {2024},
+  publisher = {IEEE},
+  doi       = {10.1109/TPDS.2024.3367319}
+}</pre><button class="icon-btn" data-kit="copy press" data-copy-from="#pd-ubib-pre-{{ k }}" data-toast="Copied BibTeX" aria-label="Copy BibTeX"><svg class="pd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="14" height="14" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><svg class="pd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12 5 5L20 6"/></svg></button></div>
+            </div>
+          </div>
+        </li>
+        {%- endfor -%}
+      </ul>
     </div>
   </article>
 
