@@ -1,89 +1,63 @@
 {%- comment -%}
-  Research page, the areas (_data/research.yml): the page's one set piece.
-  Wide screens with JavaScript: a sticky figure plate on the left (one diagram per area, stacked; research.js shows the
-  one of the area being read, the old one clearing through blur, the new one drawing itself), its caption (the figure
-  number rolls, the tagline changes) and an index of the areas with a gliding mark (scrollspy + highlight); the seven
-  areas as tall text blocks on the right, the one being read in full ink.
-  Small screens, and without JavaScript: each area carries its own figure above its text; nothing sticks.
-  Each area keeps its anchor (#pqc, #accel ...): the home page links to them.
+  Research page, the research areas (_data/research.yml): the page's set piece.
+  Desktop with the scroll stepper: a pinned section (100vh + 6 steps tall) whose stage fills the viewport and stays; the
+  stepper rests on seven points (data-snap-points), one per area. The areas lie on top of each other in the stage: the
+  plate (one frame for all) shows the current area's diagram, the text beside it changes in place, and a mark of seven
+  steps under the plate shows where the page is and takes you to a step (research.js).
+  Phones, reduced motion, ?static and no JavaScript: the areas one after the other, each with its diagram.
+  Each area keeps its anchor (#pqc, #accel ...): the home page links to them; research.js lands on the right step.
 {%- endcomment -%}
 {%- assign areas = site.data.research -%}
-<section class="rareas section" id="areas" aria-labelledby="rareas-title" data-rareas>
-  <div class="wrap">
-    <header class="sechead" data-inview>
-      <h2 class="sechead__title" id="rareas-title">Research areas</h2>
-    </header>
+{%- assign last = areas.size | minus: 1 -%}
+{%- assign points = '' -%}
+{%- for a in areas -%}
+  {%- assign pt = forloop.index0 | times: 1.0 | divided_by: last | round: 5 -%}
+  {%- assign points = points | append: pt | append: ' ' -%}
+{%- endfor -%}
+{%- assign points = points | strip -%}
+<section class="rsteps rpart" id="areas" aria-labelledby="rsteps-title" data-snap data-snap-points="{{ points }}" data-snap-duration="900" data-rsteps style="--steps: {{ last }}">
+  <div class="rsteps__stage" data-rsteps-stage>
+    <div class="wrap rgrid">
+      <div class="rgrid__main rsteps__main">
+        <header class="sechead" data-inview>
+          <h2 class="sechead__title" id="rsteps-title">Research areas</h2>
+        </header>
 
-    <div class="rareas__grid">
-      <div class="rplate" data-rplate>
-        <div class="rplate__sticky">
-          {%- comment -%} The plate repeats what each area's own figure says, so it is hidden from screen readers. {%- endcomment -%}
-          <div class="rplate__frame" data-rplate-frame data-cursor="Redraw" aria-hidden="true">
-            {%- for a in areas %}
-            <span class="rplate__fig{% if forloop.first %} is-current{% endif %}" data-rplate-fig>
+        <div class="rsteps__deck" data-rsteps-deck>
+          <div class="rsteps__plate" aria-hidden="true" data-rsteps-plate><span class="rsteps__plate-in"></span></div>
+          {%- for a in areas %}
+          {%- capture n -%}{% bibliography_count --query @*[theme={{ a.key }}] %}{%- endcapture -%}
+          {%- assign n = n | strip %}
+          <article class="rarea{% if forloop.first %} is-current{% endif %}" id="{{ a.key }}" aria-labelledby="rarea-{{ a.key }}" data-rarea data-key="{{ a.key }}">
+            <div class="rarea__fig" data-rarea-fig>
               {% include site/diagrams/{{ a.key }}.liquid live="always" trigger="manual" detail="full" %}
-            </span>
-            {%- endfor %}
-          </div>
-          <div class="rplate__bar">
-            <p class="rplate__cap figcap" aria-hidden="true">
-              {%- comment -%} the figure number is an odometer strip: research.js rolls it to the area being read {%- endcomment %}
-              <span class="figcap__no">Fig. <span class="rplate__no"><span class="rplate__strip" data-rplate-no>
-                {%- for a in areas -%}<span>{{ forloop.index | plus: 1 }}</span>{%- endfor -%}
-              </span></span></span>
-              <span class="rplate__tags">
-                {%- for a in areas -%}
-                  <span class="rplate__tag{% if forloop.first %} is-current{% endif %}" data-rplate-tag>{{ a.tagline }}</span>
-                {%- endfor -%}
-              </span>
-            </p>
-            <button
-              type="button"
-              class="rplate__pause icon-btn"
-              data-kit="press tooltip"
-              data-tip="Pause the figure"
-              aria-label="Pause the figure"
-              data-rplate-pause
-            >
-              {% include site/icon.liquid name="pause" size=16 %}
-            </button>
-          </div>
-          <nav class="rindex" aria-label="Research areas">
-            <ol class="rindex__list" data-kit="scrollspy highlight" data-mode="both" data-items=".rindex__link" data-rindex>
+            </div>
+            <div class="rarea__text">
+              <h3 class="rarea__title" id="rarea-{{ a.key }}" data-rarea-line>{{ a.title }}</h3>
+              <p class="rarea__tag" data-rarea-line>{{ a.tagline }}</p>
+              <p class="rarea__desc" data-rarea-line>{{ a.description }}</p>
+              <p class="rarea__foot" data-rarea-line>
+                <a class="btn btn--ghost btn--small rarea__more" href="{{ '/publications/' | relative_url }}#area={{ a.key }}" data-kit="magnetic press ripple" data-inner>
+                  <span data-kit="sliding-text">{{ n }} {% if n == '1' %}paper{% else %}papers{% endif %}</span>
+                  {% include site/icon.liquid name="arrow-right" size=16 %}
+                </a>
+              </p>
+            </div>
+          </article>
+          {%- endfor %}
+
+          <nav class="rprog" aria-label="Research areas" data-rprog>
+            <ol class="rprog__list" data-kit="tooltip-group">
               {%- for a in areas %}
-              <li>
-                <a class="rindex__link" href="#{{ a.key }}">
-                  <span class="rindex__name">{{ a.short | default: a.title }}</span>
-                  <span class="rindex__count t-data">{% bibliography_count --query @*[theme={{ a.key }}] %}</span>
+              <li class="rprog__item">
+                <a class="rprog__step{% if forloop.first %} is-current{% endif %}" href="#{{ a.key }}" data-tip="{{ a.short | default: a.title }}" aria-label="{{ a.title }}"{% if forloop.first %} aria-current="step"{% endif %} data-rprog-step>
+                  <span class="rprog__bar"><span class="rprog__fill"></span></span>
                 </a>
               </li>
               {%- endfor %}
             </ol>
           </nav>
         </div>
-      </div>
-
-      <div class="rareas__list">
-        {%- for a in areas %}
-        {%- capture n -%}{% bibliography_count --query @*[theme={{ a.key }}] %}{%- endcapture -%}
-        {%- assign n = n | strip %}
-        <article class="rarea{% if forloop.first %} is-active{% endif %}" id="{{ a.key }}" aria-labelledby="rarea-{{ a.key }}" data-rarea>
-          <figure class="rarea__fig">
-            <span class="rarea__plate" data-rarea-fig>
-              {% include site/diagrams/{{ a.key }}.liquid live="always" trigger="manual" detail="full" %}
-            </span>
-            <figcaption class="figcap"><span class="figcap__no">Fig. {{ forloop.index | plus: 1 }}</span><span>{{ a.tagline }}</span></figcaption>
-          </figure>
-          <div class="rarea__text">
-            <h3 class="rarea__title" id="rarea-{{ a.key }}">{{ a.title }}</h3>
-            <p class="rarea__desc">{{ a.description }}</p>
-            <p class="rarea__foot">
-              <span class="rarea__count"><span class="t-data">{{ n }}</span> {% if n == '1' %}paper{% else %}papers{% endif %}</span>
-              <a class="link" href="{{ '/publications/' | relative_url }}#area={{ a.key }}">Papers in this area</a>
-            </p>
-          </div>
-        </article>
-        {%- endfor %}
       </div>
     </div>
   </div>

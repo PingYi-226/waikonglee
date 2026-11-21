@@ -1,120 +1,44 @@
 {%- comment -%}
-  Research page, funded projects (_data/grants.yml): a time axis with one bar per project (after the career strip of the
-  home page: positions are computed here, the bars draw in with CSS when [data-inview] adds .is-in), and under it the
-  projects as rows that open to role, funder, amount and output. Bar and row light each other (research.js).
-  `period` is read as "<Month> <year> – <Month> <year>" (month names may be abbreviated; "present" is allowed at the end).
+  Research page, funded projects (_data/grants.yml, newest first): rows that open one at a time (disclosure, unfold) to
+  role, funder, amount and output.
 {%- endcomment -%}
-{%- assign grants = site.data.grants -%}
-{%- assign mnames = 'jan,feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec' | split: ',' -%}
-{%- assign year_now = site.time | date: '%Y' | plus: 0 -%}
-{%- assign month_now = site.time | date: '%m' | plus: 0 -%}
-{%- comment -%} first pass: each project's start and end in months, and the span of the axis {%- endcomment -%}
-{%- assign starts = '' -%}
-{%- assign ends = '' -%}
-{%- assign y0 = 9999 -%}
-{%- assign y1 = 0 -%}
-{%- for g in grants -%}
-  {%- assign parts = g.period | split: '–' -%}
-  {%- assign a = parts[0] | strip | split: ' ' -%}
-  {%- assign b = parts[1] | default: 'present' | strip | split: ' ' -%}
-  {%- assign am = a[0] | slice: 0, 3 | downcase -%}
-  {%- assign sm = 1 -%}
-  {%- for m in mnames -%}{%- if m == am -%}{%- assign sm = forloop.index -%}{%- endif -%}{%- endfor -%}
-  {%- assign sy = a[1] | plus: 0 -%}
-  {%- assign bm = b[0] | slice: 0, 3 | downcase -%}
-  {%- if bm == 'pre' -%}
-    {%- assign ey = year_now -%}
-    {%- assign em = month_now -%}
-  {%- else -%}
-    {%- assign em = 12 -%}
-    {%- for m in mnames -%}{%- if m == bm -%}{%- assign em = forloop.index -%}{%- endif -%}{%- endfor -%}
-    {%- assign ey = b[1] | plus: 0 -%}
-  {%- endif -%}
-  {%- if sy < y0 -%}{%- assign y0 = sy -%}{%- endif -%}
-  {%- if ey > y1 -%}{%- assign y1 = ey -%}{%- endif -%}
-  {%- assign s = sy | times: 12 | plus: sm | minus: 1 -%}
-  {%- assign e = ey | times: 12 | plus: em -%}
-  {%- assign starts = starts | append: s | append: ',' -%}
-  {%- assign ends = ends | append: e | append: ',' -%}
-{%- endfor -%}
-{%- assign starts = starts | split: ',' -%}
-{%- assign ends = ends | split: ',' -%}
-{%- assign t0 = y0 | times: 12 -%}
-{%- assign t1 = y1 | plus: 1 | times: 12 -%}
-{%- assign span = t1 | minus: t0 -%}
-<section class="rproj section" id="projects" aria-labelledby="rproj-title" data-rproj>
-  <div class="wrap">
-    <header class="sechead" data-inview>
-      <h2 class="sechead__title" id="rproj-title">Funded projects</h2>
-    </header>
-
-    <figure class="rproj__fig" data-inview="0.4">
-      <div class="rproj__chart">
-        <ol class="rproj__years t-data" aria-hidden="true">
-          {%- for y in (y0..y1) -%}
-            {%- assign yl = y | times: 12 | minus: t0 | times: 100.0 | divided_by: span -%}
-            <li style="--l: {{ yl | round: 3 }}%"><span>{{ y }}</span></li>
-          {%- endfor -%}
-        </ol>
-        <ol class="rproj__lanes" data-kit="tooltip-group">
-          {%- for g in grants -%}
-            {%- assign i = forloop.index0 -%}
-            {%- assign s = starts[i] | plus: 0 | minus: t0 -%}
-            {%- assign e = ends[i] | plus: 0 | minus: t0 -%}
-            {%- assign left = s | times: 100.0 | divided_by: span -%}
-            {%- assign width = e | minus: s | times: 100.0 | divided_by: span -%}
-            {%- assign who = g.funder | split: ' (' | first -%}
-            <li class="rproj__lane" style="--l: {{ left | round: 3 }}%; --w: {{ width | round: 3 }}%; --i: {{ i }}">
-              <button
-                type="button"
-                class="rproj__seg"
-                data-proj-bar="{{ i }}"
-                data-tip="{{ g.period | replace: '–', 'to' }}"
-                aria-label="{{ g.title }}, {{ g.period | replace: '–', 'to' }}"
-              >
-                <span class="rproj__who t-label">{{ who }}</span>
-                <span class="rproj__bar"></span>
-              </button>
-            </li>
-          {%- endfor -%}
-        </ol>
-      </div>
-      <figcaption class="figcap">
-        <span class="figcap__no">Fig. {{ site.data.research.size | plus: 2 }}</span>
-        <span>Funded projects by funder, {{ y0 }} to {{ y1 }}</span>
-      </figcaption>
-    </figure>
-
-    <ul class="rows rproj__rows" data-kit="highlight reveal-group" data-mode="hover" data-items=".rproj__row" data-reveal="fade" data-rproj-rows>
-      {%- for g in grants %}
-      {%- assign i = forloop.index0 %}
-      <li class="rproj__row" data-reveal-item data-proj-row="{{ i }}">
-        <h3 class="rproj__h">
-          <button
-            type="button"
-            class="rproj__head"
-            data-kit="disclosure press"
-            data-press="choice"
-            data-group="projects"
-            aria-expanded="false"
-            aria-controls="rproj-{{ i }}"
-            data-proj-trigger
-          >
-            <span class="rproj__period t-data">{{ g.period }}</span>
-            <span class="rproj__title">{{ g.title }}</span>
-            <span class="rproj__chev" data-disclosure-icon>{% include site/icon.liquid name="chevron-down" size=18 %}</span>
-          </button>
-        </h3>
-        <div class="rproj__panel" id="rproj-{{ i }}" data-disclosure-panel>
-          <dl class="rproj__body">
-            <div class="rproj__item"><dt class="t-label">Role</dt><dd>{{ g.role }}</dd></div>
-            <div class="rproj__item"><dt class="t-label">Funder</dt><dd>{{ g.funder }}</dd></div>
-            <div class="rproj__item"><dt class="t-label">Amount</dt><dd class="rproj__amount">{{ g.amount }}</dd></div>
-            <div class="rproj__item rproj__item--wide"><dt class="t-label">Output</dt><dd>{{ g.output }}</dd></div>
-          </dl>
-        </div>
-      </li>
-      {%- endfor %}
-    </ul>
+<section class="rproj rpart" id="projects" aria-labelledby="rproj-title" data-snap data-rproj>
+  <div class="wrap rgrid">
+    <div class="rgrid__main">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title" id="rproj-title">Funded projects</h2>
+      </header>
+      <ul class="rows rproj__rows" data-kit="highlight" data-items=".rproj__head">
+        {%- for g in site.data.grants %}
+        {%- assign i = forloop.index0 %}
+        <li class="rproj__row">
+          <h3 class="rproj__h">
+            <button
+              type="button"
+              class="rproj__head"
+              data-kit="disclosure press"
+              data-press="choice"
+              data-effect="unfold"
+              data-group="rproj"
+              aria-expanded="false"
+              aria-controls="rproj-{{ i }}"
+            >
+              <span class="rproj__period t-data">{{ g.period }}</span>
+              <span class="rproj__title">{{ g.title }}</span>
+              <span class="rproj__chev" data-disclosure-icon>{% include site/icon.liquid name="chevron-down" size=18 %}</span>
+            </button>
+          </h3>
+          <div class="rproj__panel" id="rproj-{{ i }}" data-disclosure-panel>
+            <dl class="rproj__body">
+              <div class="rproj__item"><dt class="t-label">Role</dt><dd>{{ g.role }}</dd></div>
+              <div class="rproj__item"><dt class="t-label">Funder</dt><dd>{{ g.funder }}</dd></div>
+              <div class="rproj__item"><dt class="t-label">Amount</dt><dd class="rproj__amount">{{ g.amount }}</dd></div>
+              <div class="rproj__item rproj__item--wide"><dt class="t-label">Output</dt><dd>{{ g.output }}</dd></div>
+            </dl>
+          </div>
+        </li>
+        {%- endfor %}
+      </ul>
+    </div>
   </div>
 </section>

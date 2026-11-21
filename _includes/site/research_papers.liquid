@@ -1,0 +1,119 @@
+{%- comment -%}
+  Research page, the papers: the research areas (rows, _data/research.yml) by year (columns), each cell shaded by the
+  number of papers of that area in that year. Counts come from the bibliography at build time (`theme` and `year` of
+  each entry, through bibliography_count queries with two conditions); the years are the years that have papers, and a
+  gap in the years shows as a wider space between two columns. A row takes you to the publication list filtered by its
+  area; a cell names its count under the pointer (tooltip); the totals roll when the part arrives (research.js).
+{%- endcomment -%}
+{%- assign areas = site.data.research -%}
+{%- assign year_now = site.time | date: '%Y' | plus: 0 -%}
+{%- comment -%} the years that have papers {%- endcomment -%}
+{%- assign years = '' -%}
+{%- assign ycounts = '' -%}
+{%- for y in (1990..year_now) -%}
+  {%- capture c -%}{% bibliography_count --query @*[year={{ y }}] %}{%- endcapture -%}
+  {%- assign c = c | strip | plus: 0 -%}
+  {%- if c > 0 -%}
+    {%- assign years = years | append: y | append: ',' -%}
+    {%- assign ycounts = ycounts | append: c | append: ',' -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign years = years | split: ',' -%}
+{%- assign ycounts = ycounts | split: ',' -%}
+{%- comment -%} a column that does not follow the previous year gets a wider space before it {%- endcomment -%}
+{%- assign gaps = '' -%}
+{%- assign prev = 0 -%}
+{%- for y in years -%}
+  {%- assign yy = y | plus: 0 -%}
+  {%- assign nexty = prev | plus: 1 -%}
+  {%- if prev > 0 and yy > nexty -%}{%- assign gaps = gaps | append: ' is-gap,' -%}{%- else -%}{%- assign gaps = gaps | append: ',' -%}{%- endif -%}
+  {%- assign prev = yy -%}
+{%- endfor -%}
+{%- assign gaps = gaps | split: ',' -%}
+{%- comment -%} the cells, row by row, and the largest cell (for the shading) {%- endcomment -%}
+{%- assign cells = '' -%}
+{%- assign rsums = '' -%}
+{%- assign peak = 1 -%}
+{%- assign total = 0 -%}
+{%- for a in areas -%}
+  {%- assign rs = 0 -%}
+  {%- for y in years -%}
+    {%- capture c -%}{% bibliography_count --query @*[theme={{ a.key }},year={{ y }}] %}{%- endcapture -%}
+    {%- assign c = c | strip | plus: 0 -%}
+    {%- if c > peak -%}{%- assign peak = c -%}{%- endif -%}
+    {%- assign rs = rs | plus: c -%}
+    {%- assign cells = cells | append: c | append: ',' -%}
+  {%- endfor -%}
+  {%- assign rsums = rsums | append: rs | append: ',' -%}
+  {%- assign total = total | plus: rs -%}
+{%- endfor -%}
+{%- assign cells = cells | split: ',' -%}
+{%- assign rsums = rsums | split: ',' -%}
+{%- assign ny = years.size -%}
+{%- comment -%} the columns: the names, the years (a narrow track before a year that does not follow the previous one), the sums {%- endcomment -%}
+{%- assign tracks = 'var(--rmat-name)' -%}
+{%- for y in years -%}
+  {%- if gaps[forloop.index0] != blank -%}{%- assign tracks = tracks | append: ' var(--rmat-gap)' -%}{%- endif -%}
+  {%- assign tracks = tracks | append: ' minmax(0, 1fr)' -%}
+{%- endfor -%}
+{%- assign tracks = tracks | append: ' var(--rmat-sum)' -%}
+<section class="rpapers rpart" id="papers" aria-labelledby="rpapers-title" data-snap data-rpapers>
+  <div class="wrap rgrid">
+    <div class="rgrid__main">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title" id="rpapers-title">Papers</h2>
+        <a class="link" href="{{ '/publications/' | relative_url }}">All publications</a>
+      </header>
+
+      {%- comment -%} a table in ARIA terms, laid out with CSS grid (the template's scripts restyle every <table>) {%- endcomment %}
+      <div class="rmat__scroll">
+        <div class="rmat" role="table" aria-labelledby="rpapers-title" style="--tracks: {{ tracks }}" data-kit="tooltip-group" data-rmat>
+          <div class="rmat__head" role="rowgroup">
+            <div class="rmat__line rmat__line--years" role="row">
+              <span class="rmat__corner" role="columnheader"><span class="sr-only">Research area</span></span>
+              {%- for y in years %}
+              {%- if gaps[forloop.index0] != blank %}<span class="rmat__gap" aria-hidden="true"></span>{% endif %}
+              <span class="rmat__y t-data" role="columnheader" data-col="{{ forloop.index0 }}">{{ y }}</span>
+              {%- endfor %}
+              <span class="rmat__sumh" role="columnheader"><span class="sr-only">All years</span></span>
+            </div>
+          </div>
+          <div class="rmat__body" role="rowgroup">
+            {%- for a in areas %}
+            {%- assign r = forloop.index0 %}
+            <div class="rmat__line rmat__row" role="row" data-rmat-row data-cursor-grow style="--r: {{ r }}">
+              <span class="rmat__name" role="rowheader">
+                <a class="rmat__link" href="{{ '/publications/' | relative_url }}#area={{ a.key }}" data-rmat-link>{{ a.short | default: a.title }}</a>
+              </span>
+              {%- for y in years %}
+              {%- assign k = r | times: ny | plus: forloop.index0 -%}
+              {%- assign c = cells[k] | plus: 0 %}
+              {%- if gaps[forloop.index0] != blank %}<span class="rmat__gap" aria-hidden="true"></span>{% endif %}
+              <span class="rmat__c" role="cell" data-col="{{ forloop.index0 }}">
+                {%- if c > 0 -%}
+                {%- assign v = c | times: 1.0 | divided_by: peak | round: 3 -%}
+                <span class="rmat__cell{% if v >= 0.5 %} is-deep{% endif %}" style="--v: {{ v }}; --c: {{ forloop.index0 }}" data-tip="{{ c }} {% if c == 1 %}paper{% else %}papers{% endif %}, {{ y }}">{{ c }}</span>
+                {%- else -%}
+                <span class="rmat__cell rmat__cell--0" style="--c: {{ forloop.index0 }}"><span class="sr-only">0</span></span>
+                {%- endif -%}
+              </span>
+              {%- endfor %}
+              <span class="rmat__sum" role="cell"><span data-kit="sliding-number" data-value="{{ rsums[r] }}" data-trigger="manual" data-rmat-num>{{ rsums[r] }}</span></span>
+            </div>
+            {%- endfor %}
+          </div>
+          <div class="rmat__feet" role="rowgroup">
+            <div class="rmat__line rmat__foot" role="row">
+              <span class="rmat__name" role="rowheader"><span class="sr-only">All areas</span></span>
+              {%- for y in years %}
+              {%- if gaps[forloop.index0] != blank %}<span class="rmat__gap" aria-hidden="true"></span>{% endif %}
+              <span class="rmat__ysum t-data" role="cell" data-col="{{ forloop.index0 }}">{{ ycounts[forloop.index0] }}</span>
+              {%- endfor %}
+              <span class="rmat__sum rmat__total" role="cell"><span data-kit="sliding-number" data-value="{{ total }}" data-trigger="manual" data-rmat-num>{{ total }}</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

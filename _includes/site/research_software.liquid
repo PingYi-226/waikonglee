@@ -1,57 +1,77 @@
 {%- comment -%}
-  Research page, open-source software (_data/software.yml): ruled groups, the group's name in a rail on the left and its
-  repositories as rows. Each row: the name (a link to GitHub), what it is, the paper it accompanies, and the clone
-  command built from `repo`, which copies on click. One hover surface glides over all the rows.
+  Research page, open-source software (_data/software.yml): the groups as rows that open one at a time (disclosure,
+  unfold) to their repositories. Closed, a row shows the group's name, its repositories' names and their number. Each
+  repository: its name (a link to GitHub), what it is, the paper it accompanies, and the clone command built from
+  `repo`, which copies on click (with a toast).
 {%- endcomment -%}
 {%- assign gh_user = site.data.socials.github_username -%}
-<section class="rsoft section" id="software" aria-labelledby="rsoft-title">
-  <div class="wrap">
-    <header class="sechead" data-inview>
-      <h2 class="sechead__title" id="rsoft-title">Open-source software</h2>
-      {%- if gh_user %}
-      <a class="link-arrow" href="https://github.com/{{ gh_user }}">All repositories on GitHub {% include site/icon.liquid name="arrow-up-right" size=16 %}</a>
-      {%- endif %}
-    </header>
-    <div class="rsoft__groups" data-kit="highlight" data-mode="hover" data-items=".rrepo">
-      {%- for g in site.data.software %}
-      {%- assign gid = 'rsoft-g' | append: forloop.index %}
-      <div class="rsoft__group" role="group" aria-labelledby="{{ gid }}">
-        <div class="rsoft__rail">
-          <h3 class="rsoft__name" id="{{ gid }}">{{ g.group }}</h3>
-          <p class="rsoft__count t-data">{{ g.items.size }} {% if g.items.size == 1 %}repository{% else %}repositories{% endif %}</p>
-        </div>
-        <ul class="rsoft__rows" data-kit="reveal-group">
-          {%- for s in g.items %}
-          {%- assign rname = s.repo | split: '/' | last %}
-          {%- assign cmd = 'git clone https://github.com/' | append: s.repo | append: '.git' %}
-          <li class="rrepo">
-            <a class="rrepo__name" href="https://github.com/{{ s.repo }}">
-              {% include site/icon.liquid name="github" size=16 %}
-              <span class="t-data">{{ rname }}</span>
-              <span class="sr-only">on GitHub</span>
-            </a>
-            <div class="rrepo__body">
-              <p class="rrepo__text">{{ s.text }}</p>
-              {%- if s.paper %}
-              <p class="rrepo__paper"><span class="rrepo__with">Accompanies</span> <cite>{{ s.paper }}</cite></p>
-              {%- endif %}
-              <button
-                type="button"
-                class="rclone"
-                data-kit="copy press"
-                data-copy="{{ cmd }}"
-                data-toast="Clone command copied"
-              >
-                <span class="k-swap">{% include site/icon.liquid name="copy" size=15 %}{% include site/icon.liquid name="check" size=15 %}</span>
-                <span class="sr-only">Copy</span>
-                <code class="rclone__cmd">{{ cmd }}</code>
-              </button>
-            </div>
-          </li>
-          {%- endfor %}
-        </ul>
-      </div>
-      {%- endfor %}
+<section class="rsoft rpart" id="software" aria-labelledby="rsoft-title" data-snap data-rsoft>
+  <div class="wrap rgrid">
+    <div class="rgrid__main">
+      <header class="sechead" data-inview>
+        <h2 class="sechead__title" id="rsoft-title">Open-source software</h2>
+        {%- if gh_user %}
+        <a class="link-arrow" href="https://github.com/{{ gh_user }}">All repositories on GitHub {% include site/icon.liquid name="arrow-up-right" size=16 %}</a>
+        {%- endif %}
+      </header>
+      <ul class="rgroups" data-kit="highlight" data-items=".rgroup__head">
+        {%- for g in site.data.software %}
+        {%- assign gid = 'rsoft-g' | append: forloop.index %}
+        <li class="rgroup" data-rgroup>
+          <h3 class="rgroup__h">
+            <button
+              type="button"
+              class="rgroup__head"
+              data-kit="disclosure press"
+              data-press="choice"
+              data-effect="unfold"
+              data-group="rsoft"
+              aria-expanded="false"
+              aria-controls="{{ gid }}"
+            >
+              <span class="rgroup__name">{{ g.group }}</span>
+              <span class="rgroup__repos t-data">
+                {%- for s in g.items -%}<span>{{ s.repo | split: '/' | last }}</span>{%- endfor -%}
+              </span>
+              <span class="rgroup__n t-data">{{ g.items.size }}</span>
+              <span class="rgroup__chev" data-disclosure-icon>{% include site/icon.liquid name="chevron-down" size=18 %}</span>
+            </button>
+          </h3>
+          <div class="rgroup__panel" id="{{ gid }}" data-disclosure-panel>
+            <ul class="rgroup__list">
+              {%- for s in g.items %}
+              {%- assign rname = s.repo | split: '/' | last %}
+              {%- assign cmd = 'git clone https://github.com/' | append: s.repo | append: '.git' %}
+              <li class="rrepo">
+                <a class="rrepo__name" href="https://github.com/{{ s.repo }}">
+                  {% include site/icon.liquid name="github" size=16 %}
+                  <span class="t-data">{{ rname }}</span>
+                  <span class="sr-only">on GitHub</span>
+                </a>
+                <div class="rrepo__body">
+                  <p class="rrepo__text">{{ s.text }}</p>
+                  {%- if s.paper %}
+                  <p class="rrepo__paper"><cite>{{ s.paper }}</cite></p>
+                  {%- endif %}
+                  <button
+                    type="button"
+                    class="rclone"
+                    data-kit="copy press"
+                    data-copy="{{ cmd }}"
+                    data-toast="Clone command copied"
+                  >
+                    <span class="k-swap">{% include site/icon.liquid name="copy" size=15 %}{% include site/icon.liquid name="check" size=15 %}</span>
+                    <span class="sr-only">Copy</span>
+                    <code class="rclone__cmd">{{ cmd }}</code>
+                  </button>
+                </div>
+              </li>
+              {%- endfor %}
+            </ul>
+          </div>
+        </li>
+        {%- endfor %}
+      </ul>
     </div>
   </div>
 </section>
