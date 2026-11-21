@@ -15,6 +15,19 @@
     </div>
   </article>
 
+  <article class="kitdemo__item" id="demo-split-stage">
+    <header>
+      <h3>split: a staged entrance</h3>
+      <p>Parts marked data-trigger="manual" wait hidden until the page plays them; here they are played 0.08 s apart by rank, as the home page's first screen will be. The statement's last words morph inside the split line.</p>
+    </header>
+    <div class="kitdemo__stage stack" style="--stack: 1rem" id="stage-a">
+      <h2 class="t-d1" style="margin:0" data-kit="split" data-split="chars" data-trigger="manual" data-stage>Wai-Kong Lee</h2>
+      <p class="t-small t-muted" style="margin:0" data-kit="split" data-split="words" data-effect="arrive" data-trigger="manual" data-stagger="0.08" data-stage>Associate Professor, Gachon University</p>
+      <p class="kdemo-statement" data-kit="split" data-split="lines" data-trigger="manual" data-stage>I build fast and secure implementations of post-quantum and privacy-preserving cryptography on <span class="kdemo-statement__words" id="morph-c" data-kit="morph-text" data-words='["GPUs.","FPGAs.","embedded processors."]'>GPUs, FPGAs and embedded processors.</span></p>
+      <p><button class="btn btn--ghost btn--small" type="button" data-demo-stage>Play the entrance</button></p>
+    </div>
+  </article>
+
   <article class="kitdemo__item" id="demo-sliding-number">
     <header>
       <h3>sliding-number</h3>
@@ -55,6 +68,22 @@
       </div>
     </div>
   </article>
+  <article class="kitdemo__item" id="demo-morph-text">
+    <header>
+      <h3>morph-text</h3>
+      <p>The home page's statement: the last words melt into the next ones every 3.2 s. Pointer over them: they hold; click: one change; pointer away: they go on. The second line has text after the word, which glides.</p>
+    </header>
+    <div class="kitdemo__stage stack" style="--stack: 2rem">
+      <p class="kdemo-statement" id="morph-p">I build fast and secure implementations of post-quantum and privacy-preserving cryptography on <span class="kdemo-statement__words" id="morph-a" data-kit="morph-text" data-words='["GPUs.","FPGAs.","embedded processors."]'>GPUs, FPGAs and embedded processors.</span></p>
+      <p class="t-d4" style="margin:0">Our kernels run on <span class="t-italic" id="morph-b" data-kit="morph-text" data-interval="2400" data-words='["GPUs","FPGAs","microcontrollers"]'>GPUs, FPGAs and microcontrollers</span> and stay constant-time.</p>
+      <div class="cluster">
+        <button class="btn btn--ghost btn--small" type="button" data-demo-morph="next">Next</button>
+        <button class="btn btn--ghost btn--small" type="button" data-demo-morph="pause">Pause</button>
+        <button class="btn btn--ghost btn--small" type="button" data-demo-morph="play">Play</button>
+      </div>
+    </div>
+  </article>
+
   <article class="kitdemo__item" id="demo-rolling-text">
     <header>
       <h3>rolling-text</h3>
@@ -67,7 +96,7 @@
         <a href="#demo-rolling-text" class="t-small"><span data-kit="rolling-text">Teaching</span></a>
       </nav>
       <p class="t-d3" style="margin:0"><span id="roll-a" data-kit="rolling-text" data-trigger="view">Cryptographic Engineering Lab</span></p>
-      <p><button class="btn btn--ghost btn--small" type="button" data-demo-roll>Roll</button></p>
+      <p class="cluster"><button class="btn btn--ghost btn--small" type="button" data-demo-roll>Roll</button> <button class="btn btn--ghost btn--small" type="button" data-demo-roll="3">Roll three times at once</button> <span class="t-data t-muted" id="roll-state">idle</span></p>
     </div>
   </article>
 
@@ -118,6 +147,31 @@
     </div>
   </article>
 
+  <article class="kitdemo__item" id="demo-shine-text">
+    <header>
+      <h3>shine-text</h3>
+      <p>A band of light across text. The label passes on its own (loop); the sentence shines, line after line, while the pointer is over the row or the row has keyboard focus (hover). At rest both are their own colour.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <a class="kdemo-news" href="#demo-shine-text" id="shine-row">
+        <span class="kdemo-news__meta"><time datetime="2026-11-16">16 Nov 2026</time><span class="kdemo-news__label" id="shine-a" data-kit="shine-text">Open call</span></span>
+        <span class="kdemo-news__text"><span id="shine-b" data-kit="shine-text" data-trigger="hover">Call for papers: I am a guest editor, with Dr. Safiullah Khan and Dr. Zain Ul Abideen, of the collection Hardware-Accelerated Cryptography and Privacy-Preserving Computing for Resource-Constrained Systems in Discover Cybersecurity (Springer, open access).</span></span>
+      </a>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-hearts">
+    <header>
+      <h3>hearts</h3>
+      <p>The portrait mounted as on the home page, with tilt and its light. Click it: a heart. Click quickly: a combo. The tenth click of a combo brings a moment, once per page load; after it the frame only gives a little. Pause for a moment and a new combo starts.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <div class="kdemo-frame" id="hearts-a" data-kit="tilt hearts" data-max="5" data-shine="true">
+        <img src="{{ '/assets/img/prof_pic.jpg' | relative_url }}" alt="Portrait of {{ site.first_name }} {{ site.last_name }}" width="339" height="418">
+      </div>
+    </div>
+  </article>
+
   <article class="kitdemo__item" id="demo-typing-text">
     <header>
       <h3>typing-text</h3>
@@ -142,10 +196,65 @@
     </div>
   </article>
 </section>
+<style>
+  /* the home page's statement, as hero__statement and hero__rotate set it (home.css) */
+  .kdemo-statement {
+    max-width: 21em;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.45vw, 2.15rem);
+    line-height: 1.2;
+    letter-spacing: -0.006em;
+    color: var(--ink-2);
+    text-wrap: balance;
+  }
+  .kdemo-statement__words {
+    font-style: italic;
+    color: var(--ink);
+  }
+  /* a news row as the news timeline sets one (news.css: nitem__meta, nitem__label, nitem__text) */
+  .kdemo-news {
+    display: grid;
+    grid-template-columns: 9rem minmax(0, 1fr);
+    column-gap: 2rem;
+    color: inherit;
+    text-decoration: none;
+  }
+  .kdemo-news__meta {
+    display: grid;
+    align-content: start;
+    font-size: var(--fs-xs);
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .kdemo-news__label {
+    color: var(--muted);
+  }
+  .kdemo-news__text {
+    max-width: 60ch;
+    font-size: 1.04rem;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  /* the portrait as a mounted print (home.css: about__frame) */
+  .kdemo-frame {
+    width: min(100%, 15.5rem);
+    padding: 0.55rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    box-shadow: var(--shadow-2);
+  }
+  .kdemo-frame img {
+    width: 100%;
+    height: auto;
+    border-radius: 3px;
+  }
+</style>
 <script>
   // demo controls (the page's own code: the kits are driven through Site.get(el, name))
   document.addEventListener("click", function (e) {
-    var b = e.target.closest("[data-demo-replay],[data-demo-num],[data-demo-rot],[data-demo-roll],[data-demo-swap-text],[data-demo-hl],[data-demo-type],[data-demo-scr]");
+    var b = e.target.closest("[data-demo-replay],[data-demo-num],[data-demo-rot],[data-demo-morph],[data-demo-roll],[data-demo-stage],[data-demo-swap-text],[data-demo-hl],[data-demo-type],[data-demo-scr]");
     if (!b || !window.Site) return;
     if (b.dataset.demoReplay) b.dataset.demoReplay.split(" ").forEach(function (id) {
       var c = Site.get(document.getElementById(id), "split");
@@ -163,7 +272,16 @@
       var r = Site.get(document.getElementById(id), "rotating-text");
       if (r) r[b.dataset.demoRot]();
     });
-    if (b.matches("[data-demo-roll]")) Site.get(document.getElementById("roll-a"), "rolling-text").roll();
+    if (b.dataset.demoMorph) ["morph-a", "morph-b"].forEach(function (id) {
+      var m = Site.get(document.getElementById(id), "morph-text");
+      if (m) m[b.dataset.demoMorph]();
+    });
+    if (b.matches("[data-demo-roll]")) {
+      // concurrent calls share one roll: the second and third are ignored
+      var r = Site.get(document.getElementById("roll-a"), "rolling-text"), n = Number(b.dataset.demoRoll) || 1;
+      for (var i = 0; i < n; i++) r.roll();
+    }
+    if (b.matches("[data-demo-stage]")) stage();
     if (b.dataset.demoSwapText === "next") {
       var sa = Site.get(document.getElementById("swap-a"), "swap-text"), all = ["Accepting students", "Full", "On sabbatical", "Accepting students"];
       sa.set(all[all.indexOf(sa.text) + 1]);
@@ -176,4 +294,27 @@
     if (b.matches("[data-demo-type]")) ["type-a", "type-b"].forEach(function (id) { Site.get(document.getElementById(id), "typing-text").play(); });
     if (b.matches("[data-demo-scr]")) Site.get(document.getElementById("scr-a"), "scramble").play();
   });
+  // the staged entrance: each part waits (data-trigger="manual") and is played 80 ms after the one before
+  function stage() {
+    var parts = document.querySelectorAll("#stage-a [data-stage]");
+    Array.prototype.forEach.call(parts, function (el, rank) {
+      var c = Site.get(el, "split");
+      if (!c) return;
+      c.reset();
+      setTimeout(c.play, Site.env.reduce ? 0 : rank * 80);
+    });
+  }
+  // this script runs before the deferred site scripts: wait for them, then for the kits
+  document.addEventListener("DOMContentLoaded", function () { window.Site && Site.ready(function () {
+    var box = document.getElementById("stage-a");
+    var io = new IntersectionObserver(function (es) {
+      if (!es.some(function (e) { return e.isIntersecting; })) return;
+      io.disconnect();
+      stage();
+    }, { rootMargin: "0px 0px -15% 0px" });
+    io.observe(box);
+    var roll = document.getElementById("roll-a"), out = document.getElementById("roll-state");
+    roll.addEventListener("kit:rolling-start", function () { out.textContent = "rolling"; });
+    roll.addEventListener("kit:rolling-done", function () { out.textContent = "idle"; });
+  }); });
 </script>
