@@ -55,6 +55,11 @@
   var REVEAL_ZOOM_FROM = 0.95;
   // rules.md B4: an image zooms inside its card to 1.05; the clip reveal settles it from there.
   var REVEAL_CLIP_ZOOM = 1.05;
+  // ROUND2_SPEC 4.3 ("about 0.8 s in all"): the wipe's block sweeps in, holds a moment, sweeps out (s), on ease.inOut.
+  var WIPE = { in: 0.36, hold: 0.06, out: 0.38 };
+  // Own: a manual reveal that is never played shows when it is in view this long after the page is ready (ms),
+  // so a page script that fails cannot leave content hidden. data-fallback="false" turns it off.
+  var MANUAL_FALLBACK = 8000;
 
   // primitives/scroll-progress: the provider's own spring.
   var PROGRESS_SPRING = { type: "spring", stiffness: 250, damping: 40, bounce: 0 };
@@ -89,6 +94,17 @@
   var MAGNETIC_STRENGTH = 0.5;
   var MAGNETIC_RANGE = 120;
   var MAGNETIC_SPRING = { type: "spring", stiffness: 100, damping: 10, mass: 0.5 };
+  // Own (data-inner, the owner's "magnetic button"): the pull holds over the element and PAD px around it, at
+  // STRENGTH of the pointer's offset, softly capped at MAX px; the inner part moves INNER further (button and label
+  // part a little) on a softer spring, so it follows a beat later. Released, both come back on WOBBLE springs that
+  // overshoot twice (damping ratio about 0.36: 30%, then 9%), the inner one slightly out of step.
+  var MAGNETIC_PAD = 16;
+  var MAGNETIC_BTN_STRENGTH = 0.3;
+  var MAGNETIC_MAX = 14;
+  var MAGNETIC_INNER = 0.4;
+  var MAGNETIC_INNER_SPRING = { stiffness: 80, damping: 9, mass: 0.5 };
+  var MAGNETIC_WOBBLE = { stiffness: 260, damping: 9, mass: 0.6 };
+  var MAGNETIC_INNER_WOBBLE = { stiffness: 210, damping: 8, mass: 0.6 };
 
   // primitives/effects/tilt: maximum tilt (deg), perspective (px) and its spring.
   var TILT_MAX = 10;
@@ -285,6 +301,7 @@
     card: { blur: "surface", rise: true },
     zoom: { blur: "surface", zoom: true },
     clip: { clip: true },
+    wipe: { wipe: true },
   };
   var reveals = new Map(); // element -> record
   var revealIO = null;
@@ -341,7 +358,26 @@
     var anims = [];
     var fadeFrom = { opacity: 0 };
     if (v.blur) fadeFrom.filter = "blur(" + Site.tokens.blur[v.blur] + "px)";
-    if (v.clip && !reduce) {
+    if (v.wipe && r.block && !reduce) {
+      // a block sweeps in from the left over the element (which appears beneath it) and out to the right
+      var ms = function (sec) {
+        return sec * 1000 * Site.tempo;
+      };
+      var curve = "cubic-bezier(" + Site.tokens.ease.inOut.join(",") + ")";
+      var total = ms(WIPE.in + WIPE.hold + WIPE.out);
+      anims.push(el.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: ms(WIPE.in), easing: curve, delay: delay, fill: "backwards" }));
+      anims.push(
+        r.block.animate(
+          [
+            { transform: "scaleX(0)", transformOrigin: "0 50%", easing: curve },
+            { transform: "scaleX(1)", transformOrigin: "0 50%", offset: ms(WIPE.in) / total },
+            { transform: "scaleX(1)", transformOrigin: "100% 50%", offset: ms(WIPE.in + WIPE.hold) / total, easing: curve },
+            { transform: "scaleX(0)", transformOrigin: "100% 50%" },
+          ],
+          { duration: total, delay: delay, fill: "backwards" },
+        ),
+      );
+    } else if (v.clip && !reduce) {
       // a wipe upward, the picture inside settling from REVEAL_CLIP_ZOOM; both on transition.arrive
       var arrive = timing("transition.arrive", delay);
       anims.push(el.animate([{ clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0 0 0 0)" }], arrive));
@@ -383,12 +419,30 @@
   }
   document.addEventListener("focusin", onFocusIn, true);
 
-  function addReveal(el, variant, delay, step) {
+  var VOID = /^(IMG|INPUT|VIDEO|CANVAS|IFRAME|TEXTAREA|SELECT|BR|HR|EMBED|OBJECT|SVG)$/i;
+  function addReveal(el, variant, delay, step, manual, fallback) {
     if (reveals.has(el)) return reveals.get(el);
-    var r = { el: el, variant: variant || "text", delay: delay || 0, step: step == null ? REVEAL_STEP : step, state: "waiting", anims: null };
+    // the wipe needs a child for its block: on an image (or another element without children) it is the clip
+    if (variant === "wipe" && VOID.test(el.tagName)) variant = "clip";
+    var r = { el: el, variant: variant || "text", delay: delay || 0, step: step == null ? REVEAL_STEP : step, state: "waiting", anims: null, manual: !!manual, block: null };
+    if (r.variant === "wipe") {
+      r.block = document.createElement("span");
+      r.block.className = "k-wipe";
+      r.block.setAttribute("aria-hidden", "true");
+      el.appendChild(r.block);
+      if (getComputedStyle(el).position === "static") el.style.position = "relative";
+    }
     reveals.set(el, r);
     if (env.static || !window.IntersectionObserver) showNow(r);
-    else revealObserver().observe(el);
+    else if (!manual) revealObserver().observe(el);
+    else if (fallback !== false) {
+      // a page sequences it itself; should it never play, it shows when in view after a while
+      Site.ready(function () {
+        setTimeout(function () {
+          if (reveals.get(el) === r && r.state === "waiting") revealObserver().observe(el);
+        }, MANUAL_FALLBACK);
+      });
+    }
     return r;
   }
   function removeReveal(el) {
@@ -396,8 +450,29 @@
     if (!r) return;
     cancelReveal(r);
     if (revealIO) revealIO.unobserve(el);
+    if (r.block) r.block.remove();
     el.classList.add("is-in");
     reveals.delete(el);
+  }
+  /** Play several waiting reveals now as one view: reading order, staggered (a group's play()). */
+  function playBatch(list) {
+    var batch = [];
+    list.forEach(function (el) {
+      var r = reveals.get(el);
+      if (!r || r.state === "done" || r.state === "playing") return;
+      var b = el.getBoundingClientRect();
+      batch.push({ r: r, top: b.top, left: b.left });
+    });
+    batch.sort(function (a, b) {
+      return Math.round(a.top / 8) - Math.round(b.top / 8) || a.left - b.left;
+    });
+    var shrink = batch.length > STAGGER_CALM ? Math.sqrt(STAGGER_CALM / batch.length) : 1;
+    var at = 0;
+    batch.forEach(function (x) {
+      if (revealIO) revealIO.unobserve(x.r.el);
+      playReveal(x.r, x.r.delay + at);
+      at += x.r.step * 1000 * shrink;
+    });
   }
   /** Hide again and wait for the next view (demos, content swapped in place). */
   function rearm(el) {
@@ -407,11 +482,11 @@
     r.state = "waiting";
     el.classList.remove("is-in");
     revealObserver().unobserve(el);
-    revealIO.observe(el);
+    if (!r.manual) revealIO.observe(el);
   }
 
   Site.register("reveal", function (el, opts) {
-    var r = addReveal(el, opts.reveal, opts.delay, REVEAL_STEP);
+    var r = addReveal(el, opts.reveal, opts.delay, REVEAL_STEP, opts.trigger === "manual", opts.fallback);
     return {
       play: function () {
         if (r.state === "waiting" && revealIO) revealIO.unobserve(el);
@@ -419,6 +494,9 @@
       },
       reset: function () {
         rearm(el);
+      },
+      get state() {
+        return r.state;
       },
       destroy: function () {
         removeReveal(el);
@@ -437,7 +515,7 @@
         if (reveals.has(item) || /\breveal\b/.test(item.getAttribute("data-kit") || "")) continue;
         if (item.tagName === "TEMPLATE" || item.tagName === "SCRIPT") continue;
         if (sel) item.setAttribute("data-reveal-item", "");
-        addReveal(item, opts.reveal, opts.delay, step);
+        addReveal(item, opts.reveal, opts.delay, step, opts.trigger === "manual", opts.fallback);
         mine.push(item);
       }
     }
@@ -447,6 +525,9 @@
     mo.observe(el, { childList: true, subtree: !!sel });
     return {
       refresh: scan,
+      play: function () {
+        playBatch(mine);
+      },
       reset: function () {
         mine.forEach(rearm);
       },
@@ -630,6 +711,7 @@
   /* --------------------------------------------------------------- marquee */
   Site.register("marquee", function (el, opts) {
     var speed = typeof opts.speed === "number" ? opts.speed : MARQUEE_SPEED;
+    var gain = typeof opts.boost === "number" ? Math.max(0, opts.boost) : 1; // data-boost="0": the scroll does not speed it up
     var dir = opts.direction === "right" ? 1 : -1;
     var pauseOnHover = opts.pauseOnHover === true || opts.pauseOnHover === "";
     var track = document.createElement("div");
@@ -669,7 +751,7 @@
     }
     var loop = util.loop(function (t, dt) {
       velocity.set(scrollMV.getVelocity());
-      var boost = Math.min((Math.abs(smoothV.get()) / 1000) * MARQUEE_GAIN, MARQUEE_MAX_BOOST);
+      var boost = gain ? Math.min((Math.abs(smoothV.get()) / 1000) * MARQUEE_GAIN * gain, MARQUEE_MAX_BOOST) : 0;
       var rate = speed * (1 + boost) * hoverMV.get();
       if (!width) return;
       x += (dir * rate * dt) / 1000;
@@ -712,6 +794,16 @@
     el.addEventListener("focusout", onFocusOut);
     fill();
     var offL = watchLayout(fill);
+    // shown later (a layer that was display: none), fonts arriving, a resized banner: measure again
+    var ro = window.ResizeObserver
+      ? new ResizeObserver(function () {
+          fill();
+        })
+      : null;
+    if (ro) {
+      ro.observe(el);
+      ro.observe(group);
+    }
     var offV = util.visible(el, function (on) {
       seen = on;
       if (on && !still()) loop.start();
@@ -731,6 +823,7 @@
         offL();
         offV();
         offR();
+        if (ro) ro.disconnect();
         el.removeEventListener("pointerenter", onEnter);
         el.removeEventListener("pointerleave", onLeave);
         el.removeEventListener("focusin", onFocusIn);
@@ -1455,7 +1548,155 @@
    * pointer by (1 - distance / range) * strength, on its own spring; it springs back outside. Its layout
    * box is measured once (and on layout changes), not on every move. Writes the `translate` property, so it
    * composes with a press scale or a reveal on the same element. */
+  /** A 2D spring whose stiffness can change while it moves (a pull, then a release that wobbles). */
+  function springPoint(write) {
+    var p = { x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, k: 100, c: 10, m: 1 };
+    var loop = util.loop(function (t, dt) {
+      var h = Math.min(dt, 64) / 1000;
+      var n = Math.ceil(h / (1 / 240));
+      var step = h / n;
+      for (var i = 0; i < n; i++) {
+        var ax = (-p.k * (p.x - p.tx) - p.c * p.vx) / p.m;
+        var ay = (-p.k * (p.y - p.ty) - p.c * p.vy) / p.m;
+        p.vx += ax * step;
+        p.vy += ay * step;
+        p.x += p.vx * step;
+        p.y += p.vy * step;
+      }
+      if (Math.abs(p.x - p.tx) < 0.01 && Math.abs(p.y - p.ty) < 0.01 && Math.abs(p.vx) < 0.05 && Math.abs(p.vy) < 0.05) {
+        p.x = p.tx;
+        p.y = p.ty;
+        p.vx = p.vy = 0;
+        loop.stop();
+      }
+      write(p.x, p.y);
+    });
+    return {
+      to: function (x, y, spring) {
+        var s = Site.t({ type: "spring", stiffness: spring.stiffness, damping: spring.damping });
+        p.k = s.stiffness;
+        p.c = s.damping;
+        p.m = spring.mass || 1;
+        p.tx = x;
+        p.ty = y;
+        if (env.static) {
+          p.x = x;
+          p.y = y;
+          p.vx = p.vy = 0;
+          write(x, y);
+          return;
+        }
+        loop.start();
+      },
+      jump: function (x, y) {
+        p.x = p.tx = x;
+        p.y = p.ty = y;
+        p.vx = p.vy = 0;
+        loop.stop();
+        write(x, y);
+      },
+      pos: function () {
+        return p;
+      },
+      destroy: function () {
+        loop.stop();
+      },
+    };
+  }
+  function translateOf(node) {
+    return function (x, y) {
+      node.style.translate = Math.abs(x) < 0.01 && Math.abs(y) < 0.01 ? "" : x.toFixed(2) + "px " + y.toFixed(2) + "px";
+    };
+  }
+  /* data-inner: the owner's "magnetic button". Over the element (and PAD px around it) it follows the pointer by
+   * a share of its offset, softly capped; the inner part goes a little further and a beat later; leaving, both
+   * wobble back. */
+  function magneticInner(el, opts) {
+    var strength = typeof opts.strength === "number" ? opts.strength : MAGNETIC_BTN_STRENGTH;
+    var pad = typeof opts.pad === "number" ? opts.pad : MAGNETIC_PAD;
+    var max = typeof opts.max === "number" ? opts.max : MAGNETIC_MAX;
+    var inner = typeof opts.inner === "string" && opts.inner ? el.querySelector(opts.inner) : el.firstElementChild;
+    if (getComputedStyle(el).display === "inline") el.style.display = "inline-block";
+    if (inner && getComputedStyle(inner).display === "inline") inner.style.display = "inline-block";
+    var outer = springPoint(translateOf(el));
+    var inn = inner ? springPoint(translateOf(inner)) : null;
+    var held = false;
+    var box = null;
+    var inView = false;
+    function enabled() {
+      return env.hover && !reduced() && !env.static;
+    }
+    function measure() {
+      var at = outer.pos(); // measured without the pull it has now
+      box = pageBox(el, at.x, at.y);
+    }
+    function cap(v) {
+      return max * Math.tanh(v / max);
+    }
+    function release() {
+      if (!held) return;
+      held = false;
+      outer.to(0, 0, MAGNETIC_WOBBLE);
+      if (inn) inn.to(0, 0, MAGNETIC_INNER_WOBBLE);
+    }
+    function compute() {
+      if (!box || !inView || !enabled() || !pointer.fine) return release();
+      var left = box.left - window.scrollX;
+      var top = box.top - window.scrollY;
+      var x = pointer.x;
+      var y = pointer.y;
+      if (x < left - pad || x > left + box.width + pad || y < top - pad || y > top + box.height + pad) return release();
+      held = true;
+      var tx = cap((x - (left + box.width / 2)) * strength);
+      var ty = cap((y - (top + box.height / 2)) * strength);
+      outer.to(tx, ty, MAGNETIC_SPRING);
+      if (inn) inn.to(tx * MAGNETIC_INNER, ty * MAGNETIC_INNER, MAGNETIC_INNER_SPRING);
+    }
+    var onMove = util.throttle(compute);
+    window.addEventListener("pointermove", onMove, { passive: true });
+    measure();
+    var offL = watchLayout(function () {
+      if (!held) measure();
+    });
+    var offS = watchScroll(function () {
+      if (inView) compute();
+    });
+    var offV = util.visible(el, function (on) {
+      inView = on;
+      if (on && !held) measure();
+      else if (!on) release();
+    });
+    var offR = Site.on("reduce", function () {
+      if (!enabled()) {
+        held = false;
+        outer.jump(0, 0);
+        if (inn) inn.jump(0, 0);
+      }
+    });
+    function onLeaveWindow(e) {
+      if (!e.relatedTarget) release();
+    }
+    document.addEventListener("pointerout", onLeaveWindow);
+    return {
+      destroy: function () {
+        window.removeEventListener("pointermove", onMove);
+        document.removeEventListener("pointerout", onLeaveWindow);
+        offL();
+        offS();
+        offV();
+        offR();
+        outer.destroy();
+        el.style.translate = "";
+        if (inn) {
+          inn.destroy();
+          inner.style.translate = "";
+        }
+      },
+    };
+  }
+
   Site.register("magnetic", function (el, opts) {
+    if (opts.inner !== undefined && opts.inner !== false) return magneticInner(el, opts);
     var strength = typeof opts.strength === "number" ? opts.strength : MAGNETIC_STRENGTH;
     var range = typeof opts.range === "number" ? opts.range : MAGNETIC_RANGE;
     var ox = 0;

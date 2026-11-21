@@ -21,6 +21,18 @@ html.js [data-kit~="reveal-group"] [data-reveal-item]:not(.is-in) {
   opacity: 0;
 }
 
+/* the wipe's block: it sweeps in from the left over the element and out to the right (kit-scroll.js) */
+.k-wipe {
+  position: absolute;
+  inset: calc(-1 * var(--k-wipe-bleed, 1px));
+  z-index: 3;
+  border-radius: inherit;
+  background: var(--k-wipe-color, var(--ink));
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
 /* ---------- draw: hidden until the script has set its strokes up (manual draws rest whole) ---------- */
 html.js [data-kit~="draw"]:not(.k-draw):not([data-trigger="manual"]) {
   opacity: 0;

@@ -68,6 +68,13 @@
   .ks-tilt-card--ink span { color: inherit; }
   .ks-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
   .ks-tiles a { display: block; overflow: hidden; border-radius: var(--r-3); }
+  .ks-wipe-pic { margin: 0 0 0 1rem; width: 9rem; border-radius: var(--r-2); overflow: hidden; }
+  .ks-wipe-pic img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+  .ks-seq .t-d4 { display: inline-block; font-family: var(--font-display); }
+  .ks-banners { position: relative; height: 15rem; margin-top: 1.5rem; overflow: hidden; border-radius: var(--r-3); background: var(--paper-2); }
+  .ks-banner { position: absolute; left: -10%; width: 120%; padding-block: 0.7rem; font-family: var(--font-display); font-size: var(--fs-d4); color: var(--ink-2); background: var(--surface); border-block: 1px solid var(--line); }
+  .ks-banner--a { top: 3.2rem; transform: rotate(-5deg); }
+  .ks-banner--b { top: 8.6rem; transform: rotate(4deg); }
   .ks-tiles img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
   .ks-cursor-zone { position: relative; overflow: hidden; border-radius: var(--r-3); }
   .ks-cursor-zone .btn { position: absolute; right: 0.75rem; bottom: 0.75rem; }
@@ -126,6 +133,30 @@
     </div>
   </article>
 
+  <article class="kitdemo__item" id="demo-wipe">
+    <header>
+      <h3>reveal: wipe, manual</h3>
+      <p>A block sweeps across and the thing is there when it has passed: buttons, a heading, a picture. The second row waits for its page: <code>data-trigger="manual"</code>, played here 80 ms apart.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <h4 class="t-d3" data-kit="reveal" data-reveal="wipe" style="display:inline-block">Cryptographic engineering</h4>
+      <div class="ks-row" style="margin-top:1.25rem">
+        <a class="btn" href="#demo-wipe" data-kit="reveal magnetic press ripple" data-reveal="wipe" data-inner style="--k-wipe-color: var(--accent)"><span data-kit="sliding-text">Publications</span></a>
+        <a class="btn btn--ghost" href="#demo-wipe" data-kit="reveal magnetic press" data-reveal="wipe" data-delay="80" data-inner><span data-kit="sliding-text">Research</span></a>
+        <figure class="ks-wipe-pic" data-kit="reveal" data-reveal="wipe" data-delay="160"><img src="{{ ph1 }}" alt="Placeholder: a lattice of points"></figure>
+      </div>
+      <div class="ks-row ks-seq" style="margin-top:1.5rem">
+        <span class="t-d4" data-kit="reveal" data-reveal="wipe" data-trigger="manual">Name</span>
+        <span class="t-d4" data-kit="reveal" data-reveal="wipe" data-trigger="manual" data-fallback="false">role</span>
+        <span class="t-d4" data-kit="reveal" data-reveal="wipe" data-trigger="manual" data-fallback="false">statement</span>
+      </div>
+      <p class="ks-note ks-row">
+        <button type="button" class="btn btn--ghost btn--small" onclick="document.querySelectorAll('#demo-wipe [data-kit~=reveal]:not([data-trigger])').forEach(function(e){var r=Site.get(e,'reveal');r.reset();r.play()})">Replay</button>
+        <button type="button" class="btn btn--small" data-kit="press" onclick="document.querySelectorAll('#demo-wipe .ks-seq [data-kit~=reveal]').forEach(function(e,i){var r=Site.get(e,'reveal');r.reset();setTimeout(function(){r.play()},i*80)})">Play the sequence</button>
+      </p>
+    </div>
+  </article>
+
   <article class="kitdemo__item" id="demo-scroll-progress">
     <header>
       <h3>scroll-progress</h3>
@@ -168,7 +199,7 @@
   <article class="kitdemo__item" id="demo-marquee">
     <header>
       <h3>marquee</h3>
-      <p>Constant motion that speeds up while the page scrolls and settles back. The second strip stops under the pointer and when a link in it has focus.</p>
+      <p>Constant motion that speeds up while the page scrolls and settles back. The second strip stops under the pointer and when a link in it has focus. The slanted banners run inside rotated boxes at 120 and 90 px/s, with <code>data-boost="0"</code> (the scroll does not speed them up).</p>
     </header>
     <div class="kitdemo__stage">
       <div class="ks-strip" data-kit="marquee" data-speed="34">
@@ -176,6 +207,10 @@
       </div>
       <div class="ks-row" style="margin-top:1.5rem" data-kit="marquee" data-direction="right" data-speed="28" data-pause-on-hover>
         <a class="tag" href="#demo-marquee">IEEE TIFS</a><a class="tag" href="#demo-marquee">TCHES</a><a class="tag" href="#demo-marquee">IEEE TC</a><a class="tag" href="#demo-marquee">ACM TECS</a><a class="tag" href="#demo-marquee">IEEE TPDS</a><a class="tag" href="#demo-marquee">ACNS</a><a class="tag" href="#demo-marquee">CHES</a>
+      </div>
+      <div class="ks-banners" aria-hidden="true">
+        <div class="ks-banner ks-banner--a" data-kit="marquee" data-speed="120" data-boost="0"><span>IEEE TDSC</span><span>IEEE TIFS</span><span>IEEE TC</span><span>TCHES</span><span>ACM TECS</span><span>IEEE TPDS</span><span>IEEE IoT-J</span></div>
+        <div class="ks-banner ks-banner--b" data-kit="marquee" data-speed="90" data-direction="right" data-boost="0"><span>CHES</span><span>ACNS</span><span>DAC</span><span>ICCAD</span><span>ASIACCS</span><span>SAC</span><span>ISCAS</span></div>
       </div>
     </div>
   </article>
@@ -319,10 +354,12 @@
   <article class="kitdemo__item" id="demo-magnetic">
     <header>
       <h3>magnetic</h3>
-      <p>Bring the pointer near: the buttons lean toward it and spring back. Pointer only; nothing on touch or under reduced motion.</p>
+      <p>Bring the pointer near: the first two lean toward it and spring back. With <code>data-inner</code> (the next two) the button follows over itself, its label goes a little further, and leaving, both wobble back. Pointer only; nothing on touch or under reduced motion.</p>
     </header>
     <div class="kitdemo__stage ks-row" style="gap:2.5rem;padding-block:2rem">
       <a class="btn" href="#demo-magnetic" data-kit="magnetic">Get in touch</a>
+      <a class="btn" href="#demo-magnetic" data-kit="magnetic press ripple" data-inner><span data-kit="sliding-text">With an inner part</span></a>
+      <a class="btn btn--ghost" href="#demo-magnetic" data-kit="magnetic press" data-inner><span data-kit="sliding-text">Ghost</span></a>
       <button type="button" class="icon-btn" data-kit="magnetic" data-strength="0.4" data-range="90" aria-label="Next" style="border:1px solid var(--line-strong);width:3.25rem;height:3.25rem">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
