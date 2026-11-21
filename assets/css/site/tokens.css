@@ -22,7 +22,8 @@
   --accent: #2f5d54;
   --accent-soft: rgba(47, 93, 84, 0.09);
   --accent-wash: rgba(47, 93, 84, 0.05);
-  --clay: #a6583a;
+  --clay: #a6583a; /* retired */
+  --heart: #b5533f; /* the portrait's hearts only */
   --hover: rgba(43, 45, 51, 0.045); /* the surface that glides under hovered rows */
   --veil: rgba(246, 244, 239, 0.72); /* translucent paper, for bars over content */
   --scrim: rgba(30, 31, 35, 0.32); /* behind modal views */
@@ -145,6 +146,7 @@ html[data-theme="dark"] {
   --accent-soft: rgba(147, 191, 178, 0.1);
   --accent-wash: rgba(147, 191, 178, 0.055);
   --clay: #d49a7e;
+  --heart: #e08d76;
   --hover: rgba(255, 255, 255, 0.05);
   --veil: rgba(23, 24, 27, 0.72);
   --scrim: rgba(0, 0, 0, 0.5);
