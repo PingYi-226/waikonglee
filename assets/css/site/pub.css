@@ -1,7 +1,6 @@
 /* ==========================================================================
-   Publications: one entry (_layouts/bib.liquid), shared by /publications/ and the home page's
-   "Selected publications" (.publist--selected), and the publications page itself
-   (_includes/site/pub_page.liquid): Fig. 1, the tool bar, the rail and the year sections.
+   Publications: one entry (_layouts/bib.liquid) and the publications page (_includes/site/pub_page.liquid):
+   the chart of papers per year, the tool bar, the rail and the year sections.
    Behaviour: assets/js/site/pub.js.
    ========================================================================== */
 
@@ -35,6 +34,11 @@
   text-wrap: pretty;
 }
 
+/* the title is a box of its own, so it can shift a little under the pointer (below) */
+.pub__t {
+  display: block;
+}
+
 /* a selected paper: one small dot in the gutter, its name for screen readers and in a tooltip */
 .pub__mark {
   position: absolute;
@@ -44,6 +48,7 @@
   height: 0.36rem;
   border-radius: 50%;
   background: var(--accent);
+  transition: scale var(--spring-bounce);
 }
 
 .pub__mark::after {
@@ -53,8 +58,34 @@
   inset: -0.5rem;
 }
 
-.publist--selected .pub__mark {
-  display: none;
+/* the row under the pointer (or holding the keyboard focus): the surface glides to it (kit: highlight), then, one beat
+   later, the title moves a little toward the reader's way and a selected paper's dot swells; both settle back on leave */
+@media (hover: hover) and (pointer: fine) {
+  .pub__t {
+    transition: translate var(--spring-pop);
+  }
+
+  .pub:hover .pub__t {
+    translate: 0.2rem 0;
+    transition: translate var(--spring-pop) 70ms;
+  }
+
+  .pub:hover .pub__mark {
+    scale: 1.6;
+    transition: scale var(--spring-check-pop) 70ms;
+  }
+}
+
+.pub:has(:focus-visible) .pub__t {
+  translate: 0.2rem 0;
+}
+
+html.is-reduced .pub .pub__t {
+  translate: none;
+}
+
+html.is-reduced .pub .pub__mark {
+  scale: none;
 }
 
 /* matched text in a title (search) sweeps in like a highlighter */
@@ -107,11 +138,6 @@ html.is-reduced .pub__hit {
   margin-right: 0.45rem;
   font-size: 0.74rem;
   color: var(--muted);
-}
-
-/* the full list gives the year in its rail and its section headings */
-.publist--all .pub__year {
-  display: none;
 }
 
 /* actions: Abstract, BibTeX (they open in place), external links, the citation count at the end */
@@ -195,14 +221,34 @@ html.is-reduced .pub__hit {
   }
 }
 
-/* the panels: no padding of their own (the disclosure animates their height); the inner box pads */
+/* the panels: no padding of their own (the disclosure animates their height); the inner box pads, and starts clear of
+   the hairline the unfold draws down the panel's start edge (kit-pointer.css .k-unfold::before) */
 .pub__panel {
+  --k-unfold-rule: var(--line-strong);
+  --k-unfold-rule-x: 0px;
   margin: 0;
   padding: 0;
 }
 
 .pub__abs {
-  padding: 0.85rem 0 0.35rem;
+  padding: 0.85rem 0 0.35rem 1.15rem;
+}
+
+/* the new panel paints over the one it replaces (pub.js hands the place over) */
+.pub__panel {
+  z-index: 1;
+}
+
+/* the panel giving its place to the other one of the entry: out of the flow, laid over the same place, fading and
+   folding (the kit), without its own hairline (the new panel's is the same line) */
+.pub__panel.is-leaving {
+  --k-unfold-rule: transparent;
+  position: absolute;
+  top: var(--pub-leave-top, 0);
+  left: 0;
+  right: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .pub__abs p {
@@ -216,7 +262,7 @@ html.is-reduced .pub__hit {
 .pub__bib {
   position: relative;
   max-width: 52rem;
-  padding: 0.85rem 0 0.35rem;
+  padding: 0.85rem 0 0.35rem 1.15rem;
 }
 
 .pub__code {
@@ -255,7 +301,13 @@ html.is-reduced .pub__hit {
   color: inherit !important;
   font-style: normal !important;
   font-weight: 400 !important;
+  text-decoration: none !important;
   background: none !important;
+}
+
+/* one box per line (pub.js), so the lines can arrive one after the other; the newlines between them stay text */
+.pub__ln {
+  display: inline-block;
 }
 
 /* field names in ink, punctuation and the entry type receding, values as they are */
@@ -316,16 +368,11 @@ html:not(.js) .pub__copy {
   --k-highlight-inset: 0 -1rem;
 }
 
-/* home page: the selected papers, one ruled list */
-.publist--selected ol.bibliography {
-  border-bottom: 1px solid var(--line);
-}
-
 /* ==========================================================================
    The publications page
    ========================================================================== */
 
-/* ---------- page head: the figures and Fig. 1 ---------- */
+/* ---------- page head: the figures and the chart ---------- */
 .pubhead__stats {
   display: flex;
   flex-wrap: wrap;
@@ -333,10 +380,17 @@ html:not(.js) .pub__copy {
   margin: 0;
 }
 
-.pubhead__note {
-  margin: 0 0 0.35rem auto;
-  max-width: 24rem;
-  text-align: right;
+/* the citations figure links to its source; it stays a figure (the cursor names the place) */
+.pubhead__src,
+.pubhead__src:visited,
+.pubhead__src:hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+.pubhead__src:focus-visible {
+  outline-offset: 4px;
+  border-radius: var(--r-1);
 }
 
 .pubchart {
@@ -475,10 +529,6 @@ a.pubchart__bar:focus-visible .pubchart__fill {
   justify-content: flex-end;
 }
 
-.pubchart .figcap {
-  margin-top: 1rem;
-}
-
 /* ---------- tool bar: search, kind, count, areas. Sticks under the header while the list is on screen ---------- */
 /* what the keyboard or a link brings into view stays clear of the bar (--pubbar-h is set by pub.js) */
 html:has([data-pubs]) {
@@ -602,9 +652,30 @@ html.is-reduced .pubbar__end > * {
 }
 
 .pubbar__types .k-seg__item {
+  --k-grow: 1.05;
+  --k-press-scale: 0.95;
   min-height: 2rem;
   padding: 0 0.85rem;
   font-size: var(--fs-xs);
+  transition:
+    color var(--t-color),
+    scale var(--t-reveal);
+}
+
+/* the kind switch has the chips' feel (base.css): it grows a little under the pointer and the keyboard focus,
+   and the selection surface under it grows with it (kit: highlight) */
+@media (hover: hover) and (pointer: fine) {
+  .pubbar__types .k-seg__item:hover {
+    scale: var(--k-grow);
+  }
+}
+
+.pubbar__types .k-seg__item:focus-visible {
+  scale: var(--k-grow);
+}
+
+html.is-reduced .pubbar__types .k-seg__item {
+  scale: none;
 }
 
 .pubbar__n {
@@ -700,6 +771,14 @@ html.is-reduced .pubbar__end > * {
   color: var(--accent);
 }
 
+.pubrail {
+  transition: opacity var(--t-fade);
+}
+
+.pubrail.is-void {
+  opacity: 0;
+}
+
 .pubrail__count {
   display: flex;
   gap: 0.3rem;
@@ -790,11 +869,6 @@ html.is-reduced .pubbar__end > * {
 
 /* ---------- small screens: one column; the rail becomes a line above each year ---------- */
 @media (max-width: 860px) {
-  .pubhead__note {
-    margin-left: 0;
-    text-align: left;
-  }
-
   .pubbar {
     position: relative;
     top: auto;
