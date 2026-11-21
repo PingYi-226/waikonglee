@@ -2,6 +2,7 @@
   Demos of the pointer and surface components (group P). Test markup only: the styles in the <style> block
   below lay the demos out and are not part of the kit; the kit's own styles are in assets/css/site/kit-pointer.css.
 {%- endcomment -%}
+{%- capture pd_fig -%}<svg class="pd-fig" viewBox="0 0 160 90" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round">{%- for i in (0..6) -%}{%- assign x0 = i | times: 22 | plus: 14 -%}<line x1="{{ x0 }}" y1="10" x2="{{ x0 | plus: 12 }}" y2="80" stroke-opacity="0.22"/>{%- endfor -%}{%- for j in (0..3) -%}{%- assign y0 = j | times: 22 | plus: 12 -%}<line x1="8" y1="{{ y0 }}" x2="152" y2="{{ y0 | plus: 4 }}" stroke-opacity="0.22"/>{%- endfor -%}<path class="pd-fig__a" d="M18 70 L62 40 L104 52 L142 18" stroke="var(--accent)" stroke-width="1.4"/></g><g fill="currentColor">{%- for i in (0..6) -%}{%- for j in (0..3) -%}<circle cx="{{ i | times: 22 | plus: 14 | plus: j | times: 1 }}" cy="{{ j | times: 22 | plus: 12 }}" r="1.6" fill-opacity="0.55"/>{%- endfor -%}{%- endfor -%}<circle class="pd-fig__dot" cx="104" cy="52" r="3.2" fill="var(--accent)"/></g></svg>{%- endcapture -%}
 <section class="kitdemo" id="kit-pointer">
   <h2 class="t-d2">pointer</h2>
 
@@ -85,6 +86,33 @@
     #kit-pointer .pd-person__deg { font-size: var(--fs-xs); color: var(--muted); }
     @media (max-width: 1000px) { #kit-pointer .pd-rgrid { grid-template-columns: repeat(2, minmax(0, 300px)); } #kit-pointer .pd-people { grid-template-columns: repeat(2, minmax(0, 15rem)); } }
     @media (max-width: 560px) { #kit-pointer .pd-rgrid, #kit-pointer .pd-people { grid-template-columns: minmax(0, 1fr); } }
+    /* expand */
+    #kit-pointer .pd-xcards { display: flex; flex-wrap: wrap; align-items: center; gap: 3rem; }
+    #kit-pointer .pd-xcard { width: 300px; box-sizing: border-box; }
+    #kit-pointer .pd-xfig { display: block; width: 168px; }
+    #kit-pointer .pd-fig { display: block; width: 100%; height: auto; color: var(--ink-2); overflow: visible; }
+    #kit-pointer .pd-xscene { perspective: 900px; }
+    #kit-pointer .pd-xscene > .pd-xcard { transform: rotateX(16deg) rotateZ(-4deg) scale(0.82); }
+    #kit-pointer .pd-xnews { margin: 0; padding: 0; list-style: none; max-width: 44rem; }
+    #kit-pointer .pd-xnews li { display: flex; gap: 1.25rem; padding: 0.7rem 0; border-top: 1px solid var(--line); font-size: var(--fs-small); }
+    #kit-pointer .pd-xrow { color: var(--ink); text-decoration: none; }
+    /* the views (they live in .k-expand at the end of body: page CSS addresses them through data-expand-class) */
+    .k-expand.pd-xview { --k-expand-width: 1080px; }
+    .pd-xview .pd-xd { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3.5rem); align-items: start; }
+    .pd-xview .pd-xd__fig .pd-fig { display: block; width: 100%; height: auto; color: var(--ink-2); overflow: visible; }
+    .pd-xview .pd-fig__dot { animation: pd-xpulse 1.6s var(--ease-in-out) infinite alternate; transform-box: fill-box; transform-origin: center; }
+    @keyframes pd-xpulse { to { scale: 1.8; opacity: 0.5; } }
+    .pd-xview .pd-xd__title, .pd-xview .pd-xc__title, .pd-xview .pd-xt__title { margin: 0 0 0.8rem; font-family: var(--font-display); font-size: var(--fs-d2); font-weight: 400; line-height: 1.05; letter-spacing: -0.01em; }
+    .pd-xview .pd-xd__tag { font-family: var(--font-display); font-size: var(--fs-d4); line-height: 1.25; color: var(--ink-2); }
+    .pd-xview p { max-width: 38rem; color: var(--ink-2); }
+    .pd-xview .pd-xc { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(1.5rem, 4vw, 3rem); align-items: start; }
+    .pd-xview .pd-xc__poster { display: block; width: 100%; height: auto; border-radius: var(--r-2); }
+    .k-expand.pd-xview--toy { --k-expand-width: 560px; }
+    .pd-xview .pd-xt { display: grid; gap: 1rem; justify-items: start; }
+    .pd-xview .pd-xt__field { display: grid; gap: 0.3rem; font-size: var(--fs-xs); color: var(--muted); }
+    .pd-xview .pd-xt__field input { font: inherit; font-size: var(--fs-body); padding: 0.4rem 0.6rem; color: var(--ink); background: var(--paper); border: 1px solid var(--line-strong); border-radius: var(--r-2); }
+    .pd-xview .pd-xt__mark { width: 8rem; color: var(--ink); }
+    @media (max-width: 760px) { .pd-xview .pd-xd, .pd-xview .pd-xc { grid-template-columns: 1fr; } }
     /* unfold */
     #kit-pointer #pd-unfold { max-width: 50rem; }
     #kit-pointer .pd-uabs { padding: 0.2rem 0 1.3rem 1.25rem; max-width: 44rem; }
@@ -186,6 +214,77 @@
             <span class="pd-btncard__t">Lattice signatures on GPUs</span>
           </a>
           <span class="pd-note">card: tilt press</span>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <article class="kitdemo__item" id="demo-expand">
+    <header>
+      <h3>expand</h3>
+      <p>Three shapes. A card with a drawing and a name (the second one sits in a tilted, scaled scene, like the home cards); a text row; a small button. Click: the panel grows from where the trigger is seen, the drawing and the name fly into place, the rest follows. Escape during the opening, click again while it closes, Tab stays inside, scroll the long one inside. A modified click follows the link.</p>
+    </header>
+    <div class="kitdemo__stage pd-stack">
+      <div class="pd-xcards">
+        <a class="pd-rcard pd-xcard" href="#demo-expand" data-kit="expand hover-fill press" data-press="choice" data-expand="#pd-x-pqc" data-expand-class="pd-xview" id="pd-x-card">
+          <span class="pd-xfig" data-shared="figure">{{ pd_fig }}</span>
+          <span class="pd-rcard__name" data-shared="title">Post-quantum cryptography</span>
+          <span class="pd-rcard__more" data-hover-show><span class="t-data">34</span> papers {% include site/icon.liquid name="arrow-right" %}</span>
+        </a>
+        <div class="pd-xscene">
+          <a class="pd-rcard pd-xcard" href="#demo-expand" data-kit="expand press" data-press="choice" data-expand="#pd-x-he" data-expand-class="pd-xview" id="pd-x-tilted">
+            <span class="pd-xfig" data-shared="figure">{{ pd_fig }}</span>
+            <span class="pd-rcard__name" data-shared="title">Homomorphic encryption</span>
+          </a>
+        </div>
+      </div>
+
+      <ul class="pd-xnews">
+        <li><span class="t-data">2026-11</span> <a href="#demo-expand" class="pd-xrow" data-kit="expand" data-expand="#pd-x-call" data-expand-class="pd-xview pd-xview--call" id="pd-x-row"><span data-shared="title">Open call: two funded PhD places in post-quantum cryptography on GPUs</span></a></li>
+        <li><span class="t-data">2026-09</span> <span>A paper on Falcon and Mitaka accepted in IEEE TPDS.</span></li>
+      </ul>
+
+      <p><button type="button" class="btn btn--ghost btn--small" data-kit="expand press" data-expand="#pd-x-toy" data-expand-class="pd-xview pd-xview--toy" id="pd-x-btn">{% include site/icon.liquid name="play" %}<span>Your mark</span></button></p>
+
+      <template id="pd-x-pqc">
+        <article class="pd-xd">
+          <div class="pd-xd__fig" data-shared="figure">{{ pd_fig }}</div>
+          <div class="pd-xd__text">
+            <h2 class="pd-xd__title" data-shared="title">Post-quantum cryptography</h2>
+            <p class="pd-xd__tag">Signatures and key exchange that survive a quantum computer, at the speed of the classical ones.</p>
+            <p>Lattice schemes such as Falcon, Dilithium and Kyber replace RSA and elliptic curves. The group implements them on GPUs, FPGAs and small processors, measures where the time goes and removes it: batched number-theoretic transforms, samplers in shared memory, constant-time code.</p>
+            <p class="cluster"><a class="btn" href="#demo-expand" data-kit="press ripple"><span>34 papers</span>{% include site/icon.liquid name="arrow-right" %}</a><a class="btn btn--ghost" href="#demo-expand" data-kit="press ripple">On the research page</a></p>
+          </div>
+        </article>
+      </template>
+      <template id="pd-x-he">
+        <article class="pd-xd">
+          <div class="pd-xd__fig" data-shared="figure">{{ pd_fig }}</div>
+          <div class="pd-xd__text">
+            <h2 class="pd-xd__title" data-shared="title">Homomorphic encryption</h2>
+            <p class="pd-xd__tag">Computing on data that stays encrypted.</p>
+            {%- for k in (1..6) -%}
+            <p>A longer view, to scroll inside: the number-theoretic transform, key switching and bootstrapping take most of the time of a homomorphic computation. Paragraph {{ k }} of six.</p>
+            {%- endfor -%}
+            <p class="cluster"><a class="btn" href="#demo-expand" data-kit="press ripple">21 papers</a></p>
+          </div>
+        </article>
+      </template>
+      <template id="pd-x-call">
+        <article class="pd-xc">
+          <img class="pd-xc__poster" src="{{ '/assets/img/news/2024-03-11-viva-lunch.jpg' | relative_url }}" alt="The group at lunch after a viva" width="640" height="480">
+          <div>
+            <h2 class="pd-xc__title" data-shared="title">Two funded PhD places in post-quantum cryptography on GPUs</h2>
+            <p>Starting in 2027, for three years, at Gachon University. Experience with CUDA or with lattice cryptography helps; curiosity matters more.</p>
+            <p class="cluster"><a class="btn" href="#demo-expand" data-kit="press ripple">How to apply</a><a class="btn btn--ghost" href="#demo-expand" data-kit="press ripple">The group</a></p>
+          </div>
+        </article>
+      </template>
+      <div id="pd-x-toy" hidden>
+        <div class="pd-xt">
+          <h2 class="pd-xt__title">Your mark</h2>
+          <label class="pd-xt__field">Name <input type="text" value="Wai-Kong Lee" id="pd-x-input"></label>
+          <svg class="pd-xt__mark" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="30" fill="none" stroke="var(--accent)" stroke-width="1.5"/><circle cx="50" cy="50" r="4" fill="currentColor"/></svg>
         </div>
       </div>
     </div>
