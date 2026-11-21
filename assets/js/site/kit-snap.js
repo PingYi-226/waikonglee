@@ -371,6 +371,14 @@
     }
     return null;
   };
+  /** y on a pinned section's edge and `to` inside it (from its last point back to an earlier one): one move. */
+  P.edgeInto = function (y, to) {
+    for (var i = 0; i < this.zones.length; i++) {
+      var z = this.zones[i];
+      if ((Math.abs(y - z.top) <= EPS || Math.abs(y - z.bottom) <= EPS) && to > z.top + EPS && to < z.bottom - EPS) return true;
+    }
+    return false;
+  };
   P.nextStop = function (dir, y) {
     var st = this.stops;
     if (dir > 0) {
@@ -400,7 +408,7 @@
     var s = this.nextStop(dir, y);
     if (!s) return null;
     var reach = REACH * this.vh;
-    if (Math.abs(s.y - y) <= reach || this.zoneAt(y)) return { y: s.y, stop: s };
+    if (Math.abs(s.y - y) <= reach || this.zoneAt(y) || this.edgeInto(y, s.y)) return { y: s.y, stop: s };
     var line = this.freeLine(dir, y, s.y);
     var free = line === null ? Math.abs(s.y - y) : Math.abs(line - y);
     if (free <= reach) return { y: s.y, stop: s };
