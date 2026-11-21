@@ -11,6 +11,7 @@
   var Site = window.Site;
   if (!Site) return;
   var DAY = 86400000;
+  var COUNTDOWN = 30; // own value: the days roll down from this many more (the last digit turns about three times)
   // after the panel starts to grow (ms): the text, the days, the topics, the buttons. Own values, tuned on films:
   // the text starts while the panel is still landing, the rest follows the view's own blocks (120 ms + 70 ms apart).
   var AT = { text: 160, days: 380, topics: 420, buttons: 560 };
@@ -40,6 +41,8 @@
     if (!left || !days || n == null) return;
     days.textContent = String(n);
     days.setAttribute("data-value", String(n));
+    // the days count down to today's figure as the view opens
+    days.setAttribute("data-from", String(n + COUNTDOWN));
     if (unit) unit.textContent = n === 1 ? "day" : "days";
     left.hidden = false;
   }
