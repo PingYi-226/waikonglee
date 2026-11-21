@@ -342,6 +342,10 @@ html.is-reduced .nfeat__open .icon {
   padding-top: 0.25rem;
 }
 
+.nfv__actions .btn {
+  margin: 0; /* the template's stylesheet gives buttons a margin */
+}
+
 /* portrait screens and phones: one column, the poster on top */
 @media (max-width: 760px), (orientation: portrait) {
   .k-expand.nfv-view {

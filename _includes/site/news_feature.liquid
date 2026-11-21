@@ -11,7 +11,7 @@
 {%- if f.image -%}{%- assign f_img = f.image | prepend: '/assets/img/' | relative_url -%}{%- endif -%}
 {%- assign f_alt = f.image_alt | default: f.label -%}
 {%- assign f_href = f_main.url | default: f_img -%}
-<a class="nfeat" href="{{ f_href }}" data-kit="expand hover-fill press" data-press="choice" data-expand="#{{ fid }}" data-expand-class="nfv-view" data-cursor="Open"{% if f.deadline %} data-deadline="{{ f.deadline | date: '%Y-%m-%d' }}"{% endif %}>
+<a class="nfeat" href="{{ f_href }}" data-kit="expand hover-fill press" data-press="choice" data-expand="#{{ fid }}" data-expand-class="nfv-view" data-expand-label="{{ f.label | default: 'News' | escape }}" data-cursor="Open"{% if f.deadline %} data-deadline="{{ f.deadline | date: '%Y-%m-%d' }}"{% endif %}>
   <span class="nfeat__meta">
     <time class="nfeat__date" datetime="{{ f.date | date_to_xmlschema }}">{{ f.date | date: '%-d %b %Y' }}</time>
     {%- if f.label %}

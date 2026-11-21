@@ -19,11 +19,13 @@
     return Array.prototype.slice.call(scope.querySelectorAll(selector));
   }
 
-  /* days left until the end of the deadline's day (the advisor's time zone, +08:00); null once it has passed */
+  /* calendar days from today to the deadline, both dates in the advisor's time zone (+08:00); null on the day and after */
+  var ZONE = 8 * 3600000;
   function daysLeft(iso) {
-    var end = Date.parse(iso + "T23:59:59+08:00");
+    var end = Date.parse(iso + "T00:00:00Z");
     if (isNaN(end)) return null;
-    var left = Math.ceil((end - Date.now()) / DAY);
+    var today = Math.floor((Date.now() + ZONE) / DAY) * DAY;
+    var left = Math.round((end - today) / DAY);
     return left > 0 ? left : null;
   }
 
