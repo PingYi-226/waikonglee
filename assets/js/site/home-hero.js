@@ -733,7 +733,7 @@
       project(tx, ty, Q);
       var tsx = pointer.on ? pointer.x : Q[0];
       var tsy = pointer.on ? pointer.y : Q[1];
-      var tCalm = Math.max(0.18, calm(tsx, tsy, scroll));
+      var tCalm = Math.max(0.1, calm(tsx, tsy, scroll));
       var tSweep = sweepAt(tsx, tsy);
       var marks = appearAll * tCalm * tSweep[0] * (1 - q);
 
