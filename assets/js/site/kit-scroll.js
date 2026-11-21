@@ -55,6 +55,11 @@
   var REVEAL_ZOOM_FROM = 0.95;
   // rules.md B4: an image zooms inside its card to 1.05; the clip reveal settles it from there.
   var REVEAL_CLIP_ZOOM = 1.05;
+  // ROUND2_SPEC 4.3 ("about 0.8 s in all"): the wipe's block sweeps in, holds a moment, sweeps out (s), on ease.inOut.
+  var WIPE = { in: 0.36, hold: 0.06, out: 0.38 };
+  // Own: a manual reveal that is never played shows when it is in view this long after the page is ready (ms),
+  // so a page script that fails cannot leave content hidden. data-fallback="false" turns it off.
+  var MANUAL_FALLBACK = 8000;
 
   // primitives/scroll-progress: the provider's own spring.
   var PROGRESS_SPRING = { type: "spring", stiffness: 250, damping: 40, bounce: 0 };
@@ -89,6 +94,17 @@
   var MAGNETIC_STRENGTH = 0.5;
   var MAGNETIC_RANGE = 120;
   var MAGNETIC_SPRING = { type: "spring", stiffness: 100, damping: 10, mass: 0.5 };
+  // Own (data-inner, the owner's "magnetic button"): the pull holds over the element and PAD px around it, at
+  // STRENGTH of the pointer's offset, softly capped at MAX px; the inner part moves INNER further (button and label
+  // part a little) on a softer spring, so it follows a beat later. Released, both come back on WOBBLE springs that
+  // overshoot twice (damping ratio about 0.36: 30%, then 9%), the inner one slightly out of step.
+  var MAGNETIC_PAD = 16;
+  var MAGNETIC_BTN_STRENGTH = 0.3;
+  var MAGNETIC_MAX = 14;
+  var MAGNETIC_INNER = 0.4;
+  var MAGNETIC_INNER_SPRING = { stiffness: 80, damping: 9, mass: 0.5 };
+  var MAGNETIC_WOBBLE = { stiffness: 260, damping: 9, mass: 0.6 };
+  var MAGNETIC_INNER_WOBBLE = { stiffness: 210, damping: 8, mass: 0.6 };
 
   // primitives/effects/tilt: maximum tilt (deg), perspective (px) and its spring.
   var TILT_MAX = 10;
@@ -98,13 +114,16 @@
   var SHINE_SWEEP = { duration: 1.2, ease: [0.4, 0, 0.2, 1] };
   var SHINE_DEG = -15;
 
-  // primitives/cursor: the follower's spring, its entrance (scale on a press-like spring, opacity on ease.enter)
-  // and its exit (the same spring critically damped).
+  // primitives/cursor (CursorFollow): the spring the ring follows the pointer on.
   var CURSOR_FOLLOW = { type: "spring", stiffness: 500, damping: 50, bounce: 0 };
-  var CURSOR_SCALE_IN = { type: "spring", stiffness: 550, damping: 30, restSpeed: 10 };
-  var CURSOR_SCALE_OUT = { type: "spring", stiffness: 550, damping: 2 * Math.sqrt(550), restSpeed: 10 };
-  var CURSOR_OPACITY = { duration: 0.3, ease: [0.25, 0.1, 0.35, 1] };
-  // Own: the label sits below-right of the native arrow (the source places it 10px off its own 20px cursor).
+  // ROUND2_SPEC 4.2: a dot of about 6 px, a ring of about 34 px that grows to about 56 px over controls.
+  // The ring is drawn at its large size and scaled down at rest (a hairline that stays a hairline when it grows).
+  var CURSOR_RING = 34;
+  var CURSOR_BIG = 56;
+  // Own: over a control the dot shrinks to this share; under a press the ring tightens to this share.
+  var CURSOR_DOT_GROW = 0.5;
+  var CURSOR_PRESS = 0.8;
+  // Own (reduced motion): the word sits below-right of the native arrow.
   var CURSOR_OFFSET = { x: 14, y: 20 };
 
   // internal/follow-cursor.tsx: the spring of a popup following the pointer.
@@ -282,6 +301,7 @@
     card: { blur: "surface", rise: true },
     zoom: { blur: "surface", zoom: true },
     clip: { clip: true },
+    wipe: { wipe: true },
   };
   var reveals = new Map(); // element -> record
   var revealIO = null;
@@ -338,7 +358,26 @@
     var anims = [];
     var fadeFrom = { opacity: 0 };
     if (v.blur) fadeFrom.filter = "blur(" + Site.tokens.blur[v.blur] + "px)";
-    if (v.clip && !reduce) {
+    if (v.wipe && r.block && !reduce) {
+      // a block sweeps in from the left over the element (which appears beneath it) and out to the right
+      var ms = function (sec) {
+        return sec * 1000 * Site.tempo;
+      };
+      var curve = "cubic-bezier(" + Site.tokens.ease.inOut.join(",") + ")";
+      var total = ms(WIPE.in + WIPE.hold + WIPE.out);
+      anims.push(el.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: ms(WIPE.in), easing: curve, delay: delay, fill: "backwards" }));
+      anims.push(
+        r.block.animate(
+          [
+            { transform: "scaleX(0)", transformOrigin: "0 50%", easing: curve },
+            { transform: "scaleX(1)", transformOrigin: "0 50%", offset: ms(WIPE.in) / total },
+            { transform: "scaleX(1)", transformOrigin: "100% 50%", offset: ms(WIPE.in + WIPE.hold) / total, easing: curve },
+            { transform: "scaleX(0)", transformOrigin: "100% 50%" },
+          ],
+          { duration: total, delay: delay, fill: "backwards" },
+        ),
+      );
+    } else if (v.clip && !reduce) {
       // a wipe upward, the picture inside settling from REVEAL_CLIP_ZOOM; both on transition.arrive
       var arrive = timing("transition.arrive", delay);
       anims.push(el.animate([{ clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0 0 0 0)" }], arrive));
@@ -380,12 +419,30 @@
   }
   document.addEventListener("focusin", onFocusIn, true);
 
-  function addReveal(el, variant, delay, step) {
+  var VOID = /^(IMG|INPUT|VIDEO|CANVAS|IFRAME|TEXTAREA|SELECT|BR|HR|EMBED|OBJECT|SVG)$/i;
+  function addReveal(el, variant, delay, step, manual, fallback) {
     if (reveals.has(el)) return reveals.get(el);
-    var r = { el: el, variant: variant || "text", delay: delay || 0, step: step == null ? REVEAL_STEP : step, state: "waiting", anims: null };
+    // the wipe needs a child for its block: on an image (or another element without children) it is the clip
+    if (variant === "wipe" && VOID.test(el.tagName)) variant = "clip";
+    var r = { el: el, variant: variant || "text", delay: delay || 0, step: step == null ? REVEAL_STEP : step, state: "waiting", anims: null, manual: !!manual, block: null };
+    if (r.variant === "wipe") {
+      r.block = document.createElement("span");
+      r.block.className = "k-wipe";
+      r.block.setAttribute("aria-hidden", "true");
+      el.appendChild(r.block);
+      if (getComputedStyle(el).position === "static") el.style.position = "relative";
+    }
     reveals.set(el, r);
     if (env.static || !window.IntersectionObserver) showNow(r);
-    else revealObserver().observe(el);
+    else if (!manual) revealObserver().observe(el);
+    else if (fallback !== false) {
+      // a page sequences it itself; should it never play, it shows when in view after a while
+      Site.ready(function () {
+        setTimeout(function () {
+          if (reveals.get(el) === r && r.state === "waiting") revealObserver().observe(el);
+        }, MANUAL_FALLBACK);
+      });
+    }
     return r;
   }
   function removeReveal(el) {
@@ -393,8 +450,29 @@
     if (!r) return;
     cancelReveal(r);
     if (revealIO) revealIO.unobserve(el);
+    if (r.block) r.block.remove();
     el.classList.add("is-in");
     reveals.delete(el);
+  }
+  /** Play several waiting reveals now as one view: reading order, staggered (a group's play()). */
+  function playBatch(list) {
+    var batch = [];
+    list.forEach(function (el) {
+      var r = reveals.get(el);
+      if (!r || r.state === "done" || r.state === "playing") return;
+      var b = el.getBoundingClientRect();
+      batch.push({ r: r, top: b.top, left: b.left });
+    });
+    batch.sort(function (a, b) {
+      return Math.round(a.top / 8) - Math.round(b.top / 8) || a.left - b.left;
+    });
+    var shrink = batch.length > STAGGER_CALM ? Math.sqrt(STAGGER_CALM / batch.length) : 1;
+    var at = 0;
+    batch.forEach(function (x) {
+      if (revealIO) revealIO.unobserve(x.r.el);
+      playReveal(x.r, x.r.delay + at);
+      at += x.r.step * 1000 * shrink;
+    });
   }
   /** Hide again and wait for the next view (demos, content swapped in place). */
   function rearm(el) {
@@ -404,11 +482,11 @@
     r.state = "waiting";
     el.classList.remove("is-in");
     revealObserver().unobserve(el);
-    revealIO.observe(el);
+    if (!r.manual) revealIO.observe(el);
   }
 
   Site.register("reveal", function (el, opts) {
-    var r = addReveal(el, opts.reveal, opts.delay, REVEAL_STEP);
+    var r = addReveal(el, opts.reveal, opts.delay, REVEAL_STEP, opts.trigger === "manual", opts.fallback);
     return {
       play: function () {
         if (r.state === "waiting" && revealIO) revealIO.unobserve(el);
@@ -416,6 +494,9 @@
       },
       reset: function () {
         rearm(el);
+      },
+      get state() {
+        return r.state;
       },
       destroy: function () {
         removeReveal(el);
@@ -434,7 +515,7 @@
         if (reveals.has(item) || /\breveal\b/.test(item.getAttribute("data-kit") || "")) continue;
         if (item.tagName === "TEMPLATE" || item.tagName === "SCRIPT") continue;
         if (sel) item.setAttribute("data-reveal-item", "");
-        addReveal(item, opts.reveal, opts.delay, step);
+        addReveal(item, opts.reveal, opts.delay, step, opts.trigger === "manual", opts.fallback);
         mine.push(item);
       }
     }
@@ -444,6 +525,9 @@
     mo.observe(el, { childList: true, subtree: !!sel });
     return {
       refresh: scan,
+      play: function () {
+        playBatch(mine);
+      },
       reset: function () {
         mine.forEach(rearm);
       },
@@ -627,6 +711,7 @@
   /* --------------------------------------------------------------- marquee */
   Site.register("marquee", function (el, opts) {
     var speed = typeof opts.speed === "number" ? opts.speed : MARQUEE_SPEED;
+    var gain = typeof opts.boost === "number" ? Math.max(0, opts.boost) : 1; // data-boost="0": the scroll does not speed it up
     var dir = opts.direction === "right" ? 1 : -1;
     var pauseOnHover = opts.pauseOnHover === true || opts.pauseOnHover === "";
     var track = document.createElement("div");
@@ -666,7 +751,7 @@
     }
     var loop = util.loop(function (t, dt) {
       velocity.set(scrollMV.getVelocity());
-      var boost = Math.min((Math.abs(smoothV.get()) / 1000) * MARQUEE_GAIN, MARQUEE_MAX_BOOST);
+      var boost = gain ? Math.min((Math.abs(smoothV.get()) / 1000) * MARQUEE_GAIN * gain, MARQUEE_MAX_BOOST) : 0;
       var rate = speed * (1 + boost) * hoverMV.get();
       if (!width) return;
       x += (dir * rate * dt) / 1000;
@@ -709,6 +794,16 @@
     el.addEventListener("focusout", onFocusOut);
     fill();
     var offL = watchLayout(fill);
+    // shown later (a layer that was display: none), fonts arriving, a resized banner: measure again
+    var ro = window.ResizeObserver
+      ? new ResizeObserver(function () {
+          fill();
+        })
+      : null;
+    if (ro) {
+      ro.observe(el);
+      ro.observe(group);
+    }
     var offV = util.visible(el, function (on) {
       seen = on;
       if (on && !still()) loop.start();
@@ -728,6 +823,7 @@
         offL();
         offV();
         offR();
+        if (ro) ro.disconnect();
         el.removeEventListener("pointerenter", onEnter);
         el.removeEventListener("pointerleave", onLeave);
         el.removeEventListener("focusin", onFocusIn);
@@ -1452,7 +1548,155 @@
    * pointer by (1 - distance / range) * strength, on its own spring; it springs back outside. Its layout
    * box is measured once (and on layout changes), not on every move. Writes the `translate` property, so it
    * composes with a press scale or a reveal on the same element. */
+  /** A 2D spring whose stiffness can change while it moves (a pull, then a release that wobbles). */
+  function springPoint(write) {
+    var p = { x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, k: 100, c: 10, m: 1 };
+    var loop = util.loop(function (t, dt) {
+      var h = Math.min(dt, 64) / 1000;
+      var n = Math.ceil(h / (1 / 240));
+      var step = h / n;
+      for (var i = 0; i < n; i++) {
+        var ax = (-p.k * (p.x - p.tx) - p.c * p.vx) / p.m;
+        var ay = (-p.k * (p.y - p.ty) - p.c * p.vy) / p.m;
+        p.vx += ax * step;
+        p.vy += ay * step;
+        p.x += p.vx * step;
+        p.y += p.vy * step;
+      }
+      if (Math.abs(p.x - p.tx) < 0.01 && Math.abs(p.y - p.ty) < 0.01 && Math.abs(p.vx) < 0.05 && Math.abs(p.vy) < 0.05) {
+        p.x = p.tx;
+        p.y = p.ty;
+        p.vx = p.vy = 0;
+        loop.stop();
+      }
+      write(p.x, p.y);
+    });
+    return {
+      to: function (x, y, spring) {
+        var s = Site.t({ type: "spring", stiffness: spring.stiffness, damping: spring.damping });
+        p.k = s.stiffness;
+        p.c = s.damping;
+        p.m = spring.mass || 1;
+        p.tx = x;
+        p.ty = y;
+        if (env.static) {
+          p.x = x;
+          p.y = y;
+          p.vx = p.vy = 0;
+          write(x, y);
+          return;
+        }
+        loop.start();
+      },
+      jump: function (x, y) {
+        p.x = p.tx = x;
+        p.y = p.ty = y;
+        p.vx = p.vy = 0;
+        loop.stop();
+        write(x, y);
+      },
+      pos: function () {
+        return p;
+      },
+      destroy: function () {
+        loop.stop();
+      },
+    };
+  }
+  function translateOf(node) {
+    return function (x, y) {
+      node.style.translate = Math.abs(x) < 0.01 && Math.abs(y) < 0.01 ? "" : x.toFixed(2) + "px " + y.toFixed(2) + "px";
+    };
+  }
+  /* data-inner: the owner's "magnetic button". Over the element (and PAD px around it) it follows the pointer by
+   * a share of its offset, softly capped; the inner part goes a little further and a beat later; leaving, both
+   * wobble back. */
+  function magneticInner(el, opts) {
+    var strength = typeof opts.strength === "number" ? opts.strength : MAGNETIC_BTN_STRENGTH;
+    var pad = typeof opts.pad === "number" ? opts.pad : MAGNETIC_PAD;
+    var max = typeof opts.max === "number" ? opts.max : MAGNETIC_MAX;
+    var inner = typeof opts.inner === "string" && opts.inner ? el.querySelector(opts.inner) : el.firstElementChild;
+    if (getComputedStyle(el).display === "inline") el.style.display = "inline-block";
+    if (inner && getComputedStyle(inner).display === "inline") inner.style.display = "inline-block";
+    var outer = springPoint(translateOf(el));
+    var inn = inner ? springPoint(translateOf(inner)) : null;
+    var held = false;
+    var box = null;
+    var inView = false;
+    function enabled() {
+      return env.hover && !reduced() && !env.static;
+    }
+    function measure() {
+      var at = outer.pos(); // measured without the pull it has now
+      box = pageBox(el, at.x, at.y);
+    }
+    function cap(v) {
+      return max * Math.tanh(v / max);
+    }
+    function release() {
+      if (!held) return;
+      held = false;
+      outer.to(0, 0, MAGNETIC_WOBBLE);
+      if (inn) inn.to(0, 0, MAGNETIC_INNER_WOBBLE);
+    }
+    function compute() {
+      if (!box || !inView || !enabled() || !pointer.fine) return release();
+      var left = box.left - window.scrollX;
+      var top = box.top - window.scrollY;
+      var x = pointer.x;
+      var y = pointer.y;
+      if (x < left - pad || x > left + box.width + pad || y < top - pad || y > top + box.height + pad) return release();
+      held = true;
+      var tx = cap((x - (left + box.width / 2)) * strength);
+      var ty = cap((y - (top + box.height / 2)) * strength);
+      outer.to(tx, ty, MAGNETIC_SPRING);
+      if (inn) inn.to(tx * MAGNETIC_INNER, ty * MAGNETIC_INNER, MAGNETIC_INNER_SPRING);
+    }
+    var onMove = util.throttle(compute);
+    window.addEventListener("pointermove", onMove, { passive: true });
+    measure();
+    var offL = watchLayout(function () {
+      if (!held) measure();
+    });
+    var offS = watchScroll(function () {
+      if (inView) compute();
+    });
+    var offV = util.visible(el, function (on) {
+      inView = on;
+      if (on && !held) measure();
+      else if (!on) release();
+    });
+    var offR = Site.on("reduce", function () {
+      if (!enabled()) {
+        held = false;
+        outer.jump(0, 0);
+        if (inn) inn.jump(0, 0);
+      }
+    });
+    function onLeaveWindow(e) {
+      if (!e.relatedTarget) release();
+    }
+    document.addEventListener("pointerout", onLeaveWindow);
+    return {
+      destroy: function () {
+        window.removeEventListener("pointermove", onMove);
+        document.removeEventListener("pointerout", onLeaveWindow);
+        offL();
+        offS();
+        offV();
+        offR();
+        outer.destroy();
+        el.style.translate = "";
+        if (inn) {
+          inn.destroy();
+          inner.style.translate = "";
+        }
+      },
+    };
+  }
+
   Site.register("magnetic", function (el, opts) {
+    if (opts.inner !== undefined && opts.inner !== false) return magneticInner(el, opts);
     var strength = typeof opts.strength === "number" ? opts.strength : MAGNETIC_STRENGTH;
     var range = typeof opts.range === "number" ? opts.range : MAGNETIC_RANGE;
     var ox = 0;
@@ -1634,127 +1878,272 @@
   });
 
   /* ---------------------------------------------------------------- cursor */
-  /* A port of primitives/cursor's CursorFollow, beside the native cursor: one label for the page, shown over
-   * [data-cursor] targets. It pops in (scale from 0 on a press-like spring, opacity on ease.enter), follows on
-   * its own spring, swaps its text through blur.icon on transition.swap while its width glides, and leaves
-   * on the same spring critically damped. Decorative: aria-hidden, nothing that only it says. */
+  /*
+   * The page's pointer: a dot at the pointer and a hairline ring that follows on CursorFollow's spring, so it
+   * trails a little. Over a control the ring grows (with a faint fill) and the dot shrinks; over [data-cursor="Word"]
+   * the ring becomes a filled disc carrying the word (the text swaps through blur.icon while the width glides on
+   * spring.tooltip); a press tightens the ring and it springs back. Over text fields the native I-beam shows and
+   * ours hides. Fine pointers only. Under reduced motion the native cursor stays and only the word shows, beside
+   * it. Decorative (aria-hidden), never takes pointer events. One per page (the footer prints its element).
+   */
+  var CURSOR_GROW = 'a[href], button, [role="button"], [role="link"], [role="tab"], [role="checkbox"], [role="switch"], summary, label, select, input[type="checkbox"], input[type="radio"], input[type="range"], input[type="submit"], input[type="button"], input[type="reset"], input[type="file"], input[type="color"], [data-cursor-grow]';
+  var CURSOR_FIELD = 'input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]):not([type="file"]):not([type="color"]):not([type="image"]), textarea, [contenteditable]:not([contenteditable="false"])';
   var cursorInstance = null;
+  function cursorState(target) {
+    if (!target || target.nodeType !== 1) return { s: "rest" };
+    if (closest(target, CURSOR_FIELD)) return { s: "native" };
+    var zone = closest(target, "[data-cursor]");
+    var ctl = closest(target, CURSOR_GROW);
+    if (ctl && ctl.matches(':disabled, [aria-disabled="true"]')) ctl = null;
+    if (zone) {
+      var w = zone.getAttribute("data-cursor");
+      if (w === "none") return { s: "hidden" };
+      if (w === "native") return { s: "native" };
+      // a control inside a word zone is the nearer thing
+      if (ctl && ctl !== zone && zone.contains(ctl)) return { s: "grow" };
+      if (w && w !== "grow") return { s: "word", w: w };
+      return { s: "grow" };
+    }
+    return { s: ctl ? "grow" : "rest" };
+  }
+  function topLayerModal() {
+    try {
+      return !!document.querySelector(":modal");
+    } catch (e) {
+      return false;
+    }
+  }
   function createCursor(el) {
     if (cursorInstance) return null;
     el.classList.add("k-cursor");
     el.setAttribute("aria-hidden", "true");
-    el.hidden = false; // the markup may hide it until the script runs (footer.liquid does)
+    el.hidden = false; // the markup hides it until the script runs (footer.liquid)
     el.innerHTML = "";
-    var pill = document.createElement("span");
-    pill.className = "k-cursor__pill";
-    el.appendChild(pill);
+    el.style.setProperty("--k-cursor-blur", Site.tokens.blur.icon + "px");
+    el.style.setProperty("--k-cursor-big", CURSOR_BIG + "px");
+    function part(cls, parent) {
+      var n = document.createElement("span");
+      n.className = cls;
+      parent.appendChild(n);
+      return n;
+    }
+    var ring = part("k-cursor__ring", el);
+    var shape = part("k-cursor__shape", ring);
+    var dot = part("k-cursor__dot", el);
+    var dotc = part("k-cursor__dotc", dot);
+    var mode = null; // "full" (dot + ring), "label" (reduced motion: the word beside the native cursor) or null
+    var state = "rest";
+    var word = "";
     var label = null;
-    var text = "";
-    var active = false;
-    var pillScale = styleValue(reduced() ? 1 : 0, function (v) {
-      pill.style.transform = v === 1 ? "" : "scale(" + v.toFixed(4) + ")";
-    });
-    var pillFade = styleValue(0, function (v) {
-      pill.style.opacity = String(clamp(v, 0, 1));
-    });
+    var seen = false; // a mouse has moved over the page
+    var inside = false; // the pointer is in the window
+    var away = true; // it has been out of the window (or never in): the ring starts at the pointer, not from where it was
+    var byTouch = false; // the last pointer was a finger
+    var suspended = false; // a top-layer modal is open: the native cursor is back
+    var px = -100;
+    var py = -100;
+    var rx = -100;
+    var ry = -100;
+    var base = CURSOR_RING / CURSOR_BIG;
+    var press = 1;
     var widthAnim = null;
-    var x = 0;
-    var y = 0;
-    function place() {
-      el.style.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px,0)";
+    function writeShape() {
+      shape.style.transform = mode === "label" ? "" : "translate(-50%,-50%) scale(" + (base * press).toFixed(4) + ")";
+    }
+    var sBase = styleValue(base, function (v) {
+      base = v;
+      writeShape();
+    });
+    var sPress = styleValue(1, function (v) {
+      press = v;
+      writeShape();
+    });
+    var sDot = styleValue(1, function (v) {
+      dotc.style.transform = Math.abs(v - 1) < 0.001 ? "" : "scale(" + Math.max(0, v).toFixed(4) + ")";
+    });
+    function placeRing() {
+      ring.style.transform = "translate3d(" + rx.toFixed(2) + "px," + ry.toFixed(2) + "px,0)";
     }
     var fx = follower(CURSOR_FOLLOW, 0, function (v) {
-      x = v;
-      place();
+      rx = v;
+      placeRing();
     });
     var fy = follower(CURSOR_FOLLOW, 0, function (v) {
-      y = v;
-      place();
+      ry = v;
+      placeRing();
     });
+    function placeDot() {
+      dot.style.transform = "translate3d(" + px + "px," + py + "px,0)";
+    }
+    function sync() {
+      var show = !!mode && seen && inside && !byTouch && !suspended && (mode === "full" ? state !== "hidden" && state !== "native" : state === "word");
+      el.classList.toggle("is-visible", show);
+      root.classList.toggle("has-cursor", mode === "full" && seen && !byTouch && !suspended);
+    }
     function swapText(next) {
-      if (next === text) return;
+      if (label && label.textContent === next && !label.classList.contains("is-leaving")) return;
       var old = label;
-      var fromW = pill.offsetWidth;
-      label = document.createElement("span");
-      label.className = "k-cursor__text";
-      label.textContent = next;
-      pill.appendChild(label);
-      text = next;
+      label = null;
       if (old) {
+        old.classList.remove("is-current");
         old.classList.add("is-leaving");
-        if (!env.static && old.animate) {
-          old.animate([{ opacity: 0, filter: "blur(" + Site.tokens.blur.icon + "px)" }], timing("transition.swap")).finished.then(
-            function () {
-              old.remove();
-            },
-            function () {},
-          );
-          label.animate([{ opacity: 0, filter: "blur(" + Site.tokens.blur.icon + "px)" }, {}], timing("transition.swap"));
-        } else old.remove();
-        var toW = pill.offsetWidth;
-        if (widthAnim) widthAnim.cancel();
-        if (!env.static && pill.animate && Math.abs(toW - fromW) > 0.5) {
-          var c = Site.css("spring.tooltip");
-          widthAnim = pill.animate([{ width: fromW + "px" }, { width: toW + "px" }], { duration: c.duration, easing: c.easing });
+        setTimeout(function () {
+          old.remove();
+        }, Site.css("transition.swap").duration + 40);
+      }
+      if (next == null) return;
+      label = part("k-cursor__text", shape);
+      label.textContent = next;
+      // next frame: the CSS transition plays from the hidden state (opacity, blur)
+      requestAnimationFrame(function () {
+        if (label && label.parentNode) label.classList.add("is-current");
+      });
+    }
+    function setState(next) {
+      var s = next.s;
+      var w = next.w || "";
+      if (s === state && w === word) return;
+      var fromW = shape.offsetWidth;
+      state = s;
+      word = w;
+      el.classList.toggle("is-grow", s === "grow");
+      el.classList.toggle("is-word", s === "word");
+      swapText(s === "word" ? w : null);
+      // the disc's width glides to its word (A8: the resizing indicator)
+      var toW = shape.offsetWidth;
+      if (widthAnim) widthAnim.cancel();
+      widthAnim = null;
+      if (!env.static && shape.animate && fromW && Math.abs(toW - fromW) > 0.5) {
+        var c = Site.css("spring.tooltip");
+        widthAnim = shape.animate([{ width: fromW + "px" }, { width: toW + "px" }], { duration: c.duration, easing: c.easing });
+      }
+      if (mode === "full") {
+        if (s === "rest" || s === "grow" || s === "word") sBase.to(s === "rest" ? CURSOR_RING / CURSOR_BIG : 1, Site.t("spring.pop"));
+        sDot.to(s === "grow" ? CURSOR_DOT_GROW : s === "word" ? 0 : 1, Site.t("spring.pop"));
+      }
+      sync();
+    }
+    function modeNow() {
+      if (!env.hover || env.static) return null;
+      return env.reduce ? "label" : "full";
+    }
+    function applyMode() {
+      var m = modeNow();
+      if (m === mode) return sync();
+      mode = m;
+      el.classList.toggle("k-cursor--label", m === "label");
+      sBase.to(m === "label" ? 1 : state === "rest" ? CURSOR_RING / CURSOR_BIG : 1, null);
+      writeShape();
+      sync();
+    }
+    function retarget() {
+      if (!mode || !seen) return;
+      setState(cursorState(document.elementFromPoint(px, py)));
+    }
+    var onScroll = util.throttle(retarget);
+    function onMove(e) {
+      if (e.pointerType === "touch") {
+        byTouch = true;
+        return sync();
+      }
+      byTouch = false;
+      if (!mode) return;
+      px = e.clientX;
+      py = e.clientY;
+      if (mode === "label") {
+        fx.jump(px + CURSOR_OFFSET.x);
+        fy.jump(py + CURSOR_OFFSET.y);
+      } else {
+        placeDot();
+        if (away) {
+          fx.jump(px);
+          fy.jump(py);
+        } else {
+          fx.set(px);
+          fy.set(py);
         }
       }
-    }
-    function show(target) {
-      swapText(target.getAttribute("data-cursor") || "");
-      var tx = pointer.x + CURSOR_OFFSET.x;
-      var ty = pointer.y + CURSOR_OFFSET.y;
-      if (!active) {
-        active = true;
-        fx.jump(tx);
-        fy.jump(ty);
-        el.classList.add("is-active");
-        pillScale.to(1, reduced() ? null : Site.t(CURSOR_SCALE_IN));
-        pillFade.to(1, Site.t(CURSOR_OPACITY));
+      away = false;
+      if (!seen || !inside) {
+        seen = true;
+        inside = true;
+        setState(cursorState(e.target));
       }
+      sync();
     }
-    function hide() {
-      if (!active) return;
-      active = false;
-      el.classList.remove("is-active");
-      // under reduced motion it only fades, from and to its full size
-      if (!reduced()) pillScale.to(0, Site.t(CURSOR_SCALE_OUT));
-      pillFade.to(0, Site.t(CURSOR_OPACITY));
-    }
-    function enabled() {
-      return env.hover;
-    }
-    function onMove(e) {
-      if (e.pointerType === "touch" || !enabled()) return hide();
-      var target = closest(e.target, "[data-cursor]");
-      if (!target) return hide();
-      show(target);
-      fx.set(e.clientX + CURSOR_OFFSET.x);
-      fy.set(e.clientY + CURSOR_OFFSET.y);
+    function onOver(e) {
+      if (e.pointerType === "touch" || !mode) return;
+      inside = true;
+      setState(cursorState(e.target));
     }
     function onOut(e) {
-      if (!e.relatedTarget) hide();
+      if (!e.relatedTarget) {
+        inside = false;
+        away = true;
+        sync();
+      }
+    }
+    function onDown(e) {
+      if (e.pointerType === "touch") {
+        byTouch = true;
+        return sync();
+      }
+      if (mode === "full") sPress.to(CURSOR_PRESS, Site.t("spring.press"));
+    }
+    function onUp() {
+      if (mode === "full") sPress.to(1, Site.t("spring.bounce")); // springs back past its size
     }
     function onHidden() {
-      if (document.hidden) hide();
+      if (document.hidden) {
+        inside = false;
+        away = true;
+        sync();
+      }
     }
-    document.addEventListener("pointermove", onMove, { passive: true });
-    document.addEventListener("pointerover", onMove, { passive: true });
+    var mo = new MutationObserver(function () {
+      var next = root.classList.contains("is-modal") && topLayerModal();
+      if (next !== suspended) {
+        suspended = next;
+        sync();
+      }
+    });
+    mo.observe(root, { attributes: true, attributeFilter: ["class"] });
+    document.addEventListener("pointermove", onMove, { passive: true, capture: true });
+    document.addEventListener("pointerover", onOver, { passive: true });
     document.addEventListener("pointerout", onOut, { passive: true });
+    document.addEventListener("pointerdown", onDown, { passive: true, capture: true });
+    document.addEventListener("pointerup", onUp, { passive: true, capture: true });
+    document.addEventListener("pointercancel", onUp, { passive: true, capture: true });
     document.addEventListener("visibilitychange", onHidden);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    var offH = Site.on("hover", applyMode);
+    var offR = Site.on("reduce", applyMode);
+    applyMode();
     cursorInstance = {
-      hide: hide,
+      get state() {
+        return mode ? state : "off";
+      },
       destroy: function () {
-        document.removeEventListener("pointermove", onMove);
-        document.removeEventListener("pointerover", onMove);
+        document.removeEventListener("pointermove", onMove, { capture: true });
+        document.removeEventListener("pointerover", onOver);
         document.removeEventListener("pointerout", onOut);
+        document.removeEventListener("pointerdown", onDown, { capture: true });
+        document.removeEventListener("pointerup", onUp, { capture: true });
+        document.removeEventListener("pointercancel", onUp, { capture: true });
         document.removeEventListener("visibilitychange", onHidden);
+        window.removeEventListener("scroll", onScroll);
+        mo.disconnect();
+        offH();
+        offR();
         fx.destroy();
         fy.destroy();
-        pillScale.destroy();
-        pillFade.destroy();
+        sBase.destroy();
+        sPress.destroy();
+        sDot.destroy();
         if (widthAnim) widthAnim.cancel();
+        root.classList.remove("has-cursor");
         el.innerHTML = "";
-        el.classList.remove("k-cursor", "is-active");
+        el.classList.remove("k-cursor", "k-cursor--label", "is-visible", "is-grow", "is-word");
         cursorInstance = null;
       },
     };
@@ -1763,9 +2152,9 @@
   Site.register("cursor", function (el) {
     return createCursor(el);
   });
-  // a page with [data-cursor] targets and no cursor element gets one
+  // a page without the footer's cursor element gets one
   Site.ready(function () {
-    if (cursorInstance || !document.querySelector("[data-cursor]")) return;
+    if (cursorInstance) return;
     var el = document.createElement("div");
     el.setAttribute("data-kit", "cursor");
     document.body.appendChild(el);
