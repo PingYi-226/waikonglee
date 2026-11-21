@@ -155,6 +155,12 @@
   function modal() {
     return root.classList.contains("is-modal");
   }
+  /** The page is locked (the home intro, a sheet, a dialog): its scroll is not ours to move. */
+  function locked() {
+    var o = getComputedStyle(root).overflowY;
+    var b = document.body ? getComputedStyle(document.body).overflowY : "";
+    return o === "hidden" || o === "clip" || b === "hidden" || b === "clip";
+  }
 
   /* ------------------------------------------------------------ the stepper */
   var inst = null; // the one running stepper (one per page)
@@ -748,7 +754,7 @@
       }
       return;
     }
-    if (this.anim || this.band || modal()) return;
+    if (this.anim || this.band || modal() || locked()) return;
     var y = window.scrollY;
     var target = this.restTarget(y);
     if (target === null) {
@@ -813,7 +819,7 @@
     return { y: clamp(elTop - 0.3 * this.vh, s0.y, limit), free: true, index: s0.index };
   };
   P.onClick = function (e) {
-    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || modal()) return;
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || modal() || locked()) return;
     var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
     if (!a) return;
     var href = a.getAttribute("href");
@@ -843,7 +849,7 @@
     this.anchoring = false;
   };
   P.onFocus = function (e) {
-    if (this.anchoring || modal()) return;
+    if (this.anchoring || modal() || locked()) return;
     var t = e.target;
     if (!t || !t.matches || !this.wrap.contains(t)) return;
     var visible = false;
@@ -902,7 +908,7 @@
     "wheel",
     function (e) {
       if (!inst || !inst.active || e.defaultPrevented) return;
-      if (e.ctrlKey || e.metaKey || modal()) return;
+      if (e.ctrlKey || e.metaKey || modal() || locked()) return;
       var dy = norm(e.deltaY, e.deltaMode);
       var dx = norm(e.deltaX, e.deltaMode);
       if (!dy || Math.abs(dx) > Math.abs(dy)) return;
@@ -913,7 +919,7 @@
     { passive: false },
   );
   window.addEventListener("keydown", function (e) {
-    if (!inst || !inst.active || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || modal()) return;
+    if (!inst || !inst.active || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || modal() || locked()) return;
     var t = e.target;
     if (t && t.closest && (t.closest(FIELD) || t.isContentEditable)) return;
     inst.onKey(e);
