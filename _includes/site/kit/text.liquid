@@ -134,6 +134,19 @@
     </div>
   </article>
 
+  <article class="kitdemo__item" id="demo-shine-text">
+    <header>
+      <h3>shine-text</h3>
+      <p>A band of light across text. The label passes on its own (loop); the sentence shines, line after line, while the pointer is over the row or the row has keyboard focus (hover). At rest both are their own colour.</p>
+    </header>
+    <div class="kitdemo__stage">
+      <a class="kdemo-news" href="#demo-shine-text" id="shine-row">
+        <span class="kdemo-news__meta"><time datetime="2026-11-16">16 Nov 2026</time><span class="kdemo-news__label" id="shine-a" data-kit="shine-text">Open call</span></span>
+        <span class="kdemo-news__text"><span id="shine-b" data-kit="shine-text" data-trigger="hover">Call for papers: I am a guest editor, with Dr. Safiullah Khan and Dr. Zain Ul Abideen, of the collection Hardware-Accelerated Cryptography and Privacy-Preserving Computing for Resource-Constrained Systems in Discover Cybersecurity (Springer, open access).</span></span>
+      </a>
+    </div>
+  </article>
+
   <article class="kitdemo__item" id="demo-typing-text">
     <header>
       <h3>typing-text</h3>
@@ -173,6 +186,30 @@
   .kdemo-statement__words {
     font-style: italic;
     color: var(--ink);
+  }
+  /* a news row as the news timeline sets one (news.css: nitem__meta, nitem__label, nitem__text) */
+  .kdemo-news {
+    display: grid;
+    grid-template-columns: 9rem minmax(0, 1fr);
+    column-gap: 2rem;
+    color: inherit;
+    text-decoration: none;
+  }
+  .kdemo-news__meta {
+    display: grid;
+    align-content: start;
+    font-size: var(--fs-xs);
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .kdemo-news__label {
+    color: var(--muted);
+  }
+  .kdemo-news__text {
+    max-width: 60ch;
+    font-size: 1.04rem;
+    line-height: 1.55;
+    color: var(--ink-2);
   }
 </style>
 <script>

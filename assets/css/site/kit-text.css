@@ -301,6 +301,43 @@ html.js [data-kit~="highlight-text"]:not(.is-in) {
   animation-play-state: paused !important;
 }
 
+/* ---------- shine-text ---------- */
+/* While it shines (.is-shining) the text is painted by its background, clipped to the glyphs: the resting colour
+   (--k-shine-base, by default the text's own colour) and a band (--k-shine-glint) that waits left of the text until a
+   pass moves it across. `slice` lays a wrapped inline text's lines end to end, so the band runs line after line.
+   Between hover passes the clip is off, so text at rest is ordinary text (a clipped fill loses subpixel smoothing).
+   The glint is light falling on the letters: toward the paper on the light theme, toward white on the dark one
+   (a darker band there would read as a shadow). The text keeps its `color`; only the fill comes from here. */
+.k-shine {
+  --k-shine-base: currentColor;
+  --k-shine-glint: color-mix(in oklab, currentColor 22%, var(--paper));
+}
+
+html[data-theme="dark"] .k-shine {
+  --k-shine-glint: color-mix(in oklab, currentColor 30%, #fff); /* the colour of the light itself, not a theme colour */
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .k-shine.is-shining {
+    background-color: var(--k-shine-base);
+    background-image: linear-gradient(90deg, transparent, var(--k-shine-glint), transparent);
+    background-repeat: no-repeat;
+    background-size: var(--k-shine-band, 3.5em) 100%;
+    background-position: calc(-1 * var(--k-shine-band, 3.5em)) 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-box-decoration-break: slice;
+    box-decoration-break: slice;
+  }
+
+  /* selected text stays readable (a transparent fill would leave only the selection's colour) */
+  .k-shine.is-shining::selection,
+  .k-shine.is-shining ::selection {
+    -webkit-text-fill-color: currentColor;
+  }
+}
+
 /* ---------- typing-text ---------- */
 .k-type__caret {
   display: inline-block;

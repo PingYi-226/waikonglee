@@ -1547,6 +1547,140 @@
     };
   });
 
+  /* =========================================================== shine-text */
+  /*
+   * A band of light travelling across text: the text is painted by its own background, clipped to the glyphs
+   * (the resting colour, then a narrow gradient band that moves). On an inline element the background of a wrapped
+   * text is laid out as if its lines stood end to end, so the band runs through the lines in reading order; on a
+   * block it crosses all the lines at once. At rest the band waits outside the text, so the text shows its own
+   * colour. Repeating passes (loop, hover) are one Web Animation with the rest built in: hover leaving lets the
+   * pass in progress finish, coming back keeps it going (nothing restarts). Paused off screen and in hidden tabs;
+   * no band under reduced motion or ?static.
+   * The one property animated is background-position-x: a gradient clipped to glyphs cannot move any other way.
+   */
+  const SHINE_BAND = 3.5; // em: the band's width
+  const SHINE_PAUSE = 1800; // ms of rest between passes (loop, hover); data-pause overrides
+  // ms of a pass when data-duration is not given: a short label still gets a readable pass, a paragraph is not rushed
+  const SHINE_MIN = 1100;
+  const SHINE_MAX = 2600;
+  const SHINE_PER_PX = 0.7; // ms per px of travel (text length plus the band), from a 900 ms base
+  const SHINE_BASE = 900;
+
+  S.register("shine-text", function (el, opts) {
+    const trigger = ["loop", "hover", "view", "manual"].indexOf(opts.trigger) > -1 ? opts.trigger : "loop";
+    const pause = opts.pause != null && opts.pause !== "" && !isNaN(Number(opts.pause)) ? Number(opts.pause) : SHINE_PAUSE;
+    const repeat = trigger === "loop" || trigger === "hover";
+    el.classList.add("k-shine");
+    let anim = null;
+    let length = 0;
+    let band = 0;
+    let duration = 0;
+    let seen = false;
+    let wanted = trigger === "loop"; // hover: true while hovered or focused
+
+    function measure() {
+      const cs = getComputedStyle(el);
+      band = SHINE_BAND * (parseFloat(cs.fontSize) || 16);
+      length = 0;
+      if (cs.display === "inline") Array.prototype.forEach.call(el.getClientRects(), (r) => (length += r.width));
+      else length = el.getBoundingClientRect().width;
+      el.style.setProperty("--k-shine-band", band.toFixed(1) + "px");
+      duration = Number(opts.duration) || S.util.clamp(SHINE_BASE + (length + band) * SHINE_PER_PX, SHINE_MIN, SHINE_MAX);
+    }
+
+    function frames(withRest) {
+      const total = withRest ? duration + pause : duration;
+      return [
+        { backgroundPositionX: -band + "px", easing: SHIMMER_EASE },
+        { backgroundPositionX: length + "px", offset: duration / total },
+        { backgroundPositionX: length + "px" },
+      ];
+    }
+
+    const can = () => !env.reduce && !env.static && !!el.animate;
+    const running = () => anim && anim.playState !== "finished" && anim.playState !== "idle";
+
+    /** Start passes, or keep the ones in progress going (a band never restarts mid-text). */
+    function shine(loop) {
+      if (!can()) return;
+      if (running()) {
+        const t = anim.effect.getComputedTiming();
+        // in the rest after a pass a new pass may start at once; inside a pass it plays on
+        if (loop && t.progress != null && t.progress * (duration + pause) > duration) {
+          const a = anim;
+          anim = null; // so its cancel does not take the clip off
+          a.cancel();
+        } else {
+          if (loop) anim.effect.updateTiming({ iterations: Infinity });
+          return;
+        }
+      }
+      measure();
+      el.classList.add("is-shining");
+      const a = (anim = el.animate(frames(loop), { duration: (loop ? duration + pause : duration) * S.tempo, iterations: loop ? Infinity : 1 }));
+      // the clip comes off once the last pass is over (a finished or cancelled animation), unless another took over
+      const over = () => {
+        if (anim === a) {
+          anim = null;
+          el.classList.remove("is-shining");
+        }
+      };
+      a.onfinish = over;
+      a.oncancel = over;
+      if (!seen && trigger === "loop") a.pause();
+    }
+    /** Let the pass in progress finish, then stop. */
+    function settle() {
+      if (!running()) return;
+      const t = anim.effect.getComputedTiming();
+      anim.effect.updateTiming({ iterations: (t.currentIteration || 0) + 1 });
+    }
+
+    let off = () => {};
+    if (trigger === "hover")
+      off = hoverFocus(el, (on) => {
+        wanted = on;
+        if (on) shine(true);
+        else settle();
+      });
+    else if (trigger === "view" || trigger === "manual") off = env.static ? () => {} : whenTriggered(el, trigger, opts.delay, () => shine(false));
+    const offVisible = S.util.visible(el, (v) => {
+      seen = v;
+      if (trigger === "loop" && v && !running()) shine(true);
+      if (!running()) return;
+      if (v) anim.play();
+      else anim.pause();
+    });
+    const offResize = S.on("resize", () => {
+      if (!running()) return;
+      measure();
+      anim.effect.setKeyframes(frames(anim.effect.getTiming().iterations !== 1 || repeat));
+    });
+    const offReduce = S.on("reduce", () => {
+      if (!can() && anim) anim.cancel();
+      else if (wanted && seen) shine(true);
+    });
+
+    return {
+      /** One pass now (or let the pass in progress play on). */
+      play: () => shine(false),
+      /** Stop after the pass in progress. */
+      stop: settle,
+      get playing() {
+        return !!running();
+      },
+      destroy: () => {
+        off();
+        offVisible();
+        offResize();
+        offReduce();
+        if (anim) anim.cancel();
+        el.classList.remove("k-shine", "is-shining");
+        el.style.removeProperty("--k-shine-band");
+      },
+    };
+  });
+
   /* ========================================================== typing-text */
   /*
    * Animate UI's Typing Text: the text typed one character at a time, held, erased, and the next string typed
