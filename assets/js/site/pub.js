@@ -524,6 +524,8 @@
       if (countWord) countWord.set(shown === 1 ? "paper" : "papers");
       var filtered = !!(state.area || state.type || words.length);
       page.classList.toggle("is-filtered", filtered);
+      // nothing to read: the rail has no year to show
+      if (rail) rail.classList.toggle("is-void", !shown);
 
       if (note && noteText && deep)
         noteText.textContent = shown === 1 ? "Found in the abstract." : "Found in the abstracts.";

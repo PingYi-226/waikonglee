@@ -301,6 +301,7 @@ html.is-reduced .pub__hit {
   color: inherit !important;
   font-style: normal !important;
   font-weight: 400 !important;
+  text-decoration: none !important;
   background: none !important;
 }
 
@@ -768,6 +769,14 @@ html.is-reduced .pubbar__types .k-seg__item {
 
 .pubrail.is-peek .pubrail__year {
   color: var(--accent);
+}
+
+.pubrail {
+  transition: opacity var(--t-fade);
+}
+
+.pubrail.is-void {
+  opacity: 0;
 }
 
 .pubrail__count {
