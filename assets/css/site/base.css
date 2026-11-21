@@ -335,10 +335,36 @@ img {
 }
 
 /* ---------- static components ---------- */
+/* Buttons, chips and icon buttons share one feel (the owner's round-2 point 4; see the kit-pointer notes, "Buttons"):
+   - under the pointer and the keyboard focus they grow a little: CSS on `scale`, ease-out 300 ms (--k-grow);
+   - the press kit shrinks them back while held and lets them spring once past their size when let go (`transform`);
+   - the magnetic kit pulls them toward the pointer (`translate`). The three properties compose on one element;
+   - what is inside (an icon's hover gesture) starts --k-inner-delay after the outside;
+   - the ripple is clear on a primary button and quiet on a ghost one (--k-ripple-color). */
+.btn,
+.chip,
+.icon-btn {
+  --k-grow: 1.04;
+  --k-press-scale: 0.95;
+  --k-inner-delay: 70ms;
+}
+
+.icon-btn {
+  --k-press-scale: 0.92;
+}
+
+.btn--small,
+.chip,
+.icon-btn {
+  --k-grow: 1.05;
+}
+
 .btn {
   --btn-bg: var(--ink);
   --btn-fg: var(--paper);
+  --k-ripple-color: color-mix(in srgb, var(--btn-fg) 70%, transparent);
   position: relative;
+  margin: 0; /* the template gives .btn a margin of its own */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -360,7 +386,8 @@ img {
     background-color var(--t-color),
     color var(--t-color),
     border-color var(--t-color),
-    box-shadow var(--t-color);
+    box-shadow var(--t-color),
+    scale var(--t-reveal);
 }
 
 a.btn,
@@ -371,6 +398,7 @@ a.btn:visited {
 .btn--ghost {
   --btn-bg: transparent;
   --btn-fg: var(--ink);
+  --k-ripple-color: color-mix(in srgb, var(--ink) 18%, transparent);
   border-color: var(--line-strong);
 }
 
@@ -407,7 +435,8 @@ a.btn:visited {
   -webkit-tap-highlight-color: transparent;
   transition:
     background-color var(--t-color),
-    color var(--t-color);
+    color var(--t-color),
+    scale var(--t-reveal);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -436,7 +465,37 @@ a.btn:visited {
   transition:
     color var(--t-color),
     border-color var(--t-color),
-    background-color var(--t-color);
+    background-color var(--t-color),
+    scale var(--t-reveal);
+}
+
+/* the growth: pointer (fine pointers only) and keyboard focus; never on a disabled control or under reduced motion */
+@media (hover: hover) and (pointer: fine) {
+  :is(.btn, .chip, .icon-btn):hover:not(:disabled, [aria-disabled="true"]) {
+    scale: var(--k-grow);
+  }
+}
+
+:is(.btn, .chip, .icon-btn):focus-visible:not(:disabled, [aria-disabled="true"]) {
+  scale: var(--k-grow);
+}
+
+html.is-reduced :is(.btn, .chip, .icon-btn):is(:hover, :focus-visible) {
+  scale: none;
+}
+
+/* the inside one beat after the outside: an icon's hover state and gesture wait --k-inner-delay
+   (icons.css owns how each icon moves; these rules only shift its start, and are specific enough to win) */
+:is(.btn, .chip, .icon-btn) svg.icon.is-hot [class*="k-i-"] {
+  transition-delay: var(--k-inner-delay);
+}
+
+:is(.btn, .chip, .icon-btn) svg.icon.is-play [class*="k-i-"] {
+  animation-delay: var(--k-inner-delay);
+}
+
+:is(.btn, .chip, .icon-btn) :is(svg.icon--close.is-play .k-i-l2, svg.icon--plus.is-play .k-i-l1) {
+  animation-delay: calc(var(--k-inner-delay) + 0.1s);
 }
 
 .tag {

@@ -129,6 +129,18 @@ div#notebook {
   background-color: #1e1e1e;
 }
 
+#menubar,
+div#menubar {
+  background-color: #1e1e1e;
+  padding-top: 0px !important;
+}
+
+#menubar .navbar {
+  background-color: #1e1e1e;
+  margin-bottom: 0px;
+  margin-top: 0px;
+}
+
 .navbar {
   border: none;
 }
@@ -586,7 +598,7 @@ input.raw_input {
   box-shadow: none;
 }
 
-
+audio,
 video {
   display: inline;
   vertical-align: middle;

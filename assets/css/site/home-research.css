@@ -1,0 +1,379 @@
+/* ==========================================================================
+   Home page, research block (_includes/site/home/research.liquid, home-research.js).
+   A plain grid of cards first; the pinned scene (ring, grid, banners) when the script adds .is-orbit, which it does
+   where the deck runs (html.has-snap). The scene is laid out at 1280 x 760 px and scaled to fit (--orbit-scale);
+   the sizes inside it are scene px and must match the values at the top of home-research.js.
+   ========================================================================== */
+
+/* ---------- the plain grid ---------- */
+.orbit {
+  padding-block: var(--s-10);
+}
+
+.orbit__scene {
+  width: min(100% - 2 * var(--gutter), var(--page));
+  margin-inline: auto;
+}
+
+.orbit__banners,
+.orbit__core {
+  display: none;
+}
+
+.orbit__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* ---------- a card ----------
+   The drawing, the name, and a line that the pointer (or keyboard focus) reveals: the count and an icon. */
+.ocard,
+.ocard:visited {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  height: 192px; /* CARD.h in home-research.js */
+  padding: 0.85rem 1rem 0.7rem;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  overflow: hidden;
+  transition: border-color var(--t-color);
+}
+
+.ocard__fig {
+  position: relative;
+  min-height: 0;
+  margin-bottom: 0.45rem;
+  color: var(--ink-2);
+}
+
+/* the drawing's own box (16:9, as in the view): what flies into the detail view */
+.ocard__art {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: block;
+  height: 100%;
+  aspect-ratio: 16 / 9;
+  translate: -50% 0;
+}
+
+.ocard__art .diagram {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ocard__title {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 1.32rem;
+  line-height: 1.1;
+  letter-spacing: -0.008em;
+  color: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ocard__more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  height: 1.2rem;
+  margin-top: 0.15rem;
+  font-size: var(--fs-label);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.ocard__more .t-data {
+  color: inherit;
+}
+
+.ocard__more .icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--ink);
+}
+
+.ocard:focus-visible {
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ocard:hover {
+    border-color: var(--line-strong);
+  }
+}
+
+/* small screens: a ruled list, the drawing as a thumbnail beside the name */
+@media (max-width: 560px) {
+  .orbit__cards {
+    grid-template-columns: 1fr;
+    gap: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ocard,
+  .ocard:visited {
+    grid-template-columns: 5.75rem minmax(0, 1fr);
+    grid-template-rows: auto;
+    align-items: center;
+    gap: 1rem;
+    height: auto;
+    padding: 0.8rem 0;
+    background: none;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+  }
+
+  .ocard__fig {
+    grid-row: 1 / span 2;
+    height: 3.25rem;
+    margin: 0;
+  }
+
+  .ocard__title,
+  .ocard__more {
+    grid-column: 2;
+  }
+
+  .ocard__more {
+    justify-content: flex-start;
+  }
+}
+
+/* ==========================================================================
+   The scene (.is-orbit): a pinned stage, 330vh of scroll; the stepper rests on the ring and on the grid.
+   ========================================================================== */
+.orbit.is-orbit {
+  height: 330vh;
+  padding: 0;
+  align-content: normal; /* a block container would still centre its content (Chrome 123+) */
+}
+
+.orbit.is-orbit .orbit__stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
+  padding-top: var(--nav-h); /* the fixed header's room */
+  overflow: clip;
+}
+
+.orbit.is-orbit .orbit__scene {
+  position: absolute;
+  top: calc(var(--nav-h) + (100% - var(--nav-h) - 20px) / 2);
+  left: 50%;
+  width: 1280px;
+  height: 760px;
+  margin: 0;
+  translate: -50% -50%;
+  scale: var(--orbit-scale, 1);
+}
+
+/* the title: large, above the ring and the grid alike */
+.orbit.is-orbit .orbit__head {
+  position: absolute;
+  inset: 26px 0 auto; /* air under the fixed header */
+  z-index: 40;
+  display: block;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+  pointer-events: none;
+}
+
+.orbit.is-orbit .orbit__head::before {
+  display: none;
+}
+
+.orbit.is-orbit .orbit__title {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-size: 78px;
+  line-height: 1;
+  letter-spacing: -0.024em;
+  color: var(--ink);
+}
+
+/* the lattice in the middle of the ring */
+.orbit.is-orbit .orbit__core {
+  position: absolute;
+  top: calc(50% + 46px); /* RING.y */
+  left: 50%;
+  z-index: 10;
+  display: block;
+  width: 520px;
+  height: 520px;
+  margin: -260px 0 0 -260px;
+  pointer-events: none;
+}
+
+/* the cards: placed by the script (transform, opacity, filter, z-index on each li); the list makes no stacking
+   context, so the cards pass in front of and behind the core */
+.orbit.is-orbit .orbit__cards {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.orbit.is-orbit .orbit__card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 288px; /* CARD.w, CARD.h */
+  height: 192px;
+  margin: -96px 0 0 -144px;
+  opacity: 0;
+  will-change: transform, opacity, filter;
+}
+
+.orbit.is-orbit:not(.is-flat) .orbit__card {
+  pointer-events: none;
+}
+
+/* at rest on the grid the cards give their layers back, so the text is drawn at the scene's real scale (sharp) */
+.orbit.is-orbit.is-flat .orbit__card {
+  will-change: auto;
+}
+
+.orbit.is-orbit.is-flat .orbit__cards,
+.orbit.is-orbit.is-flat .orbit__card {
+  pointer-events: auto;
+}
+
+/* the two banners: beneath the cards, leaning opposite ways, wider than any screen; pulled out by the script */
+.orbit.is-orbit .orbit__banners {
+  position: absolute;
+  inset: 0 -100%;
+  display: block;
+  pointer-events: none;
+}
+
+.orbit__banner {
+  position: absolute;
+  top: calc(50% + 140px); /* the grid's lower row (GRID_Y + (CARD.h + CARD.gap) / 2): the banners cross behind it */
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: 66px;
+  margin-top: -33px;
+  background: var(--paper-2);
+  border-block: 1px solid var(--line);
+  visibility: hidden;
+}
+
+.orbit__strip {
+  --k-marquee-gap: 2.6rem;
+  --k-marquee-fade: 0%;
+  width: 100%;
+}
+
+.orbit__venue {
+  font-family: var(--font-display);
+  font-size: 38px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--faint-text);
+  white-space: nowrap;
+}
+
+.orbit__banner--confs .orbit__venue {
+  font-style: italic;
+}
+
+/* ==========================================================================
+   The detail view (kit expand; data-expand-class="odetail" lands on .k-expand)
+   ========================================================================== */
+.k-expand.odetail {
+  --k-expand-width: 1120px;
+}
+
+.odetail__body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+}
+
+.odetail__fig {
+  aspect-ratio: 16 / 9;
+  color: var(--ink-2);
+}
+
+.odetail__fig .diagram {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.odetail__title {
+  margin: 0 0 0.9rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-d2);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.018em;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.odetail__tag {
+  margin: 0 0 1rem;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--fs-d4);
+  line-height: 1.25;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.odetail__desc {
+  max-width: var(--measure);
+  margin: 0 0 1.75rem;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.odetail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .odetail__body {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* short landscape screens: the view keeps its buttons in sight */
+@media (max-height: 720px) and (min-width: 761px) {
+  .odetail__title {
+    font-size: var(--fs-d3);
+  }
+
+  .odetail__tag {
+    margin-bottom: 0.75rem;
+    font-size: 1.15rem;
+  }
+
+  .odetail__desc {
+    margin-bottom: 1.25rem;
+    font-size: var(--fs-small);
+  }
+}

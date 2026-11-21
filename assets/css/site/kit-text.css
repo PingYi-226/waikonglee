@@ -6,8 +6,8 @@
 
 /* al-folio's main.css gives every span --global-text-color instead of letting it inherit: the spans these kits
    create, and the spans that host them, take the colour of the text around them (a class on the host still wins) */
-span:where([data-kit~="split"], [data-kit~="sliding-number"], [data-kit~="rotating-text"], [data-kit~="rolling-text"], [data-kit~="sliding-text"], [data-kit~="swap-text"], [data-kit~="highlight-text"], [data-kit~="shimmer-text"], [data-kit~="typing-text"], [data-kit~="scramble"]),
-:where(.k-split, .k-num, .k-rot, .k-roll, .k-slide, .k-swap, .k-shim, .k-type, .k-scr) span {
+span:where([data-kit~="split"], [data-kit~="sliding-number"], [data-kit~="rotating-text"], [data-kit~="morph-text"], [data-kit~="rolling-text"], [data-kit~="sliding-text"], [data-kit~="swap-text"], [data-kit~="highlight-text"], [data-kit~="shimmer-text"], [data-kit~="shine-text"], [data-kit~="typing-text"], [data-kit~="scramble"]),
+:where(.k-split, .k-num, .k-rot, .k-morph, .k-roll, .k-slide, .k-swap, .k-shim, .k-shine, .k-type, .k-scr) span {
   color: inherit;
 }
 
@@ -36,6 +36,11 @@ html.js [data-kit~="split"]:not(.k-split) {
   overflow-y: clip;
   padding-block: 0.2em;
   margin-block: -0.2em;
+}
+
+/* arrived: the lines stop clipping, so a nested unit's overhang (a morph-text, a focus ring) is never cut */
+.k-split--rise.is-done .k-split__m {
+  overflow-y: visible;
 }
 
 .k-split__vis {
@@ -123,7 +128,47 @@ html.js [data-kit~="sliding-number"]:not(.is-built) {
   pointer-events: none;
 }
 
+/* ---------- morph-text ---------- */
+/* An inline-block (the word wraps as a unit) that keeps the line's baseline: the ghost, invisible and in the flow,
+   gives the box its height and baseline, the words' layers lie on top of it. The bleed is room inside the
+   threshold filter's box for ascenders, descenders, the italic overhang and the blur; the negative margin keeps it
+   out of the layout. Nothing here looks like a control: the cursor, the colour and the decoration are the text's. */
+.k-morph {
+  --k-morph-bleed: 0.32em;
+  display: inline-block;
+  vertical-align: baseline;
+  white-space: nowrap;
+  text-indent: 0;
+}
+
+.k-morph__vis {
+  position: relative;
+  display: inline-block;
+  padding: var(--k-morph-bleed);
+  margin: calc(-1 * var(--k-morph-bleed));
+}
+
+.k-morph__ghost {
+  visibility: hidden;
+}
+
+.k-morph__w {
+  position: absolute;
+  left: var(--k-morph-bleed);
+  top: var(--k-morph-bleed);
+  white-space: nowrap;
+}
+
+.k-morph__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 /* ---------- rolling-text ---------- */
+/* the script sets .is-rolling on the element while a roll plays (a hook for pages; nothing here depends on it) */
 .k-roll__w {
   display: inline-block;
   white-space: nowrap;
@@ -255,6 +300,43 @@ html.js [data-kit~="highlight-text"]:not(.is-in) {
 
 .k-shim.is-paused .k-shim__c {
   animation-play-state: paused !important;
+}
+
+/* ---------- shine-text ---------- */
+/* While it shines (.is-shining) the text is painted by its background, clipped to the glyphs: the resting colour
+   (--k-shine-base, by default the text's own colour) and a band (--k-shine-glint) that waits left of the text until a
+   pass moves it across. `slice` lays a wrapped inline text's lines end to end, so the band runs line after line.
+   Between hover passes the clip is off, so text at rest is ordinary text (a clipped fill loses subpixel smoothing).
+   The glint is light falling on the letters: toward the paper on the light theme, toward white on the dark one
+   (a darker band there would read as a shadow). The text keeps its `color`; only the fill comes from here. */
+/* defaults are fallbacks, so a page may set --k-shine-base / --k-shine-glint on the element or any ancestor */
+:root {
+  --k-shine-light: var(--paper);
+}
+
+html[data-theme="dark"] {
+  --k-shine-light: #fff; /* the colour of the light itself, not a theme colour */
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .k-shine.is-shining {
+    background-color: var(--k-shine-base, currentColor);
+    background-image: linear-gradient(90deg, transparent, var(--k-shine-glint, color-mix(in oklab, currentColor 25%, var(--k-shine-light))), transparent);
+    background-repeat: no-repeat;
+    background-size: var(--k-shine-band, 3.5em) 100%;
+    background-position: calc(-1 * var(--k-shine-band, 3.5em)) 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-box-decoration-break: slice;
+    box-decoration-break: slice;
+  }
+
+  /* selected text stays readable (a transparent fill would leave only the selection's colour) */
+  .k-shine.is-shining::selection,
+  .k-shine.is-shining ::selection {
+    -webkit-text-fill-color: currentColor;
+  }
 }
 
 /* ---------- typing-text ---------- */

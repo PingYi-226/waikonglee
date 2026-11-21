@@ -1,0 +1,136 @@
+/* ==========================================================================
+   kit-expand: a trigger that opens into a near-full-screen detail view (kit-expand.js; markup, options and
+   hooks in _work/agent_notes/kit-pointer.md). The view is built once, at the end of <body>:
+
+   .k-expand                 fixed, centres the frame; the trigger's data-expand-class is added here
+     .k-expand__scrim        dims the page
+     .k-expand__frame        the panel's box: --k-expand-width, --k-expand-height; its ::before is the shadow
+       .k-expand__panel      role=dialog; --k-expand-bg, --k-expand-radius; clipped while it grows
+         .k-expand__close    the close button (an .icon-btn)
+         .k-expand__body     scrolls when the content is taller; --k-expand-pad
+     .k-expand__flight       the shared elements' flying copies
+
+   Hooks (set them on .k-expand.<your class>, or on :root):
+     --k-expand-inset   space around the panel        clamp(1rem, 4vw, 3rem)
+     --k-expand-width   largest width                  1180px
+     --k-expand-height  height: auto (fits its content, up to the screen) or 100% (always the full height)
+     --k-expand-pad     the body's padding             clamp(1.25rem, 3.2vw, 2.75rem)
+     --k-expand-radius  corners                        var(--r-4)
+     --k-expand-bg      the panel's surface            var(--surface)
+     --k-expand-scrim   the page's veil                var(--scrim)
+   ========================================================================== */
+
+.k-expand {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-overlay) - 1); /* a lightbox opened from the view comes above it */
+  display: grid;
+  place-items: center;
+  padding: var(--k-expand-inset, clamp(1rem, 4vw, 3rem));
+  box-sizing: border-box;
+}
+
+.k-expand[hidden] {
+  display: none;
+}
+
+/* on its way back it no longer stands between the pointer and the page */
+.k-expand:not(.is-open) {
+  pointer-events: none;
+}
+
+.k-expand__scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--k-expand-scrim, var(--scrim));
+  opacity: 0;
+  transition: opacity var(--t-overlay);
+}
+
+.k-expand.is-open .k-expand__scrim {
+  opacity: 1;
+}
+
+.k-expand__frame {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(var(--k-expand-width, 1180px), 100%);
+  height: var(--k-expand-height, auto);
+  max-height: 100%;
+  min-height: 0;
+}
+
+/* the shadow: once the panel has landed (a clip would cut it while it grows), gone at once when it leaves */
+.k-expand__frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--k-expand-radius, var(--r-4));
+  box-shadow: var(--shadow-3);
+  opacity: 0;
+  transition: opacity var(--t-swap);
+  pointer-events: none;
+}
+
+.k-expand.is-landed .k-expand__frame::before {
+  opacity: 1;
+  transition: opacity var(--t-overlay);
+}
+
+.k-expand__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  color: var(--ink);
+  background: var(--k-expand-bg, var(--surface));
+  border: 1px solid var(--line);
+  border-radius: var(--k-expand-radius, var(--r-4));
+  overflow: hidden;
+  outline: none;
+}
+
+.k-expand__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: var(--k-expand-pad, clamp(1.25rem, 3.2vw, 2.75rem));
+  color: inherit;
+}
+
+.k-expand__close {
+  position: absolute;
+  top: var(--k-expand-close-inset, 0.85rem);
+  right: var(--k-expand-close-inset, 0.85rem);
+  z-index: 2;
+  background: var(--k-expand-bg, var(--surface));
+}
+
+.k-expand__flight {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* a copy of a shared element, placed by its transform from the top left corner of the screen */
+.k-expand__flyer {
+  position: absolute !important;
+  left: 0 !important;
+  top: 0 !important;
+  margin: 0 !important;
+  max-width: none !important;
+  max-height: none !important;
+  transform-origin: 0 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+/* a shared element whose copy is flying (in the trigger while the view is open, in the view until its copy lands) */
+.k-expand-away {
+  visibility: hidden !important;
+}

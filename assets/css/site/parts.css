@@ -140,7 +140,7 @@ html.js .sechead[data-inview]:not(.is-in) > * {
   color: var(--ink-2);
 }
 
-/* ---------- a figure caption, as in a paper: "Fig. 1" then the caption ---------- */
+/* ---------- a plain caption under a picture (no numbering) ---------- */
 .figcap {
   display: flex;
   flex-wrap: wrap;
@@ -149,14 +149,6 @@ html.js .sechead[data-inview]:not(.is-in) > * {
   font-size: var(--fs-xs);
   line-height: 1.5;
   color: var(--muted);
-}
-
-.figcap__no {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 1.02rem;
-  line-height: 1.2;
-  color: var(--ink-2);
 }
 
 /* ---------- a link that ends in an arrow (use sparingly: a plain .link is the default) ---------- */

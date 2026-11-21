@@ -1,0 +1,319 @@
+<!DOCTYPE html> <html lang="en"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> Snap | Wai-Kong Lee </title> <meta name="author" content="Wai-Kong Lee"> <meta name="description" content="Test page for the scroll stepper (Site.snap). Not linked from the navigation."> <meta name="keywords" content="Wai-Kong Lee, cryptographic engineering, post-quantum cryptography, homomorphic encryption, GPU computing, deep learning hardware, UTAR"> <meta property="og:site_name" content="Wai-Kong Lee"> <meta property="og:type" content="website"> <meta property="og:title" content="Wai-Kong Lee | Snap"> <meta property="og:url" content="https://pingyi-226.github.io/waikonglee/kit/snap/"> <meta property="og:description" content="Test page for the scroll stepper (Site.snap). Not linked from the navigation."> <meta property="og:image" content="https://pingyi-226.github.io/waikonglee/assets/img/og-card.png"> <meta property="og:locale" content="en"> <meta name="twitter:card" content="summary"> <meta name="twitter:title" content="Snap"> <meta name="twitter:description" content="Test page for the scroll stepper (Site.snap). Not linked from the navigation."> <meta name="twitter:image" content="https://pingyi-226.github.io/waikonglee/assets/img/og-card.png"> <script type="application/ld+json">
+    {
+        "author":
+        {
+            "@type": "Person",
+            "name": "Wai-Kong Lee"
+        },
+        "url": "https://pingyi-226.github.io/waikonglee/kit/snap/",
+        "@type": "WebSite",
+        "description": "Test page for the scroll stepper (Site.snap). Not linked from the navigation.",
+        "headline": "Snap",
+        
+        "sameAs": ["https://scholar.google.com/citations?user=4AV9DOcAAAAJ","https://orcid.org/0000-0003-4659-8979","https://github.com/benlwk","https://www.scopus.com/authid/detail.uri?authorId=56528569300"],
+        
+        "name": "Wai-Kong Lee",
+        "@context": "https://schema.org"
+    }
+  </script> <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; media-src 'self' https:; frame-src 'self' https:; connect-src 'self' https:;"> <style>
+  :root {
+    --max-content-width: 1120px;
+  }
+</style> <link rel="stylesheet" href="/waikonglee/assets/css/tailwind.css?v=50c64c15cbb9fd1ce6056fdb8bcb4b62"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css" integrity="sha256-MVopmdyC2tYTiJ8wlktf0uh0v4NgT+vNdyVFepi7Q0c=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.5/css/academicons.min.css" integrity="sha256-SzrCOBJbGVFMahewkgjwnApaV2+av1DwMAA+/QGLyZw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/scholar-icons@1.0.3/css/scholar-icons.css" integrity="sha256-VY3hHVj/hNX3fYG6wtbA6TcKJQl7+FthzGSyIB64klY=" crossorigin="anonymous"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;display=swap"> <link defer rel="stylesheet" href="/waikonglee/assets/css/jekyll-pygments-themes-github.css?v=591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link rel="shortcut icon" href="/waikonglee/assets/img/favicon.png?v=47f7e87123d695f18bbca80a763c412d"> <link rel="apple-touch-icon" href="/waikonglee/assets/img/apple-touch-icon.png?v=e272ea2a6f48e94a974ee593d58ecc80"> <link rel="stylesheet" href="/waikonglee/assets/css/main.css?v=3116ba77db9ee1581d05bb3e86fbf7f1"> <link rel="canonical" href="https://pingyi-226.github.io/waikonglee/kit/snap/"> <script src="/waikonglee/assets/js/theme.js?v=5286c3e4c334d0ecb8fc0c40ff4fa7ec"></script> <link defer rel="stylesheet" href="/waikonglee/assets/css/jekyll-pygments-themes-native.css?v=5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
+    initTheme();
+  </script> <meta name="robots" content="noindex"> <script>
+  // Mark that JavaScript is available so content can start hidden and animate in.
+  // If the site script has not started within a few seconds, drop the mark so nothing stays hidden.
+  document.documentElement.classList.add('js');
+  // The template's theme script marks <html> with "transition" for a moment whenever it applies a theme, also on load;
+  // while the mark is there its stylesheet lets only colours transition, which would swallow every entrance that starts
+  // in the first third of a second. On load there is nothing to cross-fade, so take the mark off again.
+  document.documentElement.classList.remove('transition');
+  setTimeout(function () {
+    if (!document.documentElement.classList.contains('is-ready')) document.documentElement.classList.remove('js');
+  }, 4000);
+</script> <link rel="preconnect" href="https://fonts.googleapis.com"> <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <link rel="stylesheet" href="/waikonglee/assets/css/site/tokens.css?v=bd31a2c39b8de098e8b366dd16afec26"> <link rel="stylesheet" href="/waikonglee/assets/css/site/base.css?v=a1d8867b85a820ae8c73ced724d09bfc"> <link rel="stylesheet" href="/waikonglee/assets/css/site/kit-text.css?v=a6f5c71235fb3d1c8233a5cf3602c87f"> <link rel="stylesheet" href="/waikonglee/assets/css/site/kit-pointer.css?v=a41017ffa291bd8ec728f6626854ecb9"> <link rel="stylesheet" href="/waikonglee/assets/css/site/kit-scroll.css?v=eb22211b36e491ccd726a6be713c2a47"> <link rel="stylesheet" href="/waikonglee/assets/css/site/kit-snap.css?v=0ffa1b1a9ffdea25f7896d8ad83e6d88"> <link rel="stylesheet" href="/waikonglee/assets/css/site/kit-expand.css?v=e75e97a61b2b0382db804dc772e25899"> <link rel="stylesheet" href="/waikonglee/assets/css/site/kit-hearts.css?v=237323d3ee1ab707087debb71aee8913"> <link rel="stylesheet" href="/waikonglee/assets/css/site/icons.css?v=bc35704b852d6a9e0b83e895e24d9f93"> <link rel="stylesheet" href="/waikonglee/assets/css/site/shell.css?v=abc323e3f366a21a8f37c81aedb5e64b"> <link rel="stylesheet" href="/waikonglee/assets/css/site/parts.css?v=d7bcd632b4729a3b72232a27e3910d2a"> </head> <body class="v2 layout-default"> <a class="skip-link" href="#main">Skip to content</a> <header class="nav" data-nav> <div class="nav__bar"> <a class="nav__brand" href="/waikonglee/" aria-label="Wai-Kong Lee: home"> <span class="nav__brand-name" data-kit="rolling-text">Wai-Kong Lee</span> </a> <nav class="nav__links" aria-label="Primary"> <ul class="nav__list" data-kit="highlight" data-mode="both" data-items=".nav__link"> <li> <a class="nav__link" href="/waikonglee/research/"><span class="nav__label">Research</span></a> </li> <li> <a class="nav__link" href="/waikonglee/publications/"><span class="nav__label">Publications</span></a> </li> <li> <a class="nav__link" href="/waikonglee/group/"><span class="nav__label">Group</span></a> </li> <li> <a class="nav__link" href="/waikonglee/news/"><span class="nav__label">News</span></a> </li> <li> <a class="nav__link" href="/waikonglee/cv/"><span class="nav__label">CV</span></a> </li> </ul> </nav> <div class="nav__tools" data-kit="tooltip-group"> <button id="search-toggle" type="button" class="icon-btn" aria-label="Search the site" data-tip="Search" data-kit="magnetic press"> <svg class="icon icon--search" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><g class="k-i-a"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></g></svg> </button> <button id="light-toggle" type="button" class="icon-btn nav__theme" aria-label="Switch between light and dark" data-tip="Theme" data-kit="magnetic press"> <svg class="icon icon--sun" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle class="k-i-core" cx="12" cy="12" r="4"></circle><g class="k-i-rays"><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></g></svg> <svg class="icon icon--moon" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path class="k-i-a" d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg> </button> <button type="button" class="icon-btn nav__menu" aria-label="Menu" aria-expanded="false" aria-controls="navsheet" data-nav-menu> <span class="nav__burger" aria-hidden="true"><i></i><i></i></span> </button> </div> </div> </header> <div class="navsheet" id="navsheet" role="dialog" aria-label="Menu" hidden> <nav class="navsheet__nav" aria-label="Menu"> <ol class="navsheet__list"> <li> <a class="navsheet__link" href="/waikonglee/"> <span class="navsheet__label">Home</span> </a> </li> <li> <a class="navsheet__link" href="/waikonglee/research/"> <span class="navsheet__label">Research</span> </a> </li> <li> <a class="navsheet__link" href="/waikonglee/publications/"> <span class="navsheet__label">Publications</span> </a> </li> <li> <a class="navsheet__link" href="/waikonglee/group/"> <span class="navsheet__label">Group</span> </a> </li> <li> <a class="navsheet__link" href="/waikonglee/news/"> <span class="navsheet__label">News</span> </a> </li> <li> <a class="navsheet__link" href="/waikonglee/cv/"> <span class="navsheet__label">CV</span> </a> </li> </ol> </nav> <div class="navsheet__foot"> <a class="link" href="mailto:wklee@utar.edu.my">wklee@utar.edu.my</a><ul class="socials" data-kit="tooltip-group"> <li><a class="icon-btn" href="mailto:wklee@utar.edu.my" aria-label="Email" data-tip="Email" data-kit="magnetic press"><svg class="icon icon--mail" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><g class="k-i-a"><path class="k-i-body" d="M20 4c1.105 0 2 .895 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2l8 0a0 0 0 0 1 0 0l8 0Z"></path><path class="k-i-flap" d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path></g></svg> </a></li> <li><a class="icon-btn" href="https://scholar.google.com/citations?user=4AV9DOcAAAAJ" aria-label="Google Scholar" data-tip="Google Scholar" data-kit="magnetic press" rel="noopener" target="_blank"><svg class="icon icon--scholar" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path class="k-i-board" d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path><path class="k-i-tassel" d="M22 10v6"></path></svg> </a></li> <li><a class="icon-btn" href="https://orcid.org/0000-0003-4659-8979" aria-label="ORCID" data-tip="ORCID" data-kit="magnetic press" rel="noopener" target="_blank"><svg class="icon icon--orcid" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"></circle><path d="M8.5 10.5v6"></path><path class="k-i-dot" d="M8.5 7.6v.01"></path><path class="k-i-d" d="M12 10.5v6h1.5a3 3 0 0 0 0-6Z"></path></svg> </a></li> <li><a class="icon-btn" href="https://github.com/benlwk" aria-label="GitHub" data-tip="GitHub" data-kit="magnetic press" rel="noopener" target="_blank"><svg class="icon icon--github" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path class="k-i-tail" d="M9 18c-4.51 2-5-2-7-2"></path></svg> </a></li> <li><a class="icon-btn" href="https://www.scopus.com/authid/detail.uri?authorId=56528569300" aria-label="Scopus" data-tip="Scopus" data-kit="magnetic press" rel="noopener" target="_blank"><svg class="icon icon--scopus" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5"></rect><path class="k-i-s" d="M15 8.9C14.4 7.9 13.3 7.25 12 7.25c-1.8 0-3 .95-3 2.35 0 3.15 6.25 1.65 6.25 4.85 0 1.45-1.3 2.3-3.25 2.3-1.45 0-2.6-.55-3.25-1.6" pathlength="1"></path></svg> </a></li> </ul> </div> </div> <main id="main"><style>
+  .sn-sec { position: relative; min-height: 100vh; min-height: 100svh; display: grid; align-content: center; padding: calc(var(--nav-h) + 2rem) 0 3rem; border-bottom: 1px solid var(--line); }
+  .sn-sec:nth-child(even) { background: var(--paper-2); }
+  .sn-sec h1, .sn-sec h2 { margin: 0 0 1rem; }
+  .sn-sec p { max-width: var(--measure); color: var(--ink-2); }
+  .sn-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 1.5rem; }
+  .sn-field { font: inherit; font-size: var(--fs-small); padding: 0.55rem 0.8rem; border: 1px solid var(--line-strong); border-radius: var(--r-2); background: var(--surface); color: var(--ink); min-width: 16rem; }
+  .sn-pin { padding: 0; display: block; align-content: normal; min-height: 0; height: 320vh; }
+  .sn-pin__stage { position: sticky; top: 0; height: 100vh; height: 100svh; display: grid; place-items: center; overflow: clip; }
+  .sn-pin__stage svg { width: min(78vw, 64rem); height: auto; overflow: visible; }
+  .sn-pin__stage circle { fill: var(--surface); stroke: var(--line-strong); }
+  .sn-pin__stage .is-core { fill: none; stroke: var(--line); stroke-dasharray: 3 6; }
+  .sn-pin__title { position: absolute; left: var(--gutter); top: calc(var(--nav-h) + 1.5rem); margin: 0; }
+  .sn-pin__p { position: absolute; right: var(--gutter); bottom: 2rem; margin: 0; color: var(--muted); }
+  .sn-tall { min-height: 0; height: auto; align-content: start; padding-top: calc(var(--nav-h) + 3rem); }
+  .sn-tall .wrap > * + * { margin-top: 1.25rem; }
+  .sn-tall h3 { font-family: var(--font-display); font-weight: 400; font-size: var(--fs-d3); margin: 3rem 0 0; }
+  .sn-code { max-width: min(40rem, 100%); max-height: 12rem; overflow: auto; margin: 0; padding: 1rem 1.2rem; font-family: var(--font-mono); font-size: var(--fs-xs); line-height: 1.6; background: var(--paper-3); border-radius: var(--r-2); }
+  .sn-code code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .sn .code-display-wrapper { max-width: 100%; }
+  .sn-short { min-height: 70vh; }
+  .sn-log { position: fixed; left: 1rem; bottom: 1rem; z-index: var(--z-sticky); display: grid; gap: 0.15rem; padding: 0.6rem 0.8rem; font-family: var(--font-mono); font-size: 0.7rem; line-height: 1.4; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-2); box-shadow: var(--shadow-1); pointer-events: none; max-width: 22rem; }
+  .sn-log b { font-weight: 500; color: var(--ink); }
+  .sn-dots { position: fixed; right: 1rem; top: 50%; z-index: var(--z-sticky); display: grid; gap: 0.35rem; transform: translateY(-50%); }
+  .sn-dots button { width: 0.6rem; height: 0.6rem; padding: 0; border: 1px solid var(--line-strong); border-radius: 50%; background: transparent; cursor: pointer; transition: background var(--t-color), border-color var(--t-color); }
+  .sn-dots button[aria-current="true"] { background: var(--ink); border-color: var(--ink); }
+  @media (max-width: 760px) { .sn-dots { display: none; } }
+</style> <div class="sn" data-kit="snap" data-snap-mode="deck" id="sn"> <section class="sn-sec" data-snap="" id="sn-top" aria-labelledby="sn-h1"> <div class="wrap"> <h1 class="t-d1" id="sn-h1">Snap</h1> <p>The page moves one section at a time. A wheel notch, a trackpad swipe, Page Down, Space or the arrow keys go to the next stop; a gesture the other way during a move turns it round. Home and End go to the ends.</p> <p class="sn-row"><a class="link" href="?mode=deck">Deck mode</a> <a class="link" href="?mode=soft">Soft mode</a> <a class="link" href="#sn-pin">To the pinned section</a> <a class="link" href="#sn-deep">Into the tall section</a></p> </div> </section> <section class="sn-sec" data-snap="" id="sn-two" aria-labelledby="sn-h2"> <div class="wrap"> <h2 class="t-d2" id="sn-h2">A plain stop</h2> <p>Tab moves focus; a control in another section brings that section in. Keys typed into the field stay in the field.</p> <div class="sn-row"> <button type="button" class="btn btn--ghost" data-kit="press" onclick="Site.snap.prev()"><span data-kit="sliding-text">Previous</span></button> <button type="button" class="btn" data-kit="press ripple" onclick="Site.snap.next()"><span data-kit="sliding-text">Next</span></button> <input class="sn-field" type="text" placeholder="Arrow keys and Space type here" aria-label="A text field"> </div> </div> </section> <section class="sn-sec sn-pin" data-snap="" data-snap-points="0.35 1" data-snap-top="true" data-snap-hold="1" id="sn-pin" aria-labelledby="sn-h3"> <div class="sn-pin__stage"> <h2 class="sn-pin__title t-d2" id="sn-h3">A pinned section</h2> <svg viewbox="0 0 1000 600" aria-hidden="true" data-sn-pic=""> <circle class="is-core" cx="500" cy="300" r="220"></circle> <circle r="34"></circle><circle r="34"></circle><circle r="34"></circle><circle r="34"></circle><circle r="34"></circle><circle r="34"></circle><circle r="34"></circle> </svg> <p class="sn-pin__p t-data" data-sn-progress="">0.00</p> </div> </section> <section class="sn-sec sn-tall" data-snap="" id="sn-tall" aria-labelledby="sn-h4"> <div class="wrap"> <h2 class="t-d2" id="sn-h4">A section taller than the screen</h2> <p>Here a gesture moves by most of a screen, so everything can be read; the next section is landed on exactly once it is within reach.</p> <p>Lattice-based cryptography rests on the hardness of finding short vectors in high-dimensional lattices. Schemes such as Kyber and Dilithium compute with polynomials in rings, and the number-theoretic transform turns their multiplication into pointwise products. On graphics processors the transform runs in thousands of threads at once; on microcontrollers every cycle and every byte of memory counts.</p> <pre class="sn-code" tabindex="0" aria-label="A scrollable code block"><code>// the wheel scrolls this block while it can
+for (int len = 128; len &gt;= 2; len &gt;&gt;= 1) {
+  for (int start = 0; start &lt; 256; start = j + len) {
+    int16_t zeta = zetas[k++];
+    for (j = start; j &lt; start + len; j++) {
+      int16_t t = fqmul(zeta, r[j + len]);
+      r[j + len] = r[j] - t;
+      r[j] = r[j] + t;
+    }
+  }
+}
+// Barrett reduction keeps coefficients small
+int16_t barrett_reduce(int16_t a) {
+  int16_t t;
+  const int16_t v = ((1 &lt;&lt; 26) + KYBER_Q / 2) / KYBER_Q;
+  t = ((int32_t)v * a + (1 &lt;&lt; 25)) &gt;&gt; 26;
+  t *= KYBER_Q;
+  return a - t;
+}</code></pre> <p>Homomorphic encryption lets a server compute on data it cannot read. Bootstrapping, the step that refreshes a ciphertext's noise, dominates the cost; keeping a GPU busy through it is a matter of memory layout as much as arithmetic.</p> <h3 id="sn-deep">Deep inside</h3> <p>A link to this heading lands here, inside the tall section, not at its top.</p> <p>Side-channel resistance asks that the time, power and electromagnetic traces of a computation say nothing about its secrets. Masking splits every secret into random shares; constant-time code removes branches and memory accesses that depend on secret data.</p> <p>Deep learning on encrypted data combines both worlds: the network's layers become polynomial approximations, and the accelerator's job is to evaluate them fast enough to be useful.</p> <p>The end of the tall section. The next stop follows.</p> </div> </section> <section class="sn-sec" data-snap="" id="sn-five" aria-labelledby="sn-h5"> <div class="wrap"> <h2 class="t-d2" id="sn-h5">Another stop</h2> <p>After the next one the page ends; a further gesture gives a little and comes back, and the wrapper hears <code>kit:snap-end</code>.</p> <p class="sn-row"><a class="link" href="#sn-top">Back to the top</a></p> </div> </section> <section class="sn-sec sn-short" data-snap="" id="sn-last" aria-labelledby="sn-h6"> <div class="wrap"> <h2 class="t-d2" id="sn-h6">The last section</h2> <p>Shorter than the screen. The footer lies under the page; the last stop is the very end of the page.</p> </div> </section> </div> <script>
+  // demo: "?mode=soft" (runs while the page is parsed, before the kit reads the wrapper)
+  (function () {
+    var m = /[?&]mode=(soft|deck)/.exec(location.search);
+    if (m) document.getElementById("sn").setAttribute("data-snap-mode", m[1]);
+  })();
+</script> <nav class="sn-dots" aria-label="Stops" data-sn-dots=""></nav> <div class="sn-log" aria-hidden="true" data-sn-log=""> <span>index <b data-sn-index="">-</b></span><span data-sn-events=""></span> </div> <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!window.Site) return;
+    Site.ready(function () {
+      var wrap = document.getElementById("sn");
+      var pin = document.getElementById("sn-pin");
+      var pic = pin.querySelector("[data-sn-pic]");
+      var dots = Array.prototype.slice.call(pic.querySelectorAll("circle:not(.is-core)"));
+      var core = pic.querySelector(".is-core");
+      var out = pin.querySelector("[data-sn-progress]");
+      var grid = [[200, 210], [400, 210], [600, 210], [800, 210], [300, 400], [500, 400], [700, 400]];
+      function mix(a, b, t) { return a + (b - a) * t; }
+      function draw() {
+        var r = pin.getBoundingClientRect();
+        var range = pin.offsetHeight - window.innerHeight;
+        var p = range > 0 ? Site.util.clamp(-r.top / range, 0, 1) : 0;
+        var enter = Site.util.smooth(Site.util.map(p, 0, 0.35, 0, 1));
+        var flat = Site.util.smooth(Site.util.map(p, 0.35, 1, 0, 1));
+        dots.forEach(function (c, i) {
+          var a = (i / dots.length) * Math.PI * 2 - Math.PI / 2;
+          var rx = 500 + Math.cos(a) * 220 * mix(1.9, 1, enter);
+          var ry = 300 + Math.sin(a) * 220 * mix(1.9, 1, enter);
+          c.setAttribute("cx", mix(rx, grid[i][0], flat).toFixed(1));
+          c.setAttribute("cy", mix(ry, grid[i][1], flat).toFixed(1));
+          c.style.opacity = mix(0.25, 1, enter).toFixed(3);
+        });
+        core.style.opacity = (enter * (1 - flat)).toFixed(3);
+        out.textContent = p.toFixed(2);
+      }
+      window.addEventListener("scroll", Site.util.throttle(draw), { passive: true });
+      Site.on("resize", draw);
+      draw();
+      // the hold: the dots answer the absorbed gesture with a quick wave
+      pin.addEventListener("kit:snap-hold", function () {
+        dots.forEach(function (c, i) {
+          if (c.animate) c.animate([{ transform: "translateY(0)" }, { transform: "translateY(-14px)" }, { transform: "translateY(0)" }], { duration: 420, delay: i * 50, easing: "ease-in-out" });
+        });
+      });
+      // demo readout: the stops as dots, the index and the last events
+      var nav = document.querySelector("[data-sn-dots]");
+      var idx = document.querySelector("[data-sn-index]");
+      var ev = document.querySelector("[data-sn-events]");
+      var log = [];
+      function build() {
+        nav.textContent = "";
+        Site.snap.stops.forEach(function (s, i) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.setAttribute("aria-label", "Stop " + (i + 1));
+          b.addEventListener("click", function () { Site.snap.go(i); });
+          nav.appendChild(b);
+        });
+        mark();
+      }
+      function mark() {
+        Array.prototype.forEach.call(nav.children, function (b, i) { b.setAttribute("aria-current", i === Site.snap.index ? "true" : "false"); });
+        idx.textContent = Site.snap.index + " / " + Site.snap.stops.length + (Site.snap.active ? " " + Site.snap.mode : " native");
+      }
+      ["snap-change", "snap-arrive", "snap-leave", "snap-hold", "snap-end", "snap-start"].forEach(function (n) {
+        wrap.addEventListener("kit:" + n, function (e) {
+          log.unshift(n.replace("snap-", "") + " " + e.detail.index + (e.detail.point ? "." + e.detail.point : ""));
+          log.length = Math.min(log.length, 4);
+          ev.textContent = log.join("  ");
+          mark();
+        });
+      });
+      Site.on("resize", function () { setTimeout(build, 200); });
+      window.addEventListener("load", function () { setTimeout(build, 100); });
+      build();
+    });
+  });
+</script> </main> <footer class="foot" role="contentinfo"> <div class="foot__inner"> <div class="foot__cols"> <div class="foot__id"> <p class="foot__name">Wai-Kong Lee</p> <p class="foot__aff">Associate Professor<br>Faculty of Information and Communication Technology<br>Universiti Tunku Abdul Rahman (UTAR), Malaysia</p> </div> <nav class="foot__nav" aria-label="Footer"> <ul> <li><a class="link" href="/waikonglee/research/">Research</a></li> <li><a class="link" href="/waikonglee/publications/">Publications</a></li> <li><a class="link" href="/waikonglee/group/">Group</a></li> <li><a class="link" href="/waikonglee/news/">News</a></li> <li><a class="link" href="/waikonglee/cv/">CV</a></li> </ul> </nav> <div class="foot__reach"> <p><a class="link" href="mailto:wklee@utar.edu.my">wklee@utar.edu.my</a></p> <ul class="socials" data-kit="tooltip-group"> <li><a class="icon-btn" href="mailto:wklee@utar.edu.my" aria-label="Email" data-tip="Email" data-kit="magnetic press"><svg class="icon icon--mail" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><g class="k-i-a"><path class="k-i-body" d="M20 4c1.105 0 2 .895 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2l8 0a0 0 0 0 1 0 0l8 0Z"></path><path class="k-i-flap" d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"></path></g></svg> </a></li> <li><a class="icon-btn" href="https://scholar.google.com/citations?user=4AV9DOcAAAAJ" aria-label="Google Scholar" data-tip="Google Scholar" data-kit="magnetic press" rel="noopener" target="_blank"><svg class="icon icon--scholar" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path class="k-i-board" d="M21.42 10.92a1 1 0 0 0-.02-1.84L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.83l8.57 3.91a2 2 0 0 0 1.66 0z"></path><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path><path class="k-i-tassel" d="M22 10v6"></path></svg> </a></li> <li><a class="icon-btn" href="https://orcid.org/0000-0003-4659-8979" aria-label="ORCID" data-tip="ORCID" data-kit="magnetic press" rel="noopener" target="_blank"><svg class="icon icon--orcid" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"></circle><path d="M8.5 10.5v6"></path><path class="k-i-dot" d="M8.5 7.6v.01"></path><path class="k-i-d" d="M12 10.5v6h1.5a3 3 0 0 0 0-6Z"></path></svg> </a></li> <li><a class="icon-btn" href="https://github.com/benlwk" aria-label="GitHub" data-tip="GitHub" data-kit="magnetic press" rel="noopener" target="_blank"><svg class="icon icon--github" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.4 5.4 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path><path class="k-i-tail" d="M9 18c-4.51 2-5-2-7-2"></path></svg> </a></li> <li><a class="icon-btn" href="https://www.scopus.com/authid/detail.uri?authorId=56528569300" aria-label="Scopus" data-tip="Scopus" data-kit="magnetic press" rel="noopener" target="_blank"><svg class="icon icon--scopus" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="18" height="18" rx="5"></rect><path class="k-i-s" d="M15 8.9C14.4 7.9 13.3 7.25 12 7.25c-1.8 0-3 .95-3 2.35 0 3.15 6.25 1.65 6.25 4.85 0 1.45-1.3 2.3-3.25 2.3-1.45 0-2.6-.55-3.25-1.6" pathlength="1"></path></svg> </a></li> </ul> <p class="foot__time t-label" data-clock data-zone="Asia/Kuala_Lumpur" title="Local time in Kampar, Malaysia"> <svg class="icon icon--clock" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="14" height="14" style="--icon-size:14px" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"></circle><path class="k-i-min" d="M12 12V6"></path><path class="k-i-hr" d="m12 12 4 2"></path></svg> <span>Kampar</span> <span class="foot__clock t-data" data-clock-out aria-live="off">--:--</span> </p> </div> </div> <p class="foot__mark" aria-hidden="true" data-kit="rolling-text" data-trigger="hover">Wai-Kong Lee</p> <div class="foot__base"> <span>© 2026 Wai-Kong Lee</span> <span class="foot__credit">Built with <a href="https://jekyllrb.com/" target="_blank" rel="external nofollow noopener">Jekyll</a> and the <a href="https://github.com/alshedivat/al-folio" rel="external nofollow noopener" target="_blank">al-folio</a> template. </span> </div> </div> </footer> <div class="totop" data-totop hidden> <button type="button" class="totop__btn" aria-label="Back to top" data-kit="magnetic press"> <svg class="totop__ring" viewbox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="22" pathlength="1"></circle></svg> <svg class="icon icon--arrow-up" xmlns="http://www.w3.org/2000/svg" viewbox="0 0 24 24" width="18" height="18" style="--icon-size:18px" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><g class="k-i-a"><path d="m5 12 7-7 7 7"></path><path d="M12 19V5"></path></g></svg> </button> </div> <div data-kit="cursor" hidden></div> <script>
+  window.alFolio = {
+    compatBootstrap: false
+  };
+</script> <script src="/waikonglee/assets/js/nav-toggle.js?v=141bd79a73ebc0f0b6ea58e440ae79fc"></script> <script src="/waikonglee/assets/js/tooltips-setup.js?v=fe487e99db6c43751e6e7bdb2d6a0611"></script> <script src="/waikonglee/assets/js/no_defer.js?v=53b1b1a645525975c963ce8bf8bfefcf"></script> <script defer src="/waikonglee/assets/js/common.js?v=87baac90f765f2f3362dcf6aaf312a8a"></script> <script defer src="/waikonglee/assets/js/copy_code.js?v=c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/waikonglee/assets/js/jupyter_new_tab.js?v=896d254890d9b47f0281f63bfccf0dee"></script> <script type="module" src="/waikonglee/assets/al_search/js/search/ninja-keys.min.js"></script> <ninja-keys hidebreadcrumbs noautoloadmdicons placeholder="Type to start searching"></ninja-keys> <script src="/waikonglee/assets/al_search/js/search-setup.js"></script> <script>
+// get the ninja-keys element
+const ninja = document.querySelector('ninja-keys');
+
+// add the home and posts menu items
+ninja.data = [{
+    id: "nav-about",
+    title: "About",
+    section: "Navigation",
+    handler: () => {
+      window.location.href = "/waikonglee/";
+    },
+  },{id: "nav-research",
+          title: "Research",
+          description: "Cryptographic engineering, GPU computing and efficient hardware, from algorithms down to silicon.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/waikonglee/research/";
+          },
+        },{id: "nav-publications",
+          title: "Publications",
+          description: "Journal and conference papers.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/waikonglee/publications/";
+          },
+        },{id: "nav-group",
+          title: "Group",
+          description: "Current postgraduate students and alumni.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/waikonglee/group/";
+          },
+        },{id: "nav-news",
+          title: "News",
+          description: "Activities and announcements.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/waikonglee/news/";
+          },
+        },{id: "nav-cv",
+          title: "CV",
+          description: "Education, appointments and funded projects.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/waikonglee/cv/";
+          },
+        },{id: "news-lunch-meeting-with-hwajeong-seo-and-seogchung-seo",
+          title: 'Lunch Meeting with Hwajeong Seo and Seogchung Seo.',
+          description: "",
+          section: "News",},{id: "news-lunch-after-viva-of-see-jin-chuan-bravo",
+          title: 'Lunch after VIVA of See Jin Chuan, bravo!',
+          description: "",
+          section: "News",},{id: "news-yong-min-an-made-it-through-his-master-degree-viva-good-job",
+          title: 'Yong Min An made it through his Master degree VIVA, good job!',
+          description: "",
+          section: "News",},{id: "news-published-in-ieee-transactions-on-components-packaging-and-manufacturing-technology-tc-gvf-tensor-core-gpu-based-vector-fitting-via-accelerated-tall-skinny-qr-solvers",
+          title: 'Published in IEEE Transactions on Components, Packaging and Manufacturing Technology: TC-GVF: Tensor Core...',
+          description: "",
+          section: "News",},{id: "news-published-in-applied-intelligence-augq-augmented-quantization-granularity-to-overcome-accuracy-degradation-for-sub-byte-quantized-deep-neural-networks",
+          title: 'Published in Applied Intelligence: AuGQ: Augmented quantization granularity to overcome accuracy degradation for...',
+          description: "",
+          section: "News",},{id: "news-published-in-neural-computing-and-applications-a-compact-and-flexible-fpga-accelerator-for-regular-and-octave-convolutional-neural-networks",
+          title: 'Published in Neural Computing and Applications: A compact and flexible FPGA accelerator for...',
+          description: "",
+          section: "News",},{id: "news-published-in-theoretical-computer-science-a-signature-scheme-constructed-from-zero-knowledge-argument-of-knowledge-for-the-subgraph-isomorphism-problem",
+          title: 'Published in Theoretical Computer Science: A signature scheme constructed from zero knowledge argument...',
+          description: "",
+          section: "News",},{id: "news-published-in-ieee-internet-of-things-journal-risc32-a-a-low-power-asynchronous-iot-processor-on-fpga-with-adaptive-pipeline-structure",
+          title: 'Published in IEEE Internet of Things Journal: RISC32-A: A Low-Power Asynchronous IoT Processor...',
+          description: "",
+          section: "News",},{id: "news-published-in-ieee-transactions-on-emerging-topics-in-computing-quripfenet-quantum-resistant-ipfe-based-neural-network",
+          title: 'Published in IEEE Transactions on Emerging Topics in Computing: QuripfeNet: Quantum-Resistant IPFE-Based Neural...',
+          description: "",
+          section: "News",},{id: "news-released-cutrantt-number-theoretic-transform-kernels-for-ckks-homomorphic-encryption-on-gpus",
+          title: 'Released cuTraNTT: Number-theoretic transform kernels for CKKS homomorphic encryption on GPUs.',
+          description: "",
+          section: "News",},{id: "news-released-qruov-gpu-gpu-implementation-of-the-qr-uov-post-quantum-signature-scheme",
+          title: 'Released qruov-gpu: GPU implementation of the QR-UOV post-quantum signature scheme.',
+          description: "",
+          section: "News",},{id: "news-released-tensorkyber-the-ml-kem-kyber-number-theoretic-transform-reformulated-as-integer-matrix-multiplications-on-tensor-cores",
+          title: 'Released TensorKyber: The ML-KEM (Kyber) number-theoretic transform reformulated as integer matrix multiplications on...',
+          description: "",
+          section: "News",},{id: "news-released-mldsa-gpu-keygen-sign-ml-dsa-fips-204-signing-verification-and-key-generation-on-gpus",
+          title: 'Released MLDSA-GPU-keygen-sign: ML-DSA (FIPS 204) signing, verification and key generation on GPUs.',
+          description: "",
+          section: "News",},{id: "news-released-tensormceliece-batched-tensor-core-engines-for-the-classic-mceliece-key-encapsulation-mechanism",
+          title: 'Released tensorMcEliece: Batched Tensor-Core engines for the Classic McEliece key encapsulation mechanism.',
+          description: "",
+          section: "News",},{id: "news-released-mayo-gpu-constant-time-cuda-signing-and-verification-for-the-mayo-signature-scheme-in-coarse-and-fine-grained-variants-plus-a-tensor-core-path",
+          title: 'Released mayo-gpu: Constant-time CUDA signing and verification for the MAYO signature scheme, in...',
+          description: "",
+          section: "News",},{id: "news-call-for-papers-i-am-a-guest-editor-with-dr-safiullah-khan-and-dr-zain-ul-abideen-of-the-collection-hardware-accelerated-cryptography-and-privacy-preserving-computing-for-resource-constrained-systems-in-discover-cybersecurity-springer-open-access",
+          title: 'Call for papers: I am a guest editor, with Dr. Safiullah Khan and...',
+          description: "",
+          section: "News",},{
+        id: 'social-email',
+        title: 'email',
+        section: 'Socials',
+        handler: () => {
+          window.open("mailto:%77%6B%6C%65%65@%75%74%61%72.%65%64%75.%6D%79", "_blank");
+        },
+      },{
+        id: 'social-scholar',
+        title: 'Google Scholar',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://scholar.google.com/citations?user=4AV9DOcAAAAJ", "_blank");
+        },
+      },{
+        id: 'social-orcid',
+        title: 'ORCID',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://orcid.org/0000-0003-4659-8979", "_blank");
+        },
+      },{
+        id: 'social-github',
+        title: 'GitHub',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://github.com/benlwk", "_blank");
+        },
+      },{
+        id: 'social-scopus',
+        title: 'Scopus',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://www.scopus.com/authid/detail.uri?authorId=56528569300", "_blank");
+        },
+      },{
+      id: 'light-theme',
+      title: 'Change theme to light',
+      description: 'Change the theme of the site to Light',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("light");
+      },
+    },
+    {
+      id: 'dark-theme',
+      title: 'Change theme to dark',
+      description: 'Change the theme of the site to Dark',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("dark");
+      },
+    },
+    {
+      id: 'system-theme',
+      title: 'Use system default theme',
+      description: 'Change the theme of the site to System Default',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("system");
+      },
+    },];
+
+</script> <script src="/waikonglee/assets/al_search/js/shortcut-key.js"></script> <script defer src="/waikonglee/assets/js/thirdparty/motion.js?v=95b6dbd76598b7201e9aa1336d1b5b27"></script> <script defer src="/waikonglee/assets/js/site/core.js?v=d1e79bd08503fabf7c25eb57ecee8634"></script> <script defer src="/waikonglee/assets/js/site/kit-text.js?v=f8ba8a464f5d38984ba1006c7b261817"></script> <script defer src="/waikonglee/assets/js/site/kit-pointer.js?v=9277d1041d2ae7f60319a46ede708e69"></script> <script defer src="/waikonglee/assets/js/site/kit-scroll.js?v=6f41d0c5b47b647f59e793dc66fecd47"></script> <script defer src="/waikonglee/assets/js/site/kit-snap.js?v=488ed6f82831a6d16c310c75785c1ade"></script> <script defer src="/waikonglee/assets/js/site/kit-expand.js?v=a5b7bdd4b75e59186b487fe3155b4fd0"></script> <script defer src="/waikonglee/assets/js/site/kit-hearts.js?v=2a4d87fa88428178b3f0e5360d1c22d6"></script> <script defer src="/waikonglee/assets/js/site/icons.js?v=c45ec0b9c3fc95caac0813c778ff935b"></script> <script defer src="/waikonglee/assets/js/site/shell.js?v=6c6d1dd4b31b4a47bc01d20675bfc29f"></script> </body> </html>

@@ -1,0 +1,292 @@
+/* ==========================================================================
+   Home page, first screen: the intro overlay, the hero, and the lattice layer behind it.
+   ========================================================================== */
+
+/* ---------- intro: the name draws itself, then glides to its place ---------- */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-intro);
+  pointer-events: none;
+}
+
+.intro__veil {
+  position: absolute;
+  inset: 0;
+  background: var(--paper);
+}
+
+.intro svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+
+.intro text {
+  fill: var(--ink);
+  stroke: var(--ink);
+  stroke-width: 1.1px;
+  stroke-linejoin: round;
+}
+
+html.is-intro {
+  overflow: hidden;
+}
+
+html {
+  scrollbar-gutter: stable; /* nothing shifts when the page is locked for the intro or the menu */
+}
+
+.nav {
+  transition:
+    transform var(--spring-slide),
+    border-color var(--t-overlay),
+    opacity 700ms var(--ease-out);
+}
+
+html.is-intro .nav {
+  opacity: 0;
+}
+
+/* ---------- the lattice: a fixed layer under the first screen (drawn by home-hero.js) ----------
+   It lies under the page's content (main is the stacking context, its paper is painted first) and does not scroll:
+   as the next block arrives it leaves with a sweep of light, then it is hidden and no longer drawn. */
+.hero-lattice {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100vh;
+  pointer-events: none;
+}
+
+html.js .hero-lattice:not(.is-on),
+.hero-lattice.is-gone {
+  visibility: hidden;
+}
+
+/* ---------- hero ---------- */
+.hero {
+  --hero-y: 0px; /* how far the page has scrolled into the hero (home-hero.js), for the layers' own speeds */
+  --hero-p: 0; /* the same as a fraction of the hero's height */
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-top: calc(var(--nav-h) + 1.5rem);
+}
+
+/* where the page moves in steps, the first screen is exactly one screen */
+html.has-snap .hero {
+  height: 100vh;
+  height: 100svh;
+  min-height: 0;
+  padding-top: calc(var(--nav-h) + 1rem);
+}
+
+.hero__main,
+.hero__base {
+  position: relative;
+  width: min(100% - 2 * var(--gutter), 1480px);
+  margin-inline: auto;
+}
+
+.hero__main {
+  align-self: end;
+  padding-bottom: clamp(1.5rem, 4.4vh, 3.25rem);
+}
+
+/* leaving the first screen, the layers go at their own speeds: the figures first, then the words, then the name
+   (the lattice behind does not move at all). Read from the scroll the stepper tweens, so they come back the same way. */
+.hero__name {
+  translate: 0 calc(var(--hero-y) * -0.04);
+  opacity: calc(1 - var(--hero-p) * 1.15);
+}
+
+.hero__copy {
+  translate: 0 calc(var(--hero-y) * -0.12);
+  opacity: calc(1 - var(--hero-p) * 2.6);
+}
+
+.hero__base {
+  translate: 0 calc(var(--hero-y) * -0.36);
+  opacity: calc(1 - var(--hero-p) * 4);
+}
+
+.hero__name {
+  margin: 0 0 clamp(0.75rem, 2vh, 1.4rem) -0.045em;
+  font-size: min(var(--fs-hero), 19.5vh);
+}
+
+.hero__line {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+}
+
+.hero__role {
+  margin: 0 0 clamp(0.75rem, 2.2vh, 1.5rem);
+  font-size: var(--fs-small);
+  color: var(--muted);
+}
+
+.hero__statement {
+  max-width: 21em;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, min(2.45vw, 4.4vh), 2.15rem);
+  line-height: 1.2;
+  letter-spacing: -0.006em;
+  color: var(--ink-2);
+  text-wrap: balance;
+}
+
+.hero__rotate {
+  font-style: italic;
+  color: var(--ink);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: clamp(1.25rem, 3.2vh, 2.2rem);
+}
+
+/* the wipe: the same block of ink over both buttons, so the primary one is there when it has passed */
+.hero__actions .btn {
+  --k-wipe-color: var(--ink);
+}
+
+.hero__actions .btn:not(.btn--ghost) {
+  --k-wipe-color: var(--accent);
+}
+
+.hero__base {
+  padding: 1.1rem 0 clamp(1rem, 2.6vh, 1.8rem);
+}
+
+/* the hairline over the figures draws from the left when they arrive */
+.hero__base::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: var(--line);
+  transform-origin: 0 50%;
+}
+
+.hero__figures {
+  display: flex;
+  gap: clamp(1.5rem, 4.6vw, 4.25rem);
+  margin: 0;
+}
+
+.hero__figures .stat__value {
+  font-size: clamp(2rem, min(3.6vw, 6.4vh), 3.3rem);
+}
+
+/* the citations figure leads to the profile it comes from; it reads as a figure until the pointer finds it */
+.hero__cite,
+.hero__cite:visited {
+  position: relative;
+  color: inherit;
+  text-decoration: none;
+}
+
+.hero__cite::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -0.12em;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: 100% 50%;
+  transition: transform var(--t-reveal);
+}
+
+.hero__cite:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: 0 50%;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hero__cite:hover::after {
+    transform: scaleX(1);
+    transform-origin: 0 50%;
+  }
+}
+
+/* ---------- entrance: hidden only while the script is there to bring things in ---------- */
+html.js .hero [data-hero-name]:not(.is-on) {
+  visibility: hidden;
+}
+
+html.js .hero__base:not(.is-on)::before {
+  transform: scaleX(0);
+}
+
+.hero__base.is-on::before {
+  transition: transform 1100ms var(--ease-out);
+}
+
+.hero__base .stat__label {
+  transition:
+    opacity var(--t-arrive),
+    translate var(--t-arrive),
+    filter var(--t-arrive);
+}
+
+html.js .hero__base:not(.is-on) .stat__label {
+  opacity: 0;
+  translate: 0 0.5rem;
+  filter: blur(4px);
+}
+
+html.js .hero__base:not(.is-on) .stat__value {
+  opacity: 0;
+}
+
+.hero__base .stat__value {
+  transition: opacity var(--t-reveal);
+}
+
+/* ---------- small screens: one column, the lattice as a strip under the figures ---------- */
+@media (max-width: 760px) {
+  .hero__base {
+    padding-bottom: 11.5rem; /* room for the lattice */
+  }
+
+  .hero__figures {
+    justify-content: space-between;
+    gap: 1rem;
+  }
+}
+
+/* ---------- reduced motion and print ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .hero__name,
+  .hero__copy,
+  .hero__base {
+    translate: none;
+  }
+}
+
+.is-static .hero__name,
+.is-static .hero__copy,
+.is-static .hero__base {
+  translate: none;
+  opacity: 1;
+}
+
+@media print {
+  .hero {
+    min-height: 0;
+  }
+
+  .hero-lattice {
+    display: none !important;
+  }
+}

@@ -1,0 +1,20 @@
+/* ==========================================================================
+   kit-snap: the scroll stepper (kit-snap.js; usage in _work/agent_notes/kit-scroll.md).
+   While the stepper runs (html.has-snap) the browser must neither smooth nor snap the
+   scroll it writes. Where it does not run (touch, portrait, narrow, reduced motion,
+   ?static) the wrapper gets .k-snap--native: proximity snapping on plain stops.
+   ========================================================================== */
+
+html.has-snap {
+  scroll-behavior: auto;
+  scroll-snap-type: none;
+  overscroll-behavior-y: none;
+}
+
+html:has(.k-snap--native) {
+  scroll-snap-type: y proximity;
+}
+
+.k-snap--native [data-snap]:not([data-snap-points]) {
+  scroll-snap-align: start;
+}

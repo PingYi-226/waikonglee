@@ -1,6 +1,7 @@
 /* ==========================================================================
    404 page: the page head, a small lattice plate beside it (the pointer is a point that is not on the
-   lattice; the closest lattice point is ringed), the figure 404 and the ways back in the row under it.
+   lattice; the closest lattice point is ringed, the drawing carries its own reading), the figure 404 and the
+   ways back in the row under it.
    Markup: _pages/404.md. Behaviour: assets/js/site/notfound.js.
    ========================================================================== */
 
@@ -10,7 +11,6 @@ body.layout-default main#main {
 
 .nf__fig {
   display: grid;
-  gap: 0.85rem;
   margin: 0;
 }
 
@@ -42,27 +42,6 @@ body.layout-default main#main {
 
 .nf__canvas.is-on {
   opacity: 1;
-}
-
-.nf__cap {
-  align-items: baseline;
-}
-
-.nf__read {
-  color: inherit;
-}
-
-.nf__data {
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-2);
-  white-space: nowrap;
-}
-
-/* on the lattice for a moment (after Enter or a click) */
-.nf__fig.is-on-lattice .nf__data {
-  color: var(--accent);
 }
 
 /* ---------- the row under the rule ---------- */
@@ -115,6 +94,10 @@ body.layout-default main#main {
   .nf__actions {
     margin-left: 0;
   }
+}
+
+.nf__actions .btn {
+  margin: 0; /* the template's stylesheet gives buttons a margin */
 }
 
 @media (max-width: 520px) {
