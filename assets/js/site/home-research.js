@@ -509,14 +509,24 @@
     };
   }
 
-  /* ================================================================== the detail views */
+  /* ================================================================== the detail views
+   * The card's drawing flies into the view (kit expand, data-shared="figure") and lands on the view's own, larger
+   * drawing (trigger="manual": drawn from the start, with its labels). It holds still during the flight and starts
+   * running a beat after the landing (live="always"; it runs only while on screen). A redraw from blank after the
+   * landing was tried: the drawing that had just flown in dissolved and drew itself again, which read as a glitch. */
   function initDetails(section) {
-    // the view's diagram draws itself, large, once the view has opened (it runs while it is on screen)
-    section.addEventListener("kit:expand-opened", function (e) {
+    function diagramIn(e) {
       var body = e.detail && e.detail.body;
       var svg = body && body.querySelector(".odetail__fig [data-kit~='diagram']");
-      var dg = svg && Site.get(svg, "diagram");
-      if (dg) dg.play();
+      return svg ? Site.get(svg, "diagram") : null;
+    }
+    section.addEventListener("kit:expand-open", function (e) {
+      var dg = diagramIn(e);
+      if (dg) dg.live(false);
+    });
+    section.addEventListener("kit:expand-opened", function (e) {
+      var dg = diagramIn(e);
+      if (dg) dg.live(true);
     });
   }
 
