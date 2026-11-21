@@ -67,7 +67,9 @@
       void sheet.offsetHeight; // paint the closed state first so the slide runs
       sheet.classList.add("is-open");
       button.setAttribute("aria-expanded", "true");
-      root.classList.add("is-menu-open", "is-modal");
+      root.classList.add("is-menu-open");
+      if (Site.modal) Site.modal.open("menu", { lock: true });
+      else root.classList.add("is-modal");
       var first = focusables()[0];
       if (first) first.focus({ preventScroll: true });
     }
@@ -76,7 +78,9 @@
       sheetOpen = false;
       sheet.classList.remove("is-open");
       button.setAttribute("aria-expanded", "false");
-      root.classList.remove("is-menu-open", "is-modal");
+      root.classList.remove("is-menu-open");
+      if (Site.modal) Site.modal.close("menu");
+      else root.classList.remove("is-modal");
       if (returnFocus !== false) button.focus({ preventScroll: true });
       closeTimer = setTimeout(
         function () {

@@ -1,7 +1,7 @@
-{%- comment -%} Home page, news block: the newest hand-written items. Styles and script: home. {%- endcomment -%}
+{%- comment -%} Home page, news block: the newest hand-written items. Styles and script: home-news. {%- endcomment -%}
   {%- comment -%} Items written by hand only: the ones derived from the publication list (derived: true) stay on the news page. {%- endcomment -%}
   {%- assign news = site.news | where_exp: 'item', 'item.derived != true' | sort: 'date' | reverse -%}
-  <section class="hnews section" id="news">
+  <section class="hnews section" id="news" data-snap>
     <div class="wrap">
       <header class="sechead" data-inview>
         <h2 class="sechead__title">News</h2>

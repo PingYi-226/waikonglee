@@ -3,8 +3,8 @@ layout: home
 title: About
 permalink: /
 v2: true
-site_css: [home, home-hero, home-about, home-research, diagrams]
-site_js: [home, home-hero, home-about, home-research, diagrams]
+site_css: [home, home-hero, home-about, home-research, home-news, diagrams]
+site_js: [home, home-hero, home-about, home-research, home-news, diagrams]
 
 announcements:
   enabled: true # show the latest news items

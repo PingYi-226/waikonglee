@@ -1364,10 +1364,14 @@
         if (!t.p) return;
         stop(t.anim);
         if (env.reduce || env.static) return t.p.jump(target);
-        t.anim = M.animate(t.p, target, S.t(SLIDE, { delay: i * step }));
+        // entering, the label starts a beat after its button has begun to grow (--k-inner-delay, set for buttons in base.css)
+        t.anim = M.animate(t.p, target, S.t(SLIDE, { delay: i * step + (target ? innerDelay : 0) }));
       });
     }
 
+    // the host's own delay for what is inside it, in seconds (read once: it is a design constant of the host)
+    const host = el.closest("a, button") || el;
+    const innerDelay = (parseFloat(getComputedStyle(host).getPropertyValue("--k-inner-delay")) || 0) / 1000;
     const off = hoverFocus(el, (on) => slideTo(on ? 1 : 0));
     return {
       slide: (on) => slideTo(on === false ? 0 : 1),

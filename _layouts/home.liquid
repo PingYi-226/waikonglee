@@ -12,7 +12,8 @@ layout: default
 {%- assign month_now = site.time | date: '%m' | plus: 0 -%}
 {%- assign paras = content | split: '</p>' -%}
 {%- assign count_words = 'No,One,Two,Three,Four,Five,Six,Seven,Eight,Nine,Ten,Eleven,Twelve' | split: ',' -%}
-<div class="home">
+{%- comment -%} The blocks are the stops of a deck: the page moves from one to the next (kit-snap). {%- endcomment -%}
+<div class="home" data-kit="snap" data-snap-mode="deck">
   {% include site/home/hero.liquid %}
   {% include site/home/about.liquid %}
   {% include site/home/research.liquid %}

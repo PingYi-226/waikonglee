@@ -1,53 +1,8 @@
 /* ==========================================================================
-   Home page: what the blocks share, the news block and the contact block.
-   The first screen is in home-hero.css, the about block in home-about.css, the research block in home-research.css.
+   Home page: what the blocks share, and the contact block.
+   The first screen is in home-hero.css, the about block in home-about.css, the research block in home-research.css,
+   the news block in home-news.css.
    ========================================================================== */
-
-/* ---------- news rows ---------- */
-.hnews__row {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(8rem, 2fr) minmax(0, 9fr) auto;
-  gap: 0.6rem clamp(1rem, 2.2vw, 2rem);
-  align-items: center;
-  padding: 1.35rem 0.9rem;
-}
-
-.hnews__date {
-  display: grid;
-  justify-items: start;
-  gap: 0.4rem;
-  margin: 0;
-}
-
-.hnews__tag {
-  font-family: var(--font-body);
-}
-
-.hnews__text {
-  max-width: 62ch;
-  font-size: 1.1rem;
-  line-height: 1.5;
-}
-
-.hnews__thumb {
-  width: 4.6rem;
-  height: 3.4rem;
-  object-fit: cover;
-  border-radius: var(--r-1);
-}
-
-@media (max-width: 700px) {
-  .hnews__row {
-    grid-template-columns: minmax(0, 1fr) auto;
-    padding-inline: 0.4rem;
-  }
-
-  .hnews__date {
-    grid-column: 1 / -1;
-  }
-}
 
 /* ---------- contact ---------- */
 .contact__lede {
@@ -87,3 +42,12 @@
   }
 }
 
+
+/* ---------- the deck: where the page moves in steps (html.has-snap), each of these blocks is one screen ---------- */
+html.has-snap .home > .contact {
+  display: grid;
+  align-content: center;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding-block: calc(var(--nav-h) + 1.25rem) 2rem;
+}
