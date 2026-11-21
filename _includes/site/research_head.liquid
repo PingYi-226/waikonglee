@@ -1,54 +1,44 @@
 {%- comment -%}
-  Research page, page head: the title and lede from the page's front matter, and under the rule a row of contents:
-  each figure counts what a section of the page holds and takes you there. Counts come from the data files
-  (_data/research.yml, _data/software.yml, _data/grants.yml) and the bibliography.
+  Research page, the head (the first part of the page): the title and lede from the page's front matter, and under the
+  rule the four figures of the page (areas, papers, repositories, projects). Each figure is a link to its part. Once the
+  page has left the head, research.js flies the figures into a rail at the side of the viewport, where they stay as the
+  page's navigation (the number and the last word of the label); back at the head they fly home. One set of links.
+  Counts come from the data files (_data/research.yml, _data/software.yml, _data/grants.yml) and the bibliography.
 {%- endcomment -%}
 {%- assign repo_count = 0 -%}
 {%- for g in site.data.software -%}{%- assign repo_count = repo_count | plus: g.items.size -%}{%- endfor -%}
 {%- capture paper_count -%}{% bibliography_count %}{%- endcapture -%}
 {%- assign paper_count = paper_count | strip -%}
-{%- comment -%} Fig. 1: the papers of each area, one bar each, in the order of the areas below; a bar takes you to its area {%- endcomment -%}
-{%- capture area_counts -%}
-  {%- for a in site.data.research -%}{% bibliography_count --query @*[theme={{ a.key }}] %}{% unless forloop.last %},{% endunless %}{%- endfor -%}
-{%- endcapture -%}
-{%- assign area_counts = area_counts | strip | split: ',' -%}
-{%- assign peak = 1 -%}
-{%- for c in area_counts -%}{%- assign v = c | plus: 0 -%}{%- if v > peak -%}{%- assign peak = v -%}{%- endif -%}{%- endfor -%}
-{%- capture head_aside -%}
-<figure class="rmix">
-  <ol class="rmix__rows" data-kit="highlight" data-items=".rmix__row">
-    {%- for a in site.data.research -%}
-      {%- assign v = area_counts[forloop.index0] | plus: 0 %}
-    <li>
-      <a class="rmix__row" href="#{{ a.key }}" style="--v: {{ v | times: 1.0 | divided_by: peak | round: 3 }}; --i: {{ forloop.index0 }}">
-        <span class="rmix__name">{{ a.short | default: a.title }}</span>
-        <span class="rmix__track" aria-hidden="true"><span class="rmix__bar"></span></span>
-        <span class="rmix__n t-data">{{ v }}<span class="sr-only"> {% if v == 1 %}paper{% else %}papers{% endif %}</span></span>
+{%- capture head_meta -%}
+<nav class="rfig" aria-label="Parts of this page" data-rfig>
+  <ol class="rfig__list" data-kit="highlight" data-mode="both" data-items=".rfig__link" data-rfig-list>
+    <li class="rfig__item">
+      <a class="rfig__link" href="#areas" data-rfig-link>
+        <span class="rfig__num stat__value" data-rfig-part="num"><span data-kit="sliding-number" data-value="{{ site.data.research.size }}" data-delay="700">{{ site.data.research.size }}</span></span>
+        <span class="rfig__label stat__label"><span class="rfig__q" data-rfig-part="q">research </span><span class="rfig__noun" data-rfig-part="noun">areas</span></span>
       </a>
     </li>
-    {%- endfor %}
+    <li class="rfig__item">
+      <a class="rfig__link" href="#papers" data-rfig-link>
+        <span class="rfig__num stat__value" data-rfig-part="num"><span data-kit="sliding-number" data-value="{{ paper_count }}" data-delay="760">{{ paper_count }}</span></span>
+        <span class="rfig__label stat__label"><span class="rfig__q" data-rfig-part="q">peer-reviewed </span><span class="rfig__noun" data-rfig-part="noun">papers</span></span>
+      </a>
+    </li>
+    <li class="rfig__item">
+      <a class="rfig__link" href="#software" data-rfig-link>
+        <span class="rfig__num stat__value" data-rfig-part="num"><span data-kit="sliding-number" data-value="{{ repo_count }}" data-delay="820">{{ repo_count }}</span></span>
+        <span class="rfig__label stat__label"><span class="rfig__q" data-rfig-part="q">open-source </span><span class="rfig__noun" data-rfig-part="noun">repositories</span></span>
+      </a>
+    </li>
+    <li class="rfig__item">
+      <a class="rfig__link" href="#projects" data-rfig-link>
+        <span class="rfig__num stat__value" data-rfig-part="num"><span data-kit="sliding-number" data-value="{{ site.data.grants.size }}" data-delay="880">{{ site.data.grants.size }}</span></span>
+        <span class="rfig__label stat__label"><span class="rfig__q" data-rfig-part="q">funded </span><span class="rfig__noun" data-rfig-part="noun">projects</span></span>
+      </a>
+    </li>
   </ol>
-  <figcaption class="figcap"><span class="figcap__no">Fig. 1</span><span>Papers in each research area</span></figcaption>
-</figure>
-{%- endcapture -%}
-{%- capture head_meta -%}
-<nav class="rtoc" aria-label="Contents" data-kit="highlight" data-items=".rtoc__item">
-  <a class="rtoc__item" href="#areas">
-    <span class="stat__value"><span data-kit="sliding-number" data-value="{{ site.data.research.size }}" data-delay="700">{{ site.data.research.size }}</span></span>
-    <span class="stat__label">research areas</span>
-  </a>
-  <a class="rtoc__item" href="{{ '/publications/' | relative_url }}">
-    <span class="stat__value"><span data-kit="sliding-number" data-value="{{ paper_count }}" data-delay="760">{{ paper_count }}</span></span>
-    <span class="stat__label">peer-reviewed papers</span>
-  </a>
-  <a class="rtoc__item" href="#software">
-    <span class="stat__value"><span data-kit="sliding-number" data-value="{{ repo_count }}" data-delay="820">{{ repo_count }}</span></span>
-    <span class="stat__label">open-source repositories</span>
-  </a>
-  <a class="rtoc__item" href="#projects">
-    <span class="stat__value"><span data-kit="sliding-number" data-value="{{ site.data.grants.size }}" data-delay="880">{{ site.data.grants.size }}</span></span>
-    <span class="stat__label">funded projects</span>
-  </a>
 </nav>
 {%- endcapture -%}
-{% include site/pagehead.liquid aside=head_aside meta=head_meta %}
+<section class="rhead rpart" data-snap data-rhead>
+  {% include site/pagehead.liquid meta=head_meta %}
+</section>

@@ -1,643 +1,757 @@
 /* ==========================================================================
-   Research page (/research/). Sections in page order: page head (contents row), research areas (the plate and the
-   tall text blocks: the set piece), selected results (a ruled grid), open-source software (ruled groups),
-   funded projects (a time axis and rows that open). Markup: _includes/site/research_*.liquid. Behaviour: research.js.
+   Research page (/research/). Five parts that the scroll stepper (kit-snap, soft mode) moves between, in page order:
+   the head (the four figures of the page, which become the rail), the research areas (pinned: one step per area),
+   the papers (areas by years), open-source software (groups that open) and funded projects (rows that open).
+   Markup: _includes/site/research_*.liquid. Behaviour: research.js.
+
+   Two layouts are decided by media queries that mirror the stepper's own conditions (kit-snap.js shouldRun), so the
+   page is laid out right from the first paint:
+   - "railed": a landscape screen at least 1100 px wide. Every part keeps a column on the left for the rail.
+   - "pinned": a fine pointer, no reduced motion, a landscape screen at least 760 px wide, the scripts running, not
+     ?static. The research areas become a pinned stage. Everywhere else they are one after the other.
    ========================================================================== */
 
-/* ---------- page head: a row of contents, each figure a way into its section ---------- */
-.rtoc {
+.rpage {
+  --rail-w: 8.25rem;
+  --rail-gap: clamp(2rem, 3.4vw, 3.5rem);
+  --part-top: calc(var(--nav-h) + clamp(1.25rem, 5.5vh, 3.75rem));
+}
+
+/* ---------- the parts: about one screen each, the section's rule at the same height in all of them ---------- */
+.rpart {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: var(--part-top) 0 clamp(3rem, 9vh, 6rem);
+}
+
+.rpart .sechead {
+  margin-bottom: clamp(1.5rem, 4.5vh, 3rem);
+}
+
+.rgrid__main {
+  min-width: 0;
+}
+
+@media (min-width: 1100px) and (min-aspect-ratio: 1001/1000) {
+  .rgrid {
+    display: grid;
+    grid-template-columns: var(--rail-w) minmax(0, 1fr);
+    column-gap: var(--rail-gap);
+  }
+
+  .rgrid__main {
+    grid-column: 2;
+  }
+}
+
+/* parts reached from a link take the focus (so Tab goes on from there) without a ring around the whole part */
+.rpart[tabindex="-1"]:focus,
+.rarea[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/* ---------- the head: title and lede at the top, the four figures along the bottom of the screen ---------- */
+.rhead {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.rhead .pagehead {
+  flex: 1;
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  padding-bottom: clamp(2.5rem, 9vh, 5.5rem);
+}
+
+.rhead .pagehead__meta {
+  align-self: end;
+}
+
+/* the figures: a row of links at the head; a rail at the side once the page has left the head */
+.rfig {
+  min-width: 0;
+}
+
+.rfig__list {
   --k-highlight-inset: -0.7rem -0.95rem;
   --k-highlight-radius: var(--r-2);
+  position: relative; /* said here, so the highlight kit does not write it inline (the rail makes it fixed) */
   display: flex;
   flex-wrap: wrap;
   gap: 1.25rem clamp(2rem, 5.2vw, 4.75rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.rtoc__item,
-.rtoc__item:visited {
+.rfig__item {
+  margin: 0;
+}
+
+.rfig__link,
+.rfig__link:visited {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
   color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.rtoc__item .stat__label {
+.rfig__num {
+  display: block;
+  transform-origin: 0 0;
+}
+
+.rfig__label {
+  position: relative;
+  display: block;
+  white-space: nowrap;
   transition: color var(--t-color);
 }
 
-.rtoc__item:focus-visible {
+.rfig__q,
+.rfig__noun {
+  display: inline-block;
+  color: inherit;
+  transform-origin: 0 0;
+}
+
+/* a space between the two words that does not depend on the inline-block's own whitespace */
+.rfig__q {
+  white-space: pre;
+}
+
+.rfig__link:focus-visible {
   outline-offset: 0.6rem;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .rtoc__item:hover .stat__label {
+  .rfig__link:hover .rfig__label {
     color: var(--ink);
   }
 }
 
-/* ---------- page head: Fig. 1, the papers of each area ---------- */
-.rmix {
-  margin: 0;
-  max-width: 30rem;
-  margin-left: auto;
-}
-
-.rmix__rows {
-  --k-highlight-inset: 0 -0.6rem;
+/* in the rail: the number and the last word of the label, small, stacked at the left of the parts */
+.rfig.is-railed .rfig__list {
+  --k-highlight-inset: 0 -0.55rem;
   --k-highlight-radius: var(--r-1);
-  margin: 0 0 1rem;
-  padding: 0;
-  list-style: none;
+  position: fixed;
+  z-index: var(--z-sticky);
+  top: calc(var(--part-top) + 0.55rem);
+  left: max(var(--gutter), calc((100% - var(--page)) / 2));
+  display: grid;
+  gap: 0.15rem;
+  width: var(--rail-w);
 }
 
-.rmix__row,
-.rmix__row:visited {
+/* at the very end of the page (the footer coming out from under it) the rail steps aside */
+.rfig.is-railed .rfig__list {
+  transition:
+    opacity var(--t-fade),
+    visibility 0s;
+}
+
+.rfig.is-railed .rfig__list.is-away {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--t-fade),
+    visibility 0s linear 200ms;
+}
+
+.rfig.is-railed .rfig__link {
   display: grid;
-  grid-template-columns: 10.5rem minmax(0, 1fr) 2rem;
-  align-items: center;
-  gap: 0.9rem;
-  min-height: 1.85rem;
-  font-size: var(--fs-xs);
-  line-height: 1.3;
-  color: var(--muted);
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 0.7rem;
+  padding: 0.32rem 0;
+}
+
+.rfig.is-railed .rfig__num {
+  font-size: 1.3rem;
+  line-height: 1.1;
+  text-align: right;
+  color: var(--ink-2);
   transition: color var(--t-color);
 }
 
-.rmix__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.rfig.is-railed .rfig__label {
+  line-height: 1.3;
 }
 
-.rmix__track {
-  position: relative;
-  height: 0.45rem;
-  overflow: clip;
-  border-radius: 2px;
-}
-
-/* the bar slides in from the left inside its track (never scaled: its corners stay round) */
-.rmix__bar {
+.rfig.is-railed .rfig__q {
   position: absolute;
-  inset: 0 auto 0 0;
-  width: calc(var(--v) * 100%);
-  min-width: 3px;
-  border-radius: 2px;
-  background-color: var(--line-strong);
-  transition:
-    transform var(--t-arrive) calc(380ms + var(--i) * 60ms),
-    background-color var(--t-color);
+  top: 0;
+  right: 100%;
+  opacity: 0;
+  pointer-events: none;
 }
 
-html.js .pagehead__aside:not(.is-in) .rmix__bar {
-  transform: translateX(-101%);
-}
-
-.rmix__n {
-  text-align: right;
-  color: inherit;
-}
-
-.rmix__row:focus-visible {
-  outline-offset: 2px;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .rmix__row:hover {
-    color: var(--ink);
-  }
-
-  .rmix__row:hover .rmix__bar {
-    background-color: var(--accent);
-    transition:
-      transform var(--t-arrive),
-      background-color var(--t-color);
-  }
-}
-
-.rmix__row:focus-visible .rmix__bar {
-  background-color: var(--accent);
-}
-
-@media (max-width: 860px) {
-  .rmix {
-    max-width: none;
-    margin-left: 0;
-  }
-}
-
-/* ---------- research areas ----------
-   Base (small screens, and wide screens without the script): each area is its figure, then its text.
-   Wide screens with the script: the plate sticks on the left and the text blocks run on the right. */
-.rareas__grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: clamp(1rem, 2.2vw, 2rem);
-}
-
-.rareas__list {
-  grid-column: 1 / -1;
-  display: grid;
-  gap: clamp(4rem, 12vw, 7rem);
-}
-
-.rplate {
-  display: none;
-}
-
-.rarea__fig {
-  margin: 0 0 clamp(1.75rem, 5vw, 2.5rem);
-}
-
-.rarea__plate {
-  display: grid;
-  place-items: center;
-  aspect-ratio: 16 / 10;
-  padding: 6%;
-  color: var(--ink-2);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-2);
-}
-
-.rarea__plate .diagram,
-.rplate__fig .diagram {
-  width: 100%;
-  height: auto;
-}
-
-.rarea__fig .figcap {
-  margin-top: 0.85rem;
-  flex-wrap: nowrap;
-}
-
-.rarea__fig .figcap__no {
-  flex: none;
-}
-
-.rarea__title {
-  max-width: 17ch;
-  font-family: var(--font-display);
-  font-size: var(--fs-d2);
-  line-height: 1.04;
-  letter-spacing: -0.018em;
+.rfig.is-railed .rfig__link[aria-current="true"] .rfig__num,
+.rfig.is-railed .rfig__link[aria-current="true"] .rfig__label {
   color: var(--ink);
 }
 
+/* the gliding mark of the part being read: a short ink line at the rail's edge (the highlight's selection surface) */
+.rfig.is-railed .rfig__list > .k-highlight__surface--selection {
+  background: linear-gradient(var(--ink), var(--ink)) 0 50% / 2px 56% no-repeat;
+  border-radius: 0;
+  transform: translateX(-0.45rem);
+}
+
+.rfig.is-railed .rfig__link:focus-visible {
+  outline-offset: 2px;
+}
+
+/* ---------- research areas ----------
+   Base (phones, reduced motion, ?static, no JavaScript): the areas one after the other, each its plate, then its text.
+   Pinned (see the header of this file): a stage that fills the viewport and stays; the areas lie on top of each
+   other in it, and research.js shows the current one. */
+.rsteps__deck {
+  display: grid;
+  gap: clamp(3rem, 9vh, 5.5rem);
+}
+
+.rarea {
+  display: grid;
+  gap: clamp(1.25rem, 3vw, 2.25rem);
+  align-items: start;
+}
+
+.rarea__fig {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  padding: clamp(0.75rem, 2.4vw, 1.75rem);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+}
+
+.rarea__fig .diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+}
+
+.rarea__text {
+  min-width: 0;
+  max-width: 34rem;
+}
+
+.rarea__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-d3);
+  line-height: 1.08;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+  color: var(--ink);
+}
+
+.rarea__tag {
+  margin: 0.7rem 0 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--fs-d4);
+  line-height: 1.25;
+  text-wrap: balance;
+  color: var(--ink-2);
+}
+
 .rarea__desc {
-  max-width: 50ch;
-  margin: clamp(1rem, 2.4vw, 1.5rem) 0 0;
-  font-size: 1.06rem;
+  margin: 1.1rem 0 0;
+  font-size: var(--fs-small);
+  line-height: 1.6;
+  text-wrap: pretty;
   color: var(--ink-2);
 }
 
 .rarea__foot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.5rem 1.75rem;
-  max-width: 50ch;
-  margin: clamp(1.5rem, 3vw, 2rem) 0 0;
-  padding-top: 0.9rem;
-  font-size: var(--fs-small);
-  color: var(--muted);
-  border-top: 1px solid var(--line);
+  margin: 1.4rem 0 0;
 }
 
-.rarea__count .t-data {
-  font-size: 0.84rem;
-  color: var(--ink-2);
-}
-
-.rarea__foot .link {
-  color: var(--ink);
-}
-
-/* wide screens without the script: figure on the left, text on the right, area after area */
-@media (min-width: 900px) {
-  .rarea {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: clamp(1rem, 2.2vw, 2rem);
-    align-items: start;
-  }
-
-  .rarea__fig {
-    grid-column: 1 / span 5;
-    margin: 0;
-  }
-
-  .rarea__text {
-    grid-column: 7 / -1;
-  }
-}
-
-/* wide screens with the script: the plate */
-@media (min-width: 900px) {
-  html.js .rplate {
-    display: block;
-    grid-column: 1 / span 5;
-    grid-row: 1;
-  }
-
-  html.js .rareas__list {
-    grid-column: 7 / -1;
-    grid-row: 1;
-    gap: 0;
-  }
-
-  html.js .rarea {
-    display: block;
-    min-height: min(68vh, 44rem);
-    padding-bottom: clamp(3rem, 8vh, 5rem);
-  }
-
-  html.js .rarea:last-child {
-    min-height: min(78vh, 50rem);
-  }
-
-  /* the area's own figure is still read by screen readers (the plate is not) */
-  html.js .rarea__fig {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
-
-  html.js .rarea__text {
-    padding-top: 0.15rem;
-  }
-
-  /* the area being read is in full ink, the others recede */
-  html.js .rareas.is-spying .rarea {
-    transition: opacity var(--t-overlay);
-  }
-
-  html.js .rareas.is-spying .rarea:not(.is-active):not(:focus-within) {
-    opacity: 0.3;
-  }
-}
-
-.rplate__sticky {
-  position: sticky;
-  top: calc(var(--nav-h) + 1.25rem);
-}
-
-.rplate__frame {
-  position: relative;
-  display: grid;
-  place-items: center;
-  aspect-ratio: 4 / 3;
-  color: var(--ink-2);
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--r-2);
-  overflow: hidden;
-  cursor: pointer;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  transition: border-color var(--t-color);
-}
-
-/* registration marks in the plate's corners, as on a printed plate */
-.rplate__frame::before {
-  content: "";
-  position: absolute;
-  inset: 0.85rem;
-  pointer-events: none;
-  --m: 0.6rem;
-  background:
-    linear-gradient(var(--line-strong), var(--line-strong)) 0 0 / var(--m) 1px,
-    linear-gradient(var(--line-strong), var(--line-strong)) 0 0 / 1px var(--m),
-    linear-gradient(var(--line-strong), var(--line-strong)) 100% 0 / var(--m) 1px,
-    linear-gradient(var(--line-strong), var(--line-strong)) 100% 0 / 1px var(--m),
-    linear-gradient(var(--line-strong), var(--line-strong)) 0 100% / var(--m) 1px,
-    linear-gradient(var(--line-strong), var(--line-strong)) 0 100% / 1px var(--m),
-    linear-gradient(var(--line-strong), var(--line-strong)) 100% 100% / var(--m) 1px,
-    linear-gradient(var(--line-strong), var(--line-strong)) 100% 100% / 1px var(--m);
-  background-repeat: no-repeat;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .rplate__frame:hover {
-    border-color: var(--line-strong);
-  }
-}
-
-.rplate__fig {
-  grid-area: 1 / 1;
-  display: block;
-  width: 90%;
-}
-
-/* only the plate's current figure shows; research.js takes over from here */
-html.js .rplate__fig:not(.is-current) {
-  opacity: 0;
-}
-
-/* a diagram that has no controller of its own (the placeholders) waits for research.js to bring it in */
-html.js .rplate__fig .diagram:not([data-kit~="diagram"]),
-html.js .rarea__plate .diagram:not([data-kit~="diagram"]) {
-  opacity: 0;
-}
-
-.rplate__bar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-top: 0.75rem;
-}
-
-.rplate__pause {
-  flex: none;
-  width: 2.25rem;
-  height: 2.25rem;
-  margin: -0.35rem -0.45rem 0 0;
-  color: var(--muted);
-}
-
-html.is-reduced .rplate__pause {
-  display: none;
-}
-
-.rplate__cap {
-  flex-wrap: nowrap;
-  align-items: baseline;
-  min-height: 2.6em;
-}
-
-.rplate__cap .figcap__no {
-  flex: none;
-  min-width: 3.4rem;
+.rarea__more .t-data,
+.rarea__more {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* the figure number: a strip of numbers behind a one-line window */
-.rplate__no {
-  display: inline-block;
-  height: 1.2em;
-  overflow: clip;
-  overflow-clip-margin: 0.1em;
-  vertical-align: bottom;
+.rsteps__plate,
+.rprog {
+  display: none;
 }
 
-.rplate__strip {
+@media (min-width: 900px) {
+  .rarea {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    column-gap: clamp(1.75rem, 3.6vw, 3.5rem);
+  }
+}
+
+/* pinned: the section is a screen plus one step per area; the stage sticks and holds the deck */
+@media (hover: hover) and (pointer: fine) and (min-width: 760px) and (min-aspect-ratio: 1001/1000) and (prefers-reduced-motion: no-preference) {
+  html.js:not(.is-static) .rsteps {
+    --step-h: 55vh;
+    height: calc(100vh + var(--steps) * var(--step-h));
+    min-height: 0;
+    padding: 0;
+  }
+
+  html.js:not(.is-static) .rsteps__stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    padding-top: var(--part-top);
+    overflow: clip;
+  }
+
+  html.js:not(.is-static) .rsteps__deck {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-rows: auto auto;
+    column-gap: clamp(1.75rem, 3.6vw, 3.5rem);
+    row-gap: 0;
+    align-items: start;
+  }
+
+  html.js:not(.is-static) .rarea {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    grid-template-columns: subgrid;
+    visibility: hidden;
+  }
+
+  html.js:not(.is-static) .rarea.is-current {
+    visibility: visible;
+  }
+
+  /* one frame for all the diagrams: they change inside it */
+  html.js:not(.is-static) .rsteps__plate {
+    position: relative;
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
+    aspect-ratio: 16 / 9;
+  }
+
+  .rsteps__plate-in {
+    position: absolute;
+    inset: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--r-3);
+  }
+
+  html.js:not(.is-static) .rarea__fig {
+    z-index: 1;
+    background: none;
+    border-color: transparent;
+    cursor: pointer;
+  }
+
+  html.js:not(.is-static) .rarea__text {
+    padding-top: 0.2rem;
+  }
+
+  /* the mark of seven steps under the plate */
+  html.js:not(.is-static) .rprog {
+    display: block;
+    grid-column: 1;
+    grid-row: 2;
+    margin-top: 0.6rem;
+  }
+}
+
+/* on short screens the stage gives the plate a little less width so everything stays inside it */
+@media (hover: hover) and (pointer: fine) and (min-width: 760px) and (min-aspect-ratio: 1001/1000) and (max-height: 820px) and (prefers-reduced-motion: no-preference) {
+  html.js:not(.is-static) .rsteps__deck {
+    grid-template-columns: minmax(0, 6.4fr) minmax(0, 5fr);
+  }
+
+  html.js:not(.is-static) .rarea__desc {
+    line-height: 1.55;
+  }
+}
+
+.rprog__list {
   display: flex;
-  flex-direction: column;
-}
-
-.rplate__strip > span {
-  display: block;
-  height: 1.2em;
-  line-height: 1.2em;
-}
-
-.rplate__tags {
-  display: grid;
-  max-width: 46ch;
-}
-
-.rplate__tag {
-  grid-area: 1 / 1;
-}
-
-html.js .rplate__tag:not(.is-current) {
-  opacity: 0;
-}
-
-/* the index of the areas: two columns, one gliding mark (scrollspy sets aria-current, highlight follows) */
-.rindex {
-  margin-top: 1.25rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--line);
-}
-
-.rindex__list {
-  --k-highlight-selection-bg: var(--paper-3);
-  --k-highlight-radius: var(--r-1);
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(4, auto);
-  grid-auto-flow: column;
-  column-gap: 1rem;
-  margin: 0 -0.55rem;
+  gap: 0.35rem;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.rindex__link,
-.rindex__link:visited {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.34rem 0.55rem;
-  font-size: var(--fs-xs);
-  line-height: 1.4;
-  color: var(--muted);
+.rprog__item {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* each step is a tall hit area around a hairline bar; the current one fills with ink from the side the page came from */
+.rprog__step {
+  display: block;
+  padding: 0.85rem 0;
   border-radius: var(--r-1);
-  transition: color var(--t-color);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.rindex__count {
-  font-size: 0.72rem;
-  color: inherit;
+.rprog__bar {
+  position: relative;
+  display: block;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 1px;
+  background: var(--line);
+  transition:
+    background-color var(--t-color),
+    transform 300ms var(--ease-out);
 }
 
-.rindex__link[aria-current="true"] {
-  color: var(--ink);
+.rprog__fill {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background: var(--ink);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.rprog__step.is-past .rprog__bar {
+  background: var(--line-strong);
+}
+
+.rprog__step.is-current .rprog__fill {
+  transform: none;
+}
+
+.rprog__step:focus-visible {
+  outline-offset: 0;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .rindex__link:hover {
+  .rprog__step:hover .rprog__bar {
+    background: var(--faint);
+    transform: scaleY(2);
+  }
+}
+
+/* ---------- papers: areas by years ----------
+   A table in ARIA terms; each line is a grid with the same tracks (--tracks, written by the include: the names, one
+   track per year with a narrow one before a gap in the years, the sums). */
+.rmat__scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.rmat {
+  --rmat-name: 11.5rem;
+  --rmat-sum: 3.5rem;
+  --rmat-gap: 1.1rem;
+  --rmat-cell: clamp(1.75rem, 4.6vh, 2.6rem);
+  min-width: 42rem;
+}
+
+.rmat__line {
+  display: grid;
+  grid-template-columns: var(--tracks);
+  align-items: center;
+}
+
+.rmat__row {
+  position: relative;
+  padding: 3px 0;
+}
+
+/* a gap in the years: a dashed hairline in its narrow track, through all the lines */
+.rmat__gap {
+  align-self: stretch;
+  justify-self: center;
+  width: 0;
+  border-left: 1px dashed var(--line-strong);
+}
+
+.rmat__line--years .rmat__gap {
+  margin-bottom: -0.7rem;
+}
+
+.rmat__y,
+.rmat__ysum {
+  text-align: center;
+  color: var(--muted);
+  transition: color var(--t-color);
+}
+
+.rmat__line--years {
+  padding-bottom: 0.7rem;
+}
+
+.rmat__foot {
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--line);
+}
+
+.rmat__foot .rmat__gap {
+  visibility: hidden;
+}
+
+.rmat__ysum {
+  font-size: 0.74rem;
+}
+
+.rmat__name {
+  min-width: 0;
+  padding-right: 1rem;
+}
+
+.rmat__link,
+.rmat__link:visited {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.2rem 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--fs-small);
+  line-height: 1.3;
+  white-space: nowrap;
+  vertical-align: middle;
+  color: var(--ink-2);
+  transition: color var(--t-color);
+}
+
+.rmat__c {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+}
+
+/* a cell: a rounded square shaded by its count (ink over the paper); an empty year is a small dot */
+.rmat__cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, var(--rmat-cell));
+  aspect-ratio: 1;
+  border-radius: var(--r-2);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: color-mix(in oklab, var(--ink) calc(9% + var(--v, 0) * 70%), transparent);
+  transition:
+    opacity var(--t-color),
+    box-shadow var(--t-color),
+    scale 300ms var(--ease-out);
+}
+
+.rmat__cell.is-deep {
+  color: var(--paper);
+}
+
+.rmat__cell--0 {
+  background: radial-gradient(circle, var(--faint) 0 1.5px, transparent 2px);
+}
+
+.rmat__sum {
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ink);
+}
+
+.rmat__total {
+  font-size: 1.65rem;
+}
+
+/* with a fine pointer the counts live in the tooltip; the cells answer the pointer */
+@media (hover: hover) and (pointer: fine) {
+  .rmat__cell,
+  .rmat__cell.is-deep {
+    color: transparent;
+  }
+
+  .rmat__row {
+    cursor: pointer;
+  }
+
+  .rmat__cell:not(.rmat__cell--0):hover {
+    scale: 1.14;
+    box-shadow:
+      0 0 0 2px var(--paper),
+      0 0 0 3px var(--ink);
+  }
+
+  /* the row under the pointer stays, the others recede; its name and the year light up */
+  .rmat[data-hot-row] .rmat__row:not(.is-hot) .rmat__cell {
+    opacity: 0.35;
+  }
+
+  .rmat__row.is-hot .rmat__link,
+  .rmat__link:hover,
+  .rmat .rmat__y.is-hot,
+  .rmat .rmat__ysum.is-hot {
     color: var(--ink);
   }
 }
 
-/* a narrower plate: the index in one column, so no name wraps */
-@media (max-width: 1199.98px) {
-  .rindex__list {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: none;
-    grid-auto-flow: row;
-  }
+.rmat__link:focus-visible {
+  outline-offset: 2px;
 }
 
-/* short screens: a flatter plate so the index still fits beside the text */
-@media (min-width: 900px) and (max-height: 760px) {
-  .rplate__frame {
-    aspect-ratio: 16 / 10;
-  }
+/* the cells arrive in a wave from the top left when the part arrives (research.js adds .is-in) */
+html.js .rmat:not(.is-in) .rmat__cell {
+  opacity: 0;
+  scale: 0.4;
 }
 
-/* ---------- selected results: a ruled grid ---------- */
-.rres__grid {
-  --k-highlight-bg: var(--hover);
+html.js .rmat.is-in:not(.is-settled) .rmat__cell {
+  transition:
+    opacity 260ms var(--ease-out) calc((var(--r, 0) + var(--c, 0)) * 26ms),
+    scale var(--spring-pop) calc((var(--r, 0) + var(--c, 0)) * 26ms);
+}
+
+html.js .rmat:not(.is-in) .rmat__y,
+html.js .rmat:not(.is-in) .rmat__ysum,
+html.js .rmat:not(.is-in) .rmat__link {
+  opacity: 0;
+}
+
+html.js .rmat .rmat__y,
+html.js .rmat .rmat__ysum,
+html.js .rmat .rmat__link {
+  transition:
+    opacity 300ms var(--ease-out),
+    color var(--t-color);
+}
+
+/* ---------- open-source software: groups that open ---------- */
+.rgroups {
+  --k-highlight-inset: 0 -0.9rem;
   --k-highlight-radius: var(--r-2);
-  --k-highlight-inset: 0.35rem;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.rgroup {
   border-top: 1px solid var(--line);
 }
 
-.rres__cell {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  padding: clamp(1.75rem, 3.4vw, 2.4rem) 0.15rem;
+.rgroup:last-of-type {
   border-bottom: 1px solid var(--line);
 }
 
-/* vertical rules between the cells of a row, short of the horizontal ones */
-.rres__cell::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 1.5rem;
-  bottom: 1.5rem;
-  width: 1px;
-  background: var(--line);
-  display: none;
-}
-
-.rres__figure {
+.rgroup__h {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(2.7rem, 4.6vw, 4rem);
-  line-height: 1;
-  letter-spacing: -0.022em;
-  font-variant-numeric: tabular-nums lining-nums;
-  color: var(--ink);
+  font: inherit;
 }
 
-.rres__unit {
-  max-width: 26ch;
-  margin: 0.7rem 0 0;
-  font-family: var(--font-display);
-  font-style: italic;
-  font-size: 1.22rem;
-  line-height: 1.28;
-  color: var(--ink-2);
-  text-wrap: balance;
-}
-
-.rres__text {
-  max-width: 44ch;
-  margin: 1.2rem 0 0;
-  font-size: var(--fs-small);
-  line-height: 1.6;
-  color: var(--muted);
-}
-
-.rres__src {
-  margin: auto 0 0;
-  padding-top: 1.35rem;
-}
-
-.rres__src .link-arrow {
-  align-items: baseline;
-  font-size: var(--fs-xs);
-  line-height: 1.45;
-}
-
-.rres__src .link-arrow .icon {
-  align-self: center;
-}
-
-.rres__src .t-data {
-  font-size: 0.74rem;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-@media (min-width: 640px) {
-  .rres__grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .rres__cell {
-    padding-inline: clamp(1rem, 2vw, 1.6rem);
-  }
-}
-
-@media (min-width: 640px) and (max-width: 999.98px) {
-  .rres__cell:nth-child(2n)::before {
-    display: block;
-  }
-}
-
-@media (min-width: 1000px) {
-  .rres__grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .rres__cell:not(:nth-child(3n + 1))::before {
-    display: block;
-  }
-}
-
-/* ---------- open-source software: ruled groups ---------- */
-.rsoft .sechead {
-  flex-wrap: wrap;
-  row-gap: 0.35rem;
-}
-
-.rsoft .sechead .link-arrow {
-  padding: 0;
-}
-
-.rsoft__groups {
-  --k-highlight-bg: var(--hover);
-  --k-highlight-radius: var(--r-2);
-  --k-highlight-inset: 0 -0.9rem;
-}
-
-.rsoft__group {
+.rgroup__head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.75rem;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    "name n chev"
+    "repos n chev";
+  align-items: center;
+  gap: 0.3rem 1.25rem;
+  width: 100%;
+  padding: 1.05rem 0;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.rsoft__group + .rsoft__group {
-  margin-top: clamp(2.5rem, 6vw, 4rem);
-}
-
-.rsoft__name {
+.rgroup__name {
+  grid-area: name;
   font-family: var(--font-display);
   font-size: var(--fs-d4);
   line-height: 1.2;
+  color: inherit;
+}
+
+.rgroup__repos {
+  grid-area: repos;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.1rem;
+  min-width: 0;
+  transition:
+    opacity var(--t-reveal),
+    filter var(--t-reveal);
+}
+
+.rgroup__repos > span {
+  color: inherit;
+}
+
+.rgroup__head[aria-expanded="true"] .rgroup__repos {
+  opacity: 0;
+  filter: blur(2px);
+}
+
+.rgroup__n {
+  grid-area: n;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ink-2);
+}
+
+.rgroup__chev,
+.rproj__chev {
+  grid-area: chev;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  color: var(--muted);
+  transition: color var(--t-color);
+}
+
+.rgroup__head[aria-expanded="true"] .rgroup__chev,
+.rproj__head[aria-expanded="true"] .rproj__chev {
   color: var(--ink);
 }
 
-.rsoft__count {
-  margin: 0.35rem 0 0;
+@media (hover: hover) and (pointer: fine) {
+  .rgroup__head:hover .rgroup__chev,
+  .rproj__head:hover .rproj__chev {
+    color: var(--ink);
+  }
 }
 
-.rsoft__rows {
+.rgroup__head:focus-visible,
+.rproj__head:focus-visible {
+  outline-offset: 2px;
+}
+
+.rgroup__list {
+  --k-unfold-rule-x: 0;
   margin: 0;
-  padding: 0;
+  padding: 0 0 1.25rem 1.25rem;
   list-style: none;
 }
 
 .rrepo {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.5rem;
-  padding: 1.15rem 0 1.25rem;
-  border-top: 1px solid var(--line);
+  gap: 0.35rem 2rem;
+  padding: 0.9rem 0;
 }
 
-.rrepo:last-child {
-  border-bottom: 1px solid var(--line);
+.rrepo + .rrepo {
+  border-top: 1px solid var(--line);
 }
 
 .rrepo__name,
@@ -675,25 +789,24 @@ html.js .rplate__tag:not(.is-current) {
 }
 
 .rrepo__text {
-  max-width: 60ch;
+  max-width: 62ch;
   margin: 0;
   font-size: var(--fs-small);
+  line-height: 1.55;
   color: var(--ink-2);
 }
 
 .rrepo__paper {
-  max-width: 60ch;
-  margin: 0.35rem 0 0;
-  line-height: 1.45;
-  font-size: var(--fs-xs);
-  color: var(--muted);
+  max-width: 62ch;
+  margin: 0.3rem 0 0;
+  line-height: 1.4;
 }
 
 .rrepo__paper cite {
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 1.04rem;
-  color: var(--ink-2);
+  font-size: 1.02rem;
+  color: var(--muted);
 }
 
 /* the clone command: a quiet line of code that copies itself */
@@ -702,8 +815,8 @@ html.js .rplate__tag:not(.is-current) {
   align-items: flex-start;
   gap: 0.55rem;
   max-width: 100%;
-  margin: 0.75rem 0 0 -0.55rem;
-  padding: 0.38rem 0.6rem;
+  margin: 0.55rem 0 0 -0.55rem;
+  padding: 0.34rem 0.6rem;
   font: inherit;
   text-align: left;
   color: var(--muted);
@@ -746,173 +859,17 @@ html.js .rplate__tag:not(.is-current) {
 }
 
 @media (min-width: 900px) {
-  .rsoft__group {
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    column-gap: clamp(1rem, 2.2vw, 2rem);
-  }
-
-  .rsoft__rail {
-    grid-column: 1 / span 3;
-    padding-top: 1.05rem;
-  }
-
-  .rsoft__rows {
-    grid-column: 4 / -1;
-  }
-}
-
-@media (min-width: 1100px) {
   .rrepo {
-    grid-template-columns: 14rem minmax(0, 1fr);
-    column-gap: 1.75rem;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    align-items: start;
   }
 
   .rrepo__name {
-    align-self: start;
+    margin-top: 0.05rem;
   }
 }
 
-/* ---------- funded projects: a time axis, then rows that open ---------- */
-.rproj__fig {
-  margin: 0 0 clamp(2.5rem, 6vw, 4rem);
-}
-
-.rproj__chart {
-  position: relative;
-  padding-bottom: 1.9rem;
-}
-
-.rproj__years {
-  position: absolute;
-  inset: -0.5rem 0 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 0.72rem;
-}
-
-.rproj__years li {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--l);
-  display: flex;
-  align-items: flex-end;
-  padding-left: 0.4rem;
-  border-left: 1px solid var(--line);
-}
-
-.rproj__years li:first-child {
-  border-left-color: var(--line-strong);
-}
-
-.rproj__lanes {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  gap: 0.6rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.rproj__lane {
-  position: relative;
-  height: 2.75rem;
-}
-
-.rproj__seg {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: var(--l);
-  width: var(--w);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 0.35rem;
-  padding: 0;
-  font: inherit;
-  text-align: left;
-  color: var(--muted);
-  background: none;
-  border: 0;
-  border-radius: 3px;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.rproj__who {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: inherit;
-  transition: color var(--t-color);
-}
-
-.rproj__bar {
-  display: block;
-  height: 0.7rem;
-  border-radius: 3px;
-  background-color: var(--line-strong);
-  clip-path: inset(0 0 0 0 round 3px);
-  transition: background-color var(--t-color);
-}
-
-.rproj__seg.is-open .rproj__bar {
-  background-color: color-mix(in srgb, var(--accent) 38%, var(--paper));
-}
-
-.rproj__seg.is-lit .rproj__who,
-.rproj__seg.is-open .rproj__who {
-  color: var(--ink);
-}
-
-.rproj__seg.is-lit .rproj__bar,
-.rproj__seg:focus-visible .rproj__bar {
-  background-color: var(--accent);
-}
-
-.rproj__seg:focus-visible {
-  outline-offset: 4px;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .rproj__seg:hover .rproj__who {
-    color: var(--ink);
-  }
-
-  .rproj__seg:hover .rproj__bar {
-    background-color: var(--accent);
-  }
-}
-
-/* the bars draw in from the left, one after the other, when the figure comes into view */
-html.js .rproj__fig:not(.is-in) .rproj__bar {
-  clip-path: inset(0 100% 0 0 round 3px);
-}
-
-html.js .rproj__fig:not(.is-in) .rproj__who {
-  opacity: 0;
-}
-
-.rproj__fig.is-in .rproj__bar {
-  transition:
-    clip-path var(--t-arrive) calc(150ms + var(--i) * 90ms),
-    background-color var(--t-color);
-}
-
-.rproj__fig.is-in .rproj__who {
-  transition:
-    opacity var(--t-reveal) calc(400ms + var(--i) * 90ms),
-    color var(--t-color);
-}
-
-.rproj__fig .figcap {
-  margin-top: 1.1rem;
-}
-
-/* rows */
+/* ---------- funded projects: rows that open ---------- */
 .rproj__rows {
   --k-highlight-inset: 0 -0.9rem;
 }
@@ -955,30 +912,12 @@ html.js .rproj__fig:not(.is-in) .rproj__who {
   text-wrap: balance;
 }
 
-.rproj__chev {
-  grid-area: chev;
-  display: grid;
-  place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  color: var(--muted);
-  transition: color var(--t-color);
-}
-
-.rproj__head[aria-expanded="true"] .rproj__chev {
-  color: var(--ink);
-}
-
-.rproj__head:focus-visible {
-  outline-offset: 2px;
-}
-
 .rproj__body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 1rem 2rem;
   margin: 0;
-  padding: 0.2rem 0 1.6rem;
+  padding: 0.2rem 0 1.6rem 1.25rem;
 }
 
 .rproj__item {
@@ -1021,55 +960,32 @@ html.js .rproj__fig:not(.is-in) .rproj__who {
   }
 }
 
-/* ---------- reduced motion: fades stay, travel goes ---------- */
-html.is-reduced .rproj__fig .rproj__bar {
-  clip-path: none;
+/* ---------- phones ---------- */
+@media (max-width: 759.98px) {
+  .rpart {
+    min-height: 0;
+  }
+
+  .rhead {
+    min-height: 100svh;
+  }
+
+  .rgroup__repos {
+    display: none;
+  }
 }
 
-html.js.is-reduced .rproj__fig:not(.is-in) .rproj__bar {
-  opacity: 0;
-}
-
-html.is-reduced .rproj__fig.is-in .rproj__bar {
-  transition:
-    opacity var(--t-reveal) calc(var(--i) * 90ms),
-    background-color var(--t-color);
-}
-
-/* ---------- print: the plate is a screen device; each area prints with its own figure ---------- */
+/* ---------- print: everything one after the other ---------- */
 @media print {
-  html.js .rplate {
-    display: none !important;
+  .rfig.is-railed .rfig__list {
+    position: static;
   }
 
-  html.js .rareas__list {
-    grid-column: 1 / -1 !important;
-  }
-
-  html.js .rarea__fig {
-    position: static !important;
-    width: auto !important;
-    height: auto !important;
-    margin: 0 0 1rem !important;
-    overflow: visible !important;
-    clip: auto !important;
-    white-space: normal !important;
-  }
-
-  html.js .rareas.is-spying .rarea {
-    opacity: 1 !important;
+  .rpart {
+    min-height: 0;
   }
 
   .rclone .k-swap {
     display: none;
   }
-}
-
-/* sections and areas reached from a link take the focus (so Tab goes on from there) without a ring around the whole block */
-.rareas[tabindex="-1"]:focus,
-.rarea[tabindex="-1"]:focus,
-.rres[tabindex="-1"]:focus,
-.rsoft[tabindex="-1"]:focus,
-.rproj[tabindex="-1"]:focus {
-  outline: none;
 }
