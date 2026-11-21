@@ -4,12 +4,16 @@
  *      between b1 and b2, their length ratio, a slight turn) and a short self-avoiding walk on that lattice; the points
  *      of the walk are lit, its last point is ringed. Drawn as inline SVG in ink. It settles into place when it first
  *      appears (with its row's entrance), a ripple runs through it from where the pointer came in and its points give
- *      way under the pointer, and it re-forms when the name changes (Fig. 1). A photo in the data replaces it (markup).
- *        <span class="glyph glyph--tile" data-kit="glyph" data-name="Ying Ying Chia" data-kind="tile|row|big"
+ *      way under the pointer (a student's card: the mark re-forms instead), and it morphs when the name changes (the
+ *      view behind the button in the page head). A photo in the data replaces it (markup). An empty name draws the
+ *      lattice alone.
+ *        <span class="glyph glyph--tile" data-kit="glyph" data-name="Ying Ying Chia" data-kind="tile|row|band|dot|big"
  *              data-trigger="reveal|view|load|manual" data-delay="ms">YC</span>
- *      Controller: { set(name), play(delay), model }. Event kit:glyph-change { model } after set().
- *   2. Fig. 1: the name under the large mark is a field; typing redraws the mark.
- *   3. Students filtered by degree, alumni ordered by a column: both through Site.flip.
+ *      Controller: { set(name), play(delay), reform(), model }. Event kit:glyph-change { model } after set().
+ *   2. The head: every member's mark in two rows that swell under the pointer; a mark glides the page to its person.
+ *      The button at the end of the students' row opens the view with the large mark and a name field (kit expand).
+ *   3. Student cards: the mark re-forms when the card is entered or focused.
+ *   4. Students filtered by degree, alumni ordered by a column: both through Site.flip.
  * Everything here is an enhancement: without this file the page shows every person, with their initials.
  */
 (function () {
@@ -50,7 +54,11 @@
     big: { cell: 9, field: 34, faint: 0.6, lit: 1.25, start: 1.7, ring: 3.2, push: 4.5, sigma: 8, axes: true },
     tile: { cell: 10.5, field: 31, faint: 1, lit: 2.1, start: 2.7, ring: 4.7, push: 6, sigma: 10 },
     row: { cell: 12, field: 22, faint: 1.25, lit: 3.1, start: 3.7, ring: 6.4, push: 6, sigma: 12 },
+    band: { cell: 11.5, field: 25, faint: 1.15, lit: 2.7, start: 3.3, ring: 5.8, push: 6, sigma: 11 },
+    dot: { cell: 12.5, field: 17, faint: 1.4, lit: 3.5, start: 4.1, ring: 7, push: 6, sigma: 12 },
   };
+  // a mark re-forming (a student's card entered): how far the points step out, when the walk starts again
+  var REFORM = { out: 3.2, jitter: 2.6, wait: 0.05, spread: 0.18, draw: 0.6, every: 0.9 };
   // the ripple that runs through a mark when the pointer comes in (glyph units, seconds)
   var WAVE = { speed: 95, amp: 3.4, width: 6, decay: 0.45, life: 1.5 };
 
@@ -91,7 +99,7 @@
     var b1 = [Math.cos(turn), Math.sin(turn)];
     var b2 = [ratio * Math.cos(turn - a), ratio * Math.sin(turn - a)];
     var dirs = angle > 90 ? OBTUSE : ACUTE;
-    var want = 5 + Math.floor(r() * 4);
+    var want = key ? 5 + Math.floor(r() * 4) : 0;
     var walk = [[0, 0]];
     var seen = { "0,0": 0 };
     var prev = -1;
@@ -115,6 +123,11 @@
       seen[next[0] + "," + next[1]] = walk.length;
       walk.push(next);
     }
+    // no name: the lattice alone, nothing lit
+    if (!key) {
+      walk = [];
+      seen = {};
+    }
     // centre the walk in the box
     var s = K.cell;
     var minX = Infinity;
@@ -129,8 +142,8 @@
       minY = Math.min(minY, y);
       maxY = Math.max(maxY, y);
     });
-    var cx = (minX + maxX) / 2;
-    var cy = (minY + maxY) / 2;
+    var cx = walk.length ? (minX + maxX) / 2 : 0;
+    var cy = walk.length ? (minY + maxY) / 2 : 0;
     var pts = [];
     var order = new Array(walk.length);
     var span = Math.ceil(K.field / (s * 0.5)) + 2;
@@ -154,7 +167,8 @@
       origin: [-cx, -cy],
       angle: angle,
       ratio: ratio,
-      steps: walk.length - 1,
+      steps: Math.max(0, walk.length - 1),
+      empty: !walk.length,
     };
   }
   Site.glyphModel = model;
@@ -211,7 +225,8 @@
   function createGlyph(el, o) {
     var kind = KINDS[o.kind] ? o.kind : "tile";
     var K = KINDS[kind];
-    var name = String(o.name == null ? el.textContent : o.name);
+    // read the attribute itself: the option parser turns an empty value into true
+    var name = el.hasAttribute("data-name") ? el.getAttribute("data-name") : el.textContent;
     var svg = mk("svg", { class: "glyph__svg", viewBox: "-36 -36 72 72", "aria-hidden": "true", focusable: "false" });
     var axesEl = K.axes ? mk("g", { class: "glyph__axes" }, svg) : null;
     var dotsEl = mk("g", {}, svg);
@@ -324,10 +339,13 @@
         walkEl.style.strokeDashoffset = "1";
         if (axesEl) axesEl.style.opacity = "0";
       } else {
-        end.r = end.tr = K.ring;
+        end.r = end.tr = ringSize();
         walkEl.style.strokeDashoffset = "0";
       }
       render();
+    }
+    function ringSize() {
+      return lit.length ? K.ring : 0;
     }
 
     function render() {
@@ -443,13 +461,13 @@
       return busy;
     };
 
-    function drawWalk(delay) {
+    function drawWalk(delay, duration) {
       if (walkAnim) walkAnim.cancel();
       walkEl.style.strokeDashoffset = "0";
       walkEl.style.opacity = "";
       if (!walkEl.animate) return;
       walkAnim = walkEl.animate([{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], {
-        duration: arrive.duration,
+        duration: duration || arrive.duration,
         easing: drawEase,
         delay: Math.max(0, delay * 1000),
         fill: "backwards",
@@ -483,7 +501,7 @@
       var walkAt = s + 0.3;
       drawWalk(walkAt);
       end.wait = walkAt + (arrive.duration / 1000) * 0.85;
-      end.tr = K.ring;
+      end.tr = ringSize();
       if (axesEl && axesEl.animate) {
         axesEl.style.opacity = "";
         axesEl.animate([{ opacity: 0 }, { opacity: 1 }], { duration: arrive.duration, easing: arrive.easing, delay: (walkAt + 0.2) * 1000, fill: "backwards" });
@@ -584,7 +602,7 @@
       redraw = setTimeout(function () {
         drawWalk(0);
         end.wait = (arrive.duration / 1000) * 0.85;
-        end.tr = K.ring;
+        end.tr = ringSize();
         end.k = pop.stiffness;
         end.c = pop.damping;
         wake(self);
@@ -592,8 +610,52 @@
       wake(self);
     }
 
-    // under the pointer: a ripple from where it came in, then the points near it give way
+    // the mark re-forms: its points step out a little and settle back on the entrance spring, a beat after the
+    // card around it has answered; the walk draws again and its end ring pops. At most once per REFORM.every.
+    var lastReform = 0;
+    var settleTimer = null;
+    self.reform = function () {
+      if (!played || env.static || env.reduce || !self.model) return;
+      var now = performance.now();
+      if (now - lastReform < REFORM.every * 1000) return;
+      lastReform = now;
+      dots.forEach(function (d) {
+        if (d.dead) return;
+        var len = d.dist || 1;
+        var ux = d.dist ? d.rx / len : 0;
+        var uy = d.dist ? d.ry / len : 0;
+        var side = (Math.random() - 0.5) * REFORM.jitter;
+        var out = REFORM.out * (0.6 + Math.random() * 0.8);
+        d.x = d.rx + ux * out - uy * side;
+        d.y = d.ry + uy * out + ux * side;
+        d.vx = d.vy = 0;
+        d.r = d.tr * 0.55;
+        d.wait = REFORM.wait + (d.dist / K.field) * REFORM.spread;
+        d.k = enter.stiffness;
+        d.c = enter.damping;
+      });
+      var draw = arrive.duration * REFORM.draw;
+      drawWalk(REFORM.wait + 0.08, draw);
+      end.r = 0;
+      end.vr = 0;
+      end.k = pop.stiffness;
+      end.c = pop.damping;
+      end.wait = REFORM.wait + 0.08 + (draw / 1000) * 0.85;
+      end.tr = ringSize();
+      clearTimeout(settleTimer);
+      settleTimer = setTimeout(function () {
+        dots.forEach(function (d) {
+          d.k = soft.stiffness;
+          d.c = soft.damping;
+        });
+      }, 1100);
+      wake(self);
+    };
+
+    // under the pointer: a ripple from where it came in (a student's card: the mark re-forms instead), then the
+    // points near it give way
     var host = el.closest("[data-glyph-host], .person, .alum") || el;
+    var reformsOnEnter = kind === "tile" && !!el.closest(".person");
     function local(e) {
       var r = svg.getBoundingClientRect();
       if (!r.width) return null;
@@ -603,6 +665,11 @@
       if (e.pointerType === "touch" || !played || env.reduce || !env.hover) return;
       var p = local(e);
       if (!p) return;
+      if (reformsOnEnter) {
+        self.reform();
+        pointer = p;
+        return;
+      }
       var len = Math.sqrt(p.x * p.x + p.y * p.y) || 1;
       var rim = Math.min(len, 40);
       waves.push({ x: (p.x / len) * rim, y: (p.y / len) * rim, t: performance.now() });
@@ -620,9 +687,13 @@
       pointer = null;
       wake(self);
     }
+    function onFocus(e) {
+      if (e.target === host && reformsOnEnter && host.matches(":focus-visible")) self.reform();
+    }
     host.addEventListener("pointerenter", onEnter);
     host.addEventListener("pointermove", onMove);
     host.addEventListener("pointerleave", onLeave);
+    host.addEventListener("focus", onFocus);
 
     // first state, then wait for the trigger
     var trigger = o.trigger || (el.closest("[data-reveal-item], [data-kit~='reveal']") ? "reveal" : "view");
@@ -657,6 +728,8 @@
 
     self.destroy = function () {
       clearTimeout(redraw);
+      clearTimeout(settleTimer);
+      host.removeEventListener("focus", onFocus);
       host.removeEventListener("pointerenter", onEnter);
       host.removeEventListener("pointermove", onMove);
       host.removeEventListener("pointerleave", onLeave);
@@ -672,46 +745,203 @@
     return createGlyph(el, opts);
   });
 
-  /* ============================================================ Fig. 1 */
-  function initFigure(plate) {
-    var glyph = plate.querySelector("[data-kit~='glyph']");
-    var input = plate.querySelector("[data-glyph-input]");
-    var out = plate.querySelector("[data-glyph-readout]");
+  /* =============================================== the name-to-mark view
+     The button at the end of the head's students row opens #gtoy (kit expand): the large mark and a field. The mark
+     settles in the first time the view has landed; typing morphs it; the field keeps its name between openings. */
+  function initToy(trigger) {
+    var sel = trigger.getAttribute("data-expand");
+    var view = sel && document.querySelector(sel);
+    if (!view) return;
+    var glyph = view.querySelector("[data-kit~='glyph']");
+    var input = view.querySelector("[data-glyph-input]");
     var c = glyph && Site.get(glyph, "glyph");
-    if (!c) return;
-    var fallback = glyph.getAttribute("data-name") || "";
-    var lastText = "";
-    function readout(m, animate) {
-      if (!out || !m) return;
-      var text = "θ " + m.angle + "°, |b₂|/|b₁| " + m.ratio.toFixed(2) + ", " + m.steps + " steps";
-      if (text === lastText) return;
-      lastText = text;
-      out.textContent = text;
-      if (animate && out.animate && !env.static) {
-        var sw = Site.css("transition.swap");
-        out.animate([{ opacity: 0.35, filter: "blur(" + T.blur.icon + "px)" }, { opacity: 1, filter: "blur(0px)" }], { duration: sw.duration * 2, easing: sw.easing });
+    if (!c || !input) return;
+    var first = true;
+    trigger.addEventListener("kit:expand-opened", function () {
+      if (first) {
+        first = false;
+        c.play(0);
       }
-    }
-    readout(c.model, false);
-    glyph.addEventListener("kit:glyph-change", function (e) {
-      readout(e.detail.model, true);
+      input.focus({ preventScroll: true });
     });
-    if (!input) return;
     input.addEventListener("input", function () {
-      c.set(input.value.trim() || fallback);
+      c.set(input.value.trim());
     });
-    input.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && input.value !== fallback) {
-        input.value = fallback;
-        c.set(fallback);
-      }
+  }
+
+  /* ================================================================ the head
+     Two rows of marks (students, alumni). Under the pointer a row swells: each mark grows and lifts by how close the
+     pointer is to it (a gaussian over the row), every mark on its own spring (spring.pop), written as CSS scale and
+     translate on the list item, so the link's own press and magnetic stay free. A mark is a link to its person: the
+     page glides there and the person lights up for a moment. Hovering a row, or the count under the rule, lets the
+     other row recede. */
+  var SWELL = { now: 0.26, past: 0.42, sigma: 1.15, lift: 0.3 };
+  var ADD_AT = 1150; // ms after ready: the "+" arrives once the students' marks have settled (people_band.liquid delays)
+  function initBand(band) {
+    var rows = all(band, "[data-band-row]");
+    var add = band.querySelector(".gband__add");
+    if (add) {
+      if (env.static) add.classList.add("is-in");
+      else
+        setTimeout(function () {
+          add.classList.add("is-in");
+        }, env.reduce ? 600 : ADD_AT);
+    }
+    var stats = all(document, "[data-band-for]");
+    function focusRow(key) {
+      if (key) band.setAttribute("data-focus", key);
+      else band.removeAttribute("data-focus");
+    }
+    rows.forEach(function (row) {
+      var key = row.getAttribute("data-band-row");
+      row.addEventListener("pointerenter", function (e) {
+        if (e.pointerType !== "touch") focusRow(key);
+      });
+      row.addEventListener("pointerleave", function () {
+        focusRow(null);
+      });
+      if (env.hover && !env.reduce && !env.static) swell(row, SWELL[key] || SWELL.now);
     });
-    input.addEventListener("blur", function () {
-      if (!input.value.trim()) {
-        input.value = fallback;
-        c.set(fallback);
-      }
+    stats.forEach(function (st) {
+      var key = st.getAttribute("data-band-for");
+      st.addEventListener("pointerenter", function (e) {
+        if (e.pointerType !== "touch") focusRow(key);
+      });
+      st.addEventListener("pointerleave", function () {
+        focusRow(null);
+      });
     });
+    all(band, "a.gband__m").forEach(function (a) {
+      a.addEventListener("click", function (e) {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        var id = (a.getAttribute("href") || "").slice(1);
+        var target = id && document.getElementById(id);
+        if (!target) return;
+        e.preventDefault();
+        goTo(target);
+        if (history.replaceState) history.replaceState(null, "", "#" + id);
+      });
+    });
+  }
+
+  function swell(row, amp) {
+    var items = all(row, ":scope > li").map(function (li) {
+      return { el: li, s: 1, v: 0, t: 1, cx: 0, w: 0 };
+    });
+    var sp = Site.t("spring.pop");
+    var px = null;
+    var loop = null;
+    function measure() {
+      items.forEach(function (it) {
+        var r = it.el.getBoundingClientRect();
+        // the box without the swell's own scale
+        it.w = r.width / (it.s || 1);
+        it.cx = r.left + r.width / 2;
+      });
+    }
+    function aim() {
+      items.forEach(function (it) {
+        if (px === null) {
+          it.t = 1;
+          return;
+        }
+        var sigma = it.w * SWELL.sigma * 1.2;
+        var dx = px - it.cx;
+        it.t = 1 + amp * Math.exp(-(dx * dx) / (2 * sigma * sigma));
+      });
+    }
+    function tick(time, delta) {
+      var dt = Math.min(delta, 48) / 1000;
+      var busy = false;
+      items.forEach(function (it) {
+        if (!spring(it, "s", "v", it.t, sp.stiffness, sp.damping, dt)) busy = true;
+        if (Math.abs(it.s - 1) < 0.001 && it.t === 1) {
+          it.el.style.scale = "";
+          it.el.style.translate = "";
+          return;
+        }
+        it.el.style.scale = it.s.toFixed(4);
+        it.el.style.translate = "0 " + (-(it.s - 1) * it.w * SWELL.lift).toFixed(2) + "px";
+      });
+      if (!busy) loop.stop();
+    }
+    function wakeRow() {
+      if (!loop) loop = util.loop(tick);
+      loop.start();
+    }
+    row.addEventListener("pointerenter", function (e) {
+      if (e.pointerType === "touch") return;
+      measure();
+      px = e.clientX;
+      aim();
+      wakeRow();
+    });
+    row.addEventListener("pointermove", function (e) {
+      if (e.pointerType === "touch") return;
+      px = e.clientX;
+      aim();
+      wakeRow();
+    });
+    row.addEventListener("pointerleave", function () {
+      px = null;
+      aim();
+      wakeRow();
+    });
+  }
+
+  // glide the page to a person and light them for a moment (a student's card fills, an alumni row takes the surface)
+  var landTimer = null;
+  function goTo(target) {
+    var card = target.classList.contains("person") ? target : null;
+    if (card && card.hidden) {
+      var all0 = document.querySelector("[data-filter] .chip[data-degree='']");
+      if (all0) all0.click();
+    }
+    var r = target.getBoundingClientRect();
+    var nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 64;
+    var top = window.scrollY + r.top - Math.max((window.innerHeight - r.height) / 2, nav + 24);
+    window.scrollTo({ top: Math.max(0, top), behavior: env.reduce || env.static ? "auto" : "smooth" });
+    whenStill(function () {
+      land(target);
+    });
+  }
+  function whenStill(fn) {
+    var t = null;
+    var done = false;
+    function fin() {
+      if (done) return;
+      done = true;
+      window.removeEventListener("scroll", onScroll);
+      fn();
+    }
+    function onScroll() {
+      clearTimeout(t);
+      t = setTimeout(fin, 140);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    t = setTimeout(fin, 220);
+  }
+  function land(target) {
+    clearTimeout(landTimer);
+    if (target.classList.contains("person")) {
+      var fill = Site.get(target, "hover-fill");
+      var g = target.querySelector("[data-kit~='glyph']");
+      var gc = g && Site.get(g, "glyph");
+      target.classList.add("is-landed");
+      if (fill) fill.set(true);
+      if (gc) gc.reform();
+      landTimer = setTimeout(function () {
+        target.classList.remove("is-landed");
+        if (fill && !target.matches(":hover")) fill.set(false);
+      }, 1600);
+    } else {
+      var list = target.closest("[data-alumni]");
+      var hl = list && Site.get(list, "highlight");
+      if (hl && env.hover) hl.moveTo(target);
+      landTimer = setTimeout(function () {
+        if (hl && env.hover && !target.matches(":hover")) hl.moveTo(null);
+      }, 1600);
+    }
   }
 
   /* ======================================================= students filter */
@@ -815,7 +1045,9 @@
   }
 
   Site.ready(function () {
-    all(document, ".gfig__plate").forEach(initFigure);
+    var band = document.querySelector("[data-band]");
+    if (band) initBand(band);
+    all(document, "[data-expand='#gtoy']").forEach(initToy);
     var filter = document.querySelector("[data-filter]");
     if (filter) initFilter(filter);
     var sort = document.querySelector("[data-alumni-sort]");

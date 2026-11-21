@@ -2,7 +2,7 @@
   The ledgers of the CV page, one per section of _data/cv.yml (cv.sections, in the file's order), then a line on the publications.
   Rail + content: a sticky index of the sections (scrollspy + gliding mark) on the left, the ledgers on the right.
   Entry shapes understood: position/company (appointments), studyType/institution (degrees), name/summary (projects, awards),
-  name/keywords (interests). Rows of appointments and degrees carry the id their bar in Fig. 1 points to.
+  name/keywords (interests). Rows of appointments and degrees carry the id their bar on the time axis points to.
 {%- endcomment -%}
 {%- assign cv = site.data.cv.cv -%}
 {%- assign pub_count = 0 -%}
@@ -99,8 +99,8 @@
       <div class="cvpubs__line" data-kit="reveal-group">
         <p class="cvpubs__count"><span data-kit="sliding-number" data-value="{{ pub_count | strip }}">{{ pub_count | strip }}</span><span class="cvpubs__print" aria-hidden="true">{{ pub_count | strip }}</span></p>
         <div class="cvpubs__text">
-          <p>Papers in journals and conference proceedings{% if metrics %}, cited {{ metrics.citations }} times, h-index {{ metrics.h_index }} ({{ metrics.source }}, {{ metrics.as_of }}){% endif %}.</p>
-          <a class="btn btn--ghost btn--small cvpubs__link" href="{{ '/publications/' | relative_url }}" data-kit="press"><span data-kit="sliding-text">The full list</span>{% include site/icon.liquid name="arrow-right" size="16" %}</a>
+          <p>Papers in journals and conference proceedings{% if metrics %}, cited {{ metrics.citations }} times, h-index {{ metrics.h_index }}{% endif %}.</p>
+          <a class="btn btn--ghost btn--small cvpubs__link" href="{{ '/publications/' | relative_url }}" data-kit="magnetic press ripple" data-inner><span data-kit="sliding-text">The full list</span>{% include site/icon.liquid name="arrow-right" size="16" %}</a>
         </div>
       </div>
     </section>

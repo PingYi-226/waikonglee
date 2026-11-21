@@ -1,0 +1,47 @@
+{%- comment -%}
+  The head of the Group page, beside the title: every member's mark, the current students in one row and the alumni
+  (each name once) in a quieter row under it. A mark is a link to its person further down; the row swells a little
+  under the pointer (assets/js/site/group.js, initBand). The last place in the students' row is a small button that
+  opens the name-to-mark view (#gtoy, kit "expand"): a large mark and a field; typing redraws the mark.
+  Data: _data/people.yml (current, alumni). Without JavaScript the marks are initials and the button is not shown.
+{%- endcomment -%}
+{%- assign people = site.data.people -%}
+{%- assign band_past = people.alumni | map: 'name' | uniq -%}
+<div class="gband" data-band>
+  <ul class="gband__row gband__row--now" data-band-row="now" data-kit="tooltip-group" aria-label="Current students">
+    {%- for p in people.current %}
+    {%- assign d = forloop.index0 | times: 55 | plus: 620 %}
+    <li class="gband__item">
+      <a class="gband__m" href="#p-{{ p.name | slugify }}" tabindex="-1" data-tip="{{ p.name | escape }}" data-glyph-host data-band-item>
+        {%- include site/people_glyph.liquid name=p.name photo=p.photo kind="band" trigger="load" delay=d -%}
+        <span class="sr-only">{{ p.name }}</span>
+      </a>
+    </li>
+    {%- endfor %}
+    <li class="gband__item gband__item--add js-only">
+      <button type="button" class="icon-btn gband__add" data-kit="expand press magnetic" data-expand="#gtoy" data-expand-class="gtoy-view" data-expand-label="A mark from a name" data-tip="Your mark" aria-label="Your mark" data-band-item>
+        <span class="gband__ring" data-shared="figure" data-shared-mode="fade">{% include site/icon.liquid name="plus" size="18" %}</span>
+      </button>
+    </li>
+  </ul>
+  <ul class="gband__row gband__row--past" data-band-row="past" data-kit="tooltip-group" aria-label="Alumni">
+    {%- for n in band_past %}
+    {%- assign d = forloop.index0 | times: 35 | plus: 900 %}
+    <li class="gband__item">
+      <a class="gband__m" href="#a-{{ n | slugify }}" tabindex="-1" data-tip="{{ n | escape }}" data-glyph-host data-band-item>
+        {%- include site/people_glyph.liquid name=n kind="dot" trigger="load" delay=d -%}
+        <span class="sr-only">{{ n }}</span>
+      </a>
+    </li>
+    {%- endfor %}
+  </ul>
+</div>
+<div class="gtoy" id="gtoy" hidden>
+  <div class="gtoy__mark" data-shared="figure" data-shared-mode="fade" data-glyph-host>
+    {%- include site/people_glyph.liquid name="" kind="big" trigger="manual" -%}
+  </div>
+  <label class="gtoy__field">
+    <span class="sr-only">Name</span>
+    <input class="gtoy__input" type="text" value="" placeholder="Your name" maxlength="40" autocomplete="off" autocapitalize="words" spellcheck="false" data-glyph-input>
+  </label>
+</div>

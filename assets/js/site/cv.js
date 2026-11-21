@@ -1,6 +1,6 @@
 /*
  * CV page.
- *   1. Fig. 1, the time axis: a reading line follows the pointer along the axis (spring.highlight) and says the month it is on;
+ *   1. The time axis: a reading line follows the pointer along the axis (spring.highlight) and says the month it is on;
  *      the bars it crosses step toward the accent and the caption lists them. A bar hovered or focused is named in the caption
  *      and lights its row in the ledger; a click (or Enter) goes to that row. Hovering a row lights its bar, and while the
  *      ledgers are read, the row in the middle of the view lights its bar.
@@ -90,6 +90,7 @@
     function name(bar) {
       if (named && named !== bar) light(named, false);
       named = bar;
+      fig.classList.toggle("is-naming", !!bar);
       if (bar) {
         light(bar, true);
         read.set(describe(bar));

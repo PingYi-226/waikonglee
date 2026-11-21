@@ -1,8 +1,8 @@
 {%- comment -%}
-  Fig. 1 of the CV page: education and appointments from _data/cv.yml as bars on one time axis, from the start of the first degree
+  The time axis of the CV page: education and appointments from _data/cv.yml as bars on one time axis, from the start of the first degree
   (or job, if earlier) to this month, in two lanes. Positions are percentages computed here from the dates (like the career strip
-  on the home page). Each bar is a button: it names itself in the caption, lights its row in the ledger below, and a click goes there.
-  cv.js adds the reading line that follows the pointer along the axis.
+  on the home page). Each bar is a button: it names itself in the line under the axis (empty at rest), lights its row in the ledger
+  below, and a click goes there. cv.js adds the reading line that follows the pointer along the axis.
 {%- endcomment -%}
 {%- assign cv = site.data.cv.cv -%}
 {%- assign year_now = site.time | date: '%Y' | plus: 0 -%}
@@ -18,7 +18,7 @@
 {%- assign t1 = year_now | times: 12 | plus: month_now -%}
 {%- assign span = t1 | minus: t0 -%}
 {%- capture lanes -%}education,work{%- endcapture -%}
-<figure class="cvaxis wrap" data-inview="0.3" data-cv-axis aria-labelledby="cvaxis-cap">
+<figure class="cvaxis wrap" data-inview="0.3" data-cv-axis aria-label="Education and work, {{ y0 }} to today">
   <div class="cvaxis__body">
     <span class="cvaxis__name cvaxis__name--1" aria-hidden="true">Education</span>
     <span class="cvaxis__name cvaxis__name--2" aria-hidden="true">Work</span>
@@ -75,9 +75,6 @@
       </ol>
       <div class="cvaxis__cursor" aria-hidden="true" data-cv-cursor><span class="cvaxis__cursor-label t-data" data-cv-cursor-label></span></div>
     </div>
-    <figcaption class="figcap cvaxis__cap" id="cvaxis-cap">
-      <span class="figcap__no">Fig. 1</span>
-      <span class="cvaxis__read" data-cv-read data-default="Education and work, {{ y0 }} to today.">Education and work, {{ y0 }} to today.</span>
-    </figcaption>
+    <p class="cvaxis__cap" aria-live="polite"><span class="cvaxis__read" data-cv-read data-default=""></span></p>
   </div>
 </figure>

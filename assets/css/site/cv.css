@@ -1,6 +1,6 @@
 /* ==========================================================================
    CV page (_pages/cv.md, _includes/site/cv_*.liquid, assets/js/site/cv.js).
-   The set piece is Fig. 1: education and work on one time axis, read with a line that follows the pointer.
+   The set piece is the time axis: education and work in two lanes, read with a line that follows the pointer.
    Below it the ledgers, with a sticky index. Ends with the print stylesheet (a plain one- or two-page CV).
    ========================================================================== */
 
@@ -43,6 +43,12 @@ html.js .cvbody .sechead[data-inview]:not(.is-in)::before {
   color: var(--ink-2);
 }
 
+.cvprint__in {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 .cvprint .icon {
   margin-left: -0.15rem;
 }
@@ -52,7 +58,7 @@ html.js .cvbody .sechead[data-inview]:not(.is-in)::before {
   margin-right: -0.6rem;
 }
 
-/* ---------- Fig. 1: two lanes on one axis ---------- */
+/* ---------- the time axis: two lanes on one axis ---------- */
 .cvaxis {
   --lane-h: 1.15rem;
   --lane-gap: 0.85rem;
@@ -146,7 +152,10 @@ html.js .cvaxis:not(.is-in) .cvaxis__track::before {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   clip-path: inset(0 0 0 0 round var(--r-pill));
-  transition: background-color var(--t-color);
+  transition:
+    background-color var(--t-color),
+    opacity var(--t-fade),
+    scale var(--spring-pop);
 }
 
 .cvaxis__track--2 .cvaxis__bar {
@@ -175,6 +184,15 @@ html.js .cvaxis:not(.is-in) .cvaxis__track::before {
   border-radius: var(--r-pill);
 }
 
+/* one bar named (pointer, focus, its row): it swells a little and the others recede */
+.cvaxis.is-naming .cvaxis__bar:not(.is-lit) {
+  opacity: 0.42;
+}
+
+html:not(.is-reduced) .cvaxis .cvaxis__bar.is-lit {
+  scale: 1 1.32;
+}
+
 /* drawn in as time passes: each bar opens from its start, in the order of its start date */
 html.js .cvaxis:not(.is-in) .cvaxis__bar {
   clip-path: inset(0 100% 0 0 round var(--r-pill));
@@ -183,7 +201,9 @@ html.js .cvaxis:not(.is-in) .cvaxis__bar {
 .cvaxis.is-in .cvaxis__bar {
   transition:
     clip-path var(--t-arrive) calc(250ms + var(--l) * 13ms),
-    background-color var(--t-color);
+    background-color var(--t-color),
+    opacity var(--t-fade),
+    scale var(--spring-pop);
 }
 
 html.is-reduced.js .cvaxis:not(.is-in) .cvaxis__bar {
@@ -193,7 +213,7 @@ html.is-reduced.js .cvaxis:not(.is-in) .cvaxis__bar {
 
 html.is-reduced .cvaxis.is-in .cvaxis__bar {
   transition:
-    opacity var(--t-reveal) 200ms,
+    opacity var(--t-reveal),
     background-color var(--t-color);
 }
 
@@ -282,11 +302,15 @@ html.js .cvaxis:not(.is-in) .cvaxis__now {
   transform: translateX(var(--k, -50%));
 }
 
+/* the line under the axis: empty at rest, it names what the pointer or the focus is on */
 .cvaxis__cap {
   grid-column: 4 / -1;
   grid-row: 5;
-  margin-top: 0.4rem;
+  margin: 0.4rem 0 0;
   min-height: 2.6em;
+  font-size: var(--fs-small);
+  line-height: 1.5;
+  color: var(--ink-2);
 }
 
 .cvaxis__read {
@@ -393,6 +417,15 @@ html.js .cvaxis:not(.is-in) .cvaxis__now {
   font-size: 1.5rem;
   line-height: 1.15;
   letter-spacing: -0.01em;
+  transition: translate var(--spring-pop);
+}
+
+/* the row under the pointer: the surface glides in (highlight), the title steps aside a beat later */
+@media (hover: hover) and (pointer: fine) {
+  html:not(.is-reduced) .cvrow:hover .cvrow__title {
+    translate: 0.25rem 0;
+    transition-delay: 40ms;
+  }
 }
 
 .cvrow__title--long {

@@ -11,7 +11,7 @@ site_js: [cv]
 ---
 {%- comment -%}
   The CV page, from _data/cv.yml (the same file the template's RenderCV layout read): the page head (title, summary, print button,
-  profile links), Fig. 1 (education and work on one time axis: _includes/site/cv_axis.liquid) and the ledgers with a sticky index
+  profile links), the time axis (education and work in two lanes: _includes/site/cv_axis.liquid) and the ledgers with a sticky index
   (_includes/site/cv_sections.liquid). Looks: assets/css/site/cv.css (with the print stylesheet); behaviour: assets/js/site/cv.js.
 {%- endcomment -%}
 {%- assign cv = site.data.cv.cv -%}
@@ -24,9 +24,11 @@ site_js: [cv]
   </div>
 {% endcapture %}
 {% capture head_meta %}
-  <button type="button" class="btn btn--ghost cvprint js-only" data-kit="press" data-cv-print>
-    {%- include site/icon.liquid name="download" size="18" -%}
-    <span data-kit="sliding-text">Print or save as PDF</span>
+  <button type="button" class="btn btn--ghost cvprint js-only" data-kit="magnetic press ripple" data-inner=".cvprint__in" data-cv-print>
+    <span class="cvprint__in">
+      {%- include site/icon.liquid name="download" size="18" -%}
+      <span data-kit="sliding-text">Print or save as PDF</span>
+    </span>
   </button>
   {% include site/socials.liquid class="cvsocials" %}
 {% endcapture %}
