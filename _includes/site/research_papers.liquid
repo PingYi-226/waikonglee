@@ -81,7 +81,7 @@
           <div class="rmat__body" role="rowgroup">
             {%- for a in areas %}
             {%- assign r = forloop.index0 %}
-            <div class="rmat__line rmat__row" role="row" data-rmat-row style="--r: {{ r }}">
+            <div class="rmat__line rmat__row" role="row" data-rmat-row data-cursor-grow style="--r: {{ r }}">
               <span class="rmat__name" role="rowheader">
                 <a class="rmat__link" href="{{ '/publications/' | relative_url }}#area={{ a.key }}" data-rmat-link>{{ a.short | default: a.title }}</a>
               </span>

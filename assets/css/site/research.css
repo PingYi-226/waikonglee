@@ -134,6 +134,13 @@
   }
 }
 
+/* in the rail the row's entrance no longer applies: a filter or a fade on the nav would hold the fixed rail inside it */
+html.js .pagehead__meta > .rfig.is-railed {
+  opacity: 1;
+  filter: none;
+  transition: none;
+}
+
 /* in the rail: the number and the last word of the label, small, stacked at the left of the parts */
 .rfig.is-railed .rfig__list {
   --k-highlight-inset: 0 -0.55rem;
