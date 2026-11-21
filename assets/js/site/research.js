@@ -155,10 +155,10 @@
       var sy = window.scrollY;
       els.forEach(function (it) {
         it.to = it.el.getBoundingClientRect();
-        it.delay = it.k * 45 + (it.kind === "num" ? 0 : 55);
+        it.delay = it.k * 45 + (it.kind === "num" ? 0 : 35);
       });
       var curve = springCurve(Site.t("spring.glide"));
-      var span = curve.ms + 3 * 45 + 55;
+      var span = curve.ms + 3 * 45 + 35;
       var start = performance.now();
       var f = { raf: 0, toRail: toRail };
       flight = f;

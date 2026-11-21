@@ -100,9 +100,49 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+.rfig__top {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
 .rfig__num {
   display: block;
   transform-origin: 0 0;
+}
+
+/* at the head, a small arrow says where the figure goes: it comes in a beat after the surface, under the pointer or focus */
+.rfig__go {
+  display: grid;
+  color: var(--muted);
+  opacity: 0;
+  translate: 0 -0.35rem;
+  transition:
+    opacity var(--t-fade),
+    translate var(--t-fade);
+}
+
+.rfig__link:focus-visible .rfig__go {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity var(--t-reveal) 70ms,
+    translate var(--spring-pop) 70ms;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rfig__link:hover .rfig__go {
+    opacity: 1;
+    translate: 0 0;
+    transition:
+      opacity var(--t-reveal) 70ms,
+      translate var(--spring-pop) 70ms;
+  }
+}
+
+.rfig.is-railed .rfig__go,
+.rfig.is-flying .rfig__go {
+  display: none;
 }
 
 .rfig__label {
@@ -175,6 +215,10 @@ html.js .pagehead__meta > .rfig.is-railed {
   align-items: baseline;
   column-gap: 0.7rem;
   padding: 0.32rem 0;
+}
+
+.rfig.is-railed .rfig__top {
+  justify-content: flex-end;
 }
 
 .rfig.is-railed .rfig__num {
