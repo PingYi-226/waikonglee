@@ -400,6 +400,20 @@
       setTimeout(toGrid, 0);
     });
 
+    /* a page opened at #research lands on the ring (the browser's jump may leave it just above the pinned stage) */
+    if (window.location.hash === "#" + section.id) {
+      var landRing = function () {
+        setTimeout(function () {
+          var mine = (Site.snap.stops || []).filter(function (st) {
+            return st.element === section;
+          });
+          if (active && !Site.snap.moving && mine.length && Math.abs(window.scrollY - mine[0].y) > EPS) Site.snap.go(mine[0].index);
+        }, 250);
+      };
+      if (document.readyState === "complete") landRing();
+      else window.addEventListener("load", landRing);
+    }
+
     /* the stepper's hold on the grid: the cards wave, one after the other, so it shows they can be taken */
     section.addEventListener("kit:snap-hold", function () {
       if (!active || !flat || env.reduce) return;
