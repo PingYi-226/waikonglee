@@ -252,6 +252,11 @@
       }
       return out;
     }
+    // the same for long text whose positions are not needed: one pass of the engine instead of one per character
+    var MARKS = /[\u0300-\u036f]/g;
+    function foldLong(text) {
+      return (text.normalize ? text.normalize("NFD").replace(MARKS, "") : text).toLowerCase();
+    }
     var rows = [];
     each(body.querySelectorAll(".pub[data-pub]"), function (el) {
       var t = el.querySelector(".pub__t");
@@ -270,8 +275,9 @@
         titleText: title,
         titleFold: fold(title),
         plain: !!t && t.childNodes.length === 1 && t.firstChild.nodeType === 3,
-        hay: fold([title, text(".pub__authors"), text(".pub__venue"), el.getAttribute("data-year")].join(" ").replace(/\s+/g, " ")),
-        abs: fold(text(".pub__abs").replace(/\s+/g, " ")),
+        hay: foldLong([title, text(".pub__authors"), text(".pub__venue"), el.getAttribute("data-year")].join(" ").replace(/\s+/g, " ")),
+        absEl: el.querySelector(".pub__abs"),
+        abs: null, // read on the first search that needs the abstracts
         marked: "",
       });
     });
@@ -372,6 +378,7 @@
         });
     }
     function matchQ(r, words, deep) {
+      if (deep && r.abs === null) r.abs = r.absEl ? foldLong(r.absEl.textContent.replace(/\s+/g, " ")) : "";
       for (var i = 0; i < words.length; i++) if (r.hay.indexOf(words[i]) < 0 && !(deep && r.abs.indexOf(words[i]) > -1)) return false;
       return true;
     }
@@ -670,11 +677,13 @@
     onScroll();
     if (nav) {
       var syncNav = function () {
-        var hidden = nav.classList.contains("is-hidden");
+        // under reduced motion the header never leaves (shell.css keeps it in place), whatever its class says
+        var hidden = nav.classList.contains("is-hidden") && !S.env.reduce;
         page.classList.toggle("is-navless", hidden);
         page.classList.toggle("is-nav", !hidden);
       };
       new MutationObserver(syncNav).observe(nav, { attributes: true, attributeFilter: ["class"] });
+      S.on("reduce", syncNav);
       syncNav();
     }
 
@@ -786,7 +795,7 @@
       var r = g.section.getBoundingClientRect();
       var down = r.top > stickTop();
       // reading down, the header leaves; reading up, it comes back
-      var offset = sticky() ? bar.offsetHeight + 24 + (down ? 0 : navH()) : navH() + 16;
+      var offset = sticky() ? bar.offsetHeight + 24 + (down && !S.env.reduce ? 0 : navH()) : navH() + 16;
       var top = Math.max(0, r.top + window.scrollY - offset);
       window.scrollTo({ top: top, behavior: S.env.reduce ? "auto" : "smooth" });
       if (focus && g.head) g.head.focus({ preventScroll: true });
