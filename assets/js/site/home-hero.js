@@ -437,13 +437,13 @@
     }
 
     function resize() {
-      w = root.clientWidth || window.innerWidth;
-      h = window.innerHeight;
+      // the canvas's own box (the viewport less any scrollbar, which can come and go without a window resize)
+      var box = canvas.getBoundingClientRect();
+      w = box.width || root.clientWidth || window.innerWidth;
+      h = box.height || window.innerHeight;
       dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.max(1, Math.round(w * dpr));
       canvas.height = Math.max(1, Math.round(h * dpr));
-      canvas.style.width = w + "px"; // the page's width without its scrollbar, so canvas pixels and pointer agree
-      canvas.style.height = h + "px";
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       var narrow = w < 760;
       cam.f = LAT.focal * Math.max(w, h);
@@ -674,7 +674,8 @@
         if (dd < d) d = dd;
       }
       var near = util.smooth(util.clamp((d - 10) / 120, 0, 1));
-      var side = w < 760 ? 1 : 0.4 + 0.6 * util.smooth(util.clamp((x / w - 0.12) / 0.5, 0, 1));
+      // on a wide screen the drawing leans right, away from the words; on a narrow one it is a band along the bottom
+      var side = w < 760 ? util.smooth(util.clamp((y / h - 0.5) / 0.3, 0, 1)) : 0.4 + 0.6 * util.smooth(util.clamp((x / w - 0.12) / 0.5, 0, 1));
       return (0.035 + 0.965 * near) * side;
     }
 
@@ -1013,6 +1014,15 @@
     readColors();
     resize();
     window.addEventListener("resize", util.debounce(resize, 100));
+    if ("ResizeObserver" in window) {
+      var seen = { w: 0, h: 0 };
+      new ResizeObserver(function (entries) {
+        var r = entries[entries.length - 1].contentRect;
+        if (Math.abs(r.width - seen.w) < 0.5 && Math.abs(r.height - seen.h) < 0.5) return;
+        seen = { w: r.width, h: r.height };
+        if (Math.abs(r.width - w) > 0.5 || Math.abs(r.height - h) > 0.5) resize();
+      }).observe(canvas);
+    }
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureQuiet);
     Site.on("theme", function () {
       readColors();
