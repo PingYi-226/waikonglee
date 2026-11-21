@@ -241,7 +241,7 @@
       var resting = Math.abs(q - RING_AT) * range <= EPS && !Site.snap.moving && !document.hidden;
       var want = resting ? SPIN : 0;
       omega += (want - omega) * (1 - Math.exp(-dt / SPIN_LAG));
-      if (Math.abs(omega) < 1e-4 && want === 0) omega = 0;
+      if (want === 0 && (Math.abs(omega) < 0.002 || tFlat >= 1)) omega = 0; // still, or no ring left to turn
       spin += omega * dt;
       var base = spin - SWIRL * (1 - form);
       if (tFlat <= 0 || target === null) target = home + TAU * Math.round((base - home) / TAU);
@@ -293,7 +293,21 @@
       } else still = 0;
       lastQ = q;
     }
-    var loop = util.loop(frame);
+    var ticker = util.loop(frame);
+    // the loop's state shows on the section (data-orbit-live) for anyone checking that the block sleeps
+    var loop = {
+      get running() {
+        return ticker.running;
+      },
+      start: function () {
+        ticker.start();
+        section.setAttribute("data-orbit-live", "");
+      },
+      stop: function () {
+        ticker.stop();
+        section.removeAttribute("data-orbit-live");
+      },
+    };
     function wake() {
       still = 0;
       if (active && visible && !loop.running) loop.start();
