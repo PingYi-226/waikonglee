@@ -201,7 +201,10 @@
         if (self.index > -1) {
           self.nativeArrived = self.index;
           var at = self.stopAt(window.scrollY);
-          if (at && at.index === self.index) self.restingOn = at.index;
+          if (at && at.index === self.index) {
+            self.restingOn = at.index;
+            if (at.hold) self.armed.set(at.el, at.hold);
+          }
           emit(self.elOf(self.index), "snap-arrive", self.detail(self.index, -1, 0, { initial: true }));
         }
       }),
@@ -900,46 +903,53 @@
     this.wrap.classList.remove("k-snap", "k-snap--native");
   };
 
-  /* One set of listeners for the page, registered once; they act only while a stepper runs. */
+  /* One set of listeners for the page, registered once, when a page first has a stepper (a non-passive wheel
+   * listener makes every wheel event wait for the main thread, so pages without one do not get it). They act
+   * only while the stepper runs. */
   function norm(d, mode) {
     return mode === 1 ? d * 16 : mode === 2 ? d * window.innerHeight : d;
   }
-  window.addEventListener(
-    "wheel",
-    function (e) {
-      if (!inst || !inst.active || e.defaultPrevented) return;
-      if (e.ctrlKey || e.metaKey || modal() || locked()) return;
-      var dy = norm(e.deltaY, e.deltaMode);
-      var dx = norm(e.deltaX, e.deltaMode);
-      if (!dy || Math.abs(dx) > Math.abs(dy)) return;
-      var dir = dy > 0 ? 1 : -1;
-      if (scrollsInside(e.target, dir)) return;
-      inst.onWheel(e, dy, dir);
-    },
-    { passive: false },
-  );
-  window.addEventListener("keydown", function (e) {
-    if (!inst || !inst.active || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || modal() || locked()) return;
-    var t = e.target;
-    if (t && t.closest && (t.closest(FIELD) || t.isContentEditable)) return;
-    inst.onKey(e);
-  });
-  window.addEventListener(
-    "scroll",
-    function () {
-      if (inst) inst.onScroll();
-    },
-    { passive: true },
-  );
-  window.addEventListener("scrollend", function () {
-    if (inst) inst.onScrollEnd();
-  });
-  document.addEventListener("click", function (e) {
-    if (inst && inst.active) inst.onClick(e);
-  });
-  document.addEventListener("focusin", function (e) {
-    if (inst && inst.active) inst.onFocus(e);
-  });
+  var listening = false;
+  function listen() {
+    if (listening) return;
+    listening = true;
+    window.addEventListener(
+      "wheel",
+      function (e) {
+        if (!inst || !inst.active || e.defaultPrevented) return;
+        if (e.ctrlKey || e.metaKey || modal() || locked()) return;
+        var dy = norm(e.deltaY, e.deltaMode);
+        var dx = norm(e.deltaX, e.deltaMode);
+        if (!dy || Math.abs(dx) > Math.abs(dy)) return;
+        var dir = dy > 0 ? 1 : -1;
+        if (scrollsInside(e.target, dir)) return;
+        inst.onWheel(e, dy, dir);
+      },
+      { passive: false },
+    );
+    window.addEventListener("keydown", function (e) {
+      if (!inst || !inst.active || e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || modal() || locked()) return;
+      var t = e.target;
+      if (t && t.closest && (t.closest(FIELD) || t.isContentEditable)) return;
+      inst.onKey(e);
+    });
+    window.addEventListener(
+      "scroll",
+      function () {
+        if (inst) inst.onScroll();
+      },
+      { passive: true },
+    );
+    window.addEventListener("scrollend", function () {
+      if (inst) inst.onScrollEnd();
+    });
+    document.addEventListener("click", function (e) {
+      if (inst && inst.active) inst.onClick(e);
+    });
+    document.addEventListener("focusin", function (e) {
+      if (inst && inst.active) inst.onFocus(e);
+    });
+  }
 
   /** Site.snap: the page's stepper (inert until a [data-kit="snap"] wrapper is attached). */
   Site.snap = {
@@ -978,6 +988,7 @@
 
   Site.register("snap", function (el, opts) {
     if (inst) return null; // one stepper per page
+    listen();
     inst = new Stepper(el, opts);
     var mine = inst;
     return {
