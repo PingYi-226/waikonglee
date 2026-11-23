@@ -371,9 +371,9 @@
 
     nav.addEventListener("click", function (e) {
       var a = e.target.closest("a[href^='#']");
-      if (!a || !plainClick(e)) return;
+      if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       // an area: the research areas' own handler (capture phase) has gone to its step; the focus follows
-      if (a.hasAttribute("data-rnav-to") && a.getAttribute("data-rnav-to") === "area") {
+      if (a.getAttribute("data-rnav-to") === "area") {
         if (e.defaultPrevented) focusQuiet(byHash(a.getAttribute("href")));
         return;
       }
