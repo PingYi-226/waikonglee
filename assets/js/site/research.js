@@ -336,6 +336,45 @@
       waiting = w;
     }
 
+    /** The row being landed on is a snap area until the visitor scrolls on. */
+    var landing = null;
+    function land(row) {
+      if (landing) landing.classList.remove("is-landing");
+      landing = row;
+      row.classList.add("is-landing");
+    }
+    function leaveLanding() {
+      if (!landing) return;
+      landing.classList.remove("is-landing");
+      landing = null;
+    }
+    ["wheel", "touchstart", "keydown"].forEach(function (type) {
+      window.addEventListener(type, leaveLanding, { passive: true });
+    });
+
+    /** fn once a native scroll has come to rest (scrollend, else no scroll for 160 ms; 1.6 s at most). */
+    function whenStill(fn) {
+      var done = false;
+      var quiet = 0;
+      function finish() {
+        if (done) return;
+        done = true;
+        clearTimeout(quiet);
+        clearTimeout(cap);
+        window.removeEventListener("scroll", onScroll);
+        window.removeEventListener("scrollend", finish);
+        fn();
+      }
+      function onScroll() {
+        clearTimeout(quiet);
+        quiet = setTimeout(finish, 160);
+      }
+      var cap = setTimeout(finish, 1600);
+      window.addEventListener("scroll", onScroll, { passive: true });
+      window.addEventListener("scrollend", finish);
+      onScroll();
+    }
+
     /** Go to a group of software or a project and open it (push: the hash goes into the history). */
     function goRow(r, push) {
       if (push) pushHash("#" + r.row.id);
@@ -351,20 +390,31 @@
             openRow(r);
           });
       } else {
-        // scrolling natively: open it and glide to its row; rows above it that close on the way are taken into account
+        // scrolling natively: the rows above it close at once, the page glides to its row, and it opens once the
+        // page is still (opening on the way, the browser's scroll anchoring would push the page on). For the landing
+        // the row is a snap area itself (research.css .is-landing), so the proximity snapping of the native mode
+        // lands on it and not on a section's start nearby.
         var shift = 0;
         var rows = all(r.row.parentNode, ":scope > li");
         for (var i = 0; i < rows.length && rows[i] !== r.row; i++) {
           var b = rows[i].querySelector("[aria-controls]");
           var c = b && Site.get(b, "disclosure");
           var p = b && document.getElementById(b.getAttribute("aria-controls"));
-          if (c && c.isOpen && p) shift += p.offsetHeight;
+          if (c && c.isOpen && p) {
+            shift += p.offsetHeight;
+            c.close();
+          }
         }
-        var navH = parseFloat(getComputedStyle(page).getPropertyValue("--part-top")) || 0;
-        var top = r.row.getBoundingClientRect().top + window.scrollY - shift;
-        var y = Math.max(0, top - Math.min(navH || 96, window.innerHeight * 0.2));
-        openRow(r);
-        window.scrollTo({ top: y, behavior: env.reduce || env.static ? "instant" : "smooth" });
+        land(r.row);
+        var pad = parseFloat(getComputedStyle(root).scrollPaddingTop) || 0;
+        var y = Math.max(0, r.row.getBoundingClientRect().top + window.scrollY - shift - pad);
+        var glide = !(env.reduce || env.static) && Math.abs(window.scrollY - y) > 2;
+        window.scrollTo({ top: y, behavior: glide ? "smooth" : "instant" });
+        if (glide)
+          whenStill(function () {
+            openRow(r);
+          });
+        else openRow(r);
       }
       focusQuiet(r.btn);
     }

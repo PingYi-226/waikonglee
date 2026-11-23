@@ -658,6 +658,13 @@ html.js .pagehead__meta:not(.is-in) .rnav__items > li {
   }
 }
 
+/* a group or a project reached from the head, while the page scrolls natively: a snap area of its own, so the
+   proximity snapping lands on it (research.js adds and removes the class) */
+.rgroup.is-landing,
+.rproj__row.is-landing {
+  scroll-snap-align: start;
+}
+
 /* ---------- open-source software: groups that open ---------- */
 .rgroups {
   --k-highlight-inset: 0 -0.9rem;
