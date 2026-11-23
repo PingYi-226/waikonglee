@@ -230,6 +230,7 @@ html.js .rhead .pagehead__meta > .rnav {
 
 .rnav__part {
   display: grid;
+  align-self: start; /* the part ends with its last entry: below it the pointer is in no part */
   align-content: start;
   justify-items: start;
   row-gap: 0.65rem;

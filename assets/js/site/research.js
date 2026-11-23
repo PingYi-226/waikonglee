@@ -106,6 +106,8 @@
     });
     var headWords = all(nav, "[data-rnav-name] [data-rnav-word]");
     if (headWords.length !== railWords.length) return;
+    var lists = all(nav, ".rnav__items");
+    var listsAway = false;
     var mq = window.matchMedia(RAIL_Q);
     var current = 0; // the part being read (0: the head)
     var railed = false; // the names: in the rail (true) or at home in the head
@@ -142,6 +144,36 @@
       nav.classList.toggle("is-away", railed);
     }
 
+    /* while the names fly off, the head's lists dissolve (they would pass under the names as the page scrolls on);
+       once the names are home again, the lists come back part by part. Only where the stepper moves the page: there
+       the head is out of sight whenever the names are in the rail. */
+    function listsOut() {
+      if (listsAway || !Site.snap.active) return;
+      listsAway = true;
+      lists.forEach(function (ul) {
+        stop(ul._rAnim);
+        ul._rAnim = Site.animate(ul, { opacity: 0, filter: blur(T.blur.icon) }, Site.t("transition.fade"));
+      });
+    }
+    function listsIn(instant) {
+      if (!listsAway) return;
+      listsAway = false;
+      lists.forEach(function (ul, k) {
+        stop(ul._rAnim);
+        if (instant) {
+          ul.style.opacity = "";
+          ul.style.filter = "";
+          return;
+        }
+        ul._rAnim = Site.animate(ul, { opacity: 1, filter: blur(0) }, Site.t("transition.reveal", { delay: k * T.stagger.words }));
+        ul._rAnim.then(function () {
+          if (listsAway) return;
+          ul.style.opacity = "";
+          ul.style.filter = "";
+        });
+      });
+    }
+
     /** Fly the part names to the rail (toRail) or home. The rail's own words do the flying: shown at their places,
      *  drawn (translate + scale) where the names are seen now, then moved frame by frame to where they go; home, the
      *  target is the name's place in the head as the page scrolls it in. At the end the head's word and the rail's
@@ -162,6 +194,7 @@
       }
       railed = toRail;
       if (instant || env.static || env.reduce) {
+        listsIn(true);
         settle();
         mark();
         if (env.reduce && !instant && !env.static) {
@@ -185,6 +218,7 @@
       });
       rail.classList.add("is-on", "is-flying");
       nav.classList.add("is-away");
+      if (toRail) listsOut();
       var base = railWords.map(function (w) {
         return w.getBoundingClientRect();
       });
@@ -207,7 +241,8 @@
         var dx = toRail ? 0 : window.scrollX - sx;
         var dy = toRail ? 0 : window.scrollY - sy;
         railWords.forEach(function (w, k) {
-          var p = curve.at(t - k * lag);
+          // to the rail the first name leaves first; home the last one does (the names never cross)
+          var p = curve.at(t - (toRail ? k : railWords.length - 1 - k) * lag);
           var a = from[k];
           var b = to[k];
           var o = base[k];
@@ -231,6 +266,7 @@
         flight = null;
         settle();
         mark();
+        if (!railed) listsIn(false);
       }
       f.raf = requestAnimationFrame(frame);
     }
