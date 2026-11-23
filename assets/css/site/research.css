@@ -1,7 +1,7 @@
 /* ==========================================================================
-   Research page (/research/). Five parts that the scroll stepper (kit-snap, soft mode) moves between, in page order:
-   the head (the four figures of the page, which become the rail), the research areas (pinned: one step per area),
-   the papers (areas by years), open-source software (groups that open) and funded projects (rows that open).
+   Research page (/research/). Four parts that the scroll stepper (kit-snap, soft mode) moves between, in page order:
+   the head (the page's contents; their part names become the rail), the research areas (pinned: one step per area),
+   open-source software (groups that open) and funded projects (rows that open).
    Markup: _includes/site/research_*.liquid. Behaviour: research.js.
 
    Two layouts are decided by media queries that mirror the stepper's own conditions (kit-snap.js shouldRun), so the
@@ -51,7 +51,7 @@
   outline: none;
 }
 
-/* ---------- the head: title and lede at the top, the four figures along the bottom of the screen ---------- */
+/* ---------- the head: title and lede at the top, the page's contents along the bottom of the screen ---------- */
 .rhead {
   display: flex;
   flex-direction: column;
@@ -69,60 +69,117 @@
   align-self: end;
 }
 
-/* the figures: a row of links at the head; a rail at the side once the page has left the head */
-.rfig {
+/* the contents enter part by part (below), not as one row */
+html.js .rhead .pagehead__meta > .rnav {
+  opacity: 1;
+  filter: none;
+  transition: none;
+}
+
+/* ---------- the contents: each part by its name, then what is inside it; every entry a link ----------
+   One gliding surface for all the entries (kit: highlight). The links carry their own padding (and give it back
+   with a negative margin), so the surface hugs each one and the text stays on the column's edge. */
+.rnav {
+  flex: 1 1 100%;
   min-width: 0;
 }
 
-.rfig__list {
-  --k-highlight-inset: -0.7rem -0.95rem;
+.rnav__parts {
   --k-highlight-radius: var(--r-2);
-  position: relative; /* said here, so the highlight kit does not write it inline (the rail makes it fixed) */
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.25rem clamp(2rem, 5.2vw, 4.75rem);
+  position: relative;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.rfig__item {
+.rnav__part {
+  min-width: 0;
   margin: 0;
 }
 
-.rfig__link,
-.rfig__link:visited {
+.rnav__items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rnav__items > li {
+  min-width: 0;
+  margin: 0;
+}
+
+.rnav__name,
+.rnav__name:visited,
+.rnav__item,
+.rnav__item:visited {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
   color: var(--ink);
   -webkit-tap-highlight-color: transparent;
 }
 
-.rfig__top {
-  display: flex;
+.rnav__name {
+  display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.6rem;
+  margin: 0 0 0 -0.6rem;
+  padding: 0.2rem 0.6rem 0.3rem;
 }
 
-.rfig__num {
-  display: block;
+/* the part's name: the strongest entry; the same face as in the rail, where it flies to */
+.rnav__word,
+.rrail__word {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: 0;
+  white-space: nowrap;
   transform-origin: 0 0;
 }
 
-/* at the head, a small arrow says where the figure goes: it comes in a beat after the surface, under the pointer or focus */
-.rfig__go {
+.rnav__word {
+  font-size: clamp(1.5rem, 2.1vw, 1.875rem);
+}
+
+.rnav__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  max-width: calc(100% + 1.1rem);
+  margin: 0 0 0 -0.55rem;
+  padding: 0.3rem 0.55rem;
+  font-size: var(--fs-small);
+  line-height: 1.35;
+  color: var(--ink-2);
+  transition: color var(--t-color);
+}
+
+.rnav__t {
+  min-width: 0;
+  color: inherit;
+  text-wrap: balance; /* a title that needs two lines breaks into two even ones, never one word alone */
+}
+
+.rnav__y {
+  flex: none;
+  color: var(--muted);
+}
+
+/* a small arrow comes in a beat after the surface, under the pointer or the keyboard */
+.rnav__go {
   display: grid;
+  flex: none;
+  align-self: center;
   color: var(--muted);
   opacity: 0;
-  translate: 0 -0.35rem;
+  translate: 0 -0.3rem;
   transition:
     opacity var(--t-fade),
     translate var(--t-fade);
 }
 
-.rfig__link:focus-visible .rfig__go {
+.rnav__name:focus-visible .rnav__go,
+.rnav__item:focus-visible .rnav__go {
   opacity: 1;
   translate: 0 0;
   transition:
@@ -130,78 +187,170 @@
     translate var(--spring-pop) 70ms;
 }
 
+.rnav__item:focus-visible {
+  color: var(--ink);
+}
+
+.rnav__name:focus-visible,
+.rnav__item:focus-visible {
+  outline-offset: 0;
+}
+
 @media (hover: hover) and (pointer: fine) {
-  .rfig__link:hover .rfig__go {
+  .rnav__name:hover .rnav__go,
+  .rnav__item:hover .rnav__go {
     opacity: 1;
     translate: 0 0;
     transition:
       opacity var(--t-reveal) 70ms,
       translate var(--spring-pop) 70ms;
   }
-}
 
-.rfig.is-railed .rfig__go,
-.rfig.is-flying .rfig__go {
-  display: none;
-}
-
-.rfig__label {
-  position: relative;
-  display: block;
-  white-space: nowrap;
-  transition: color var(--t-color);
-}
-
-.rfig__q,
-.rfig__noun {
-  display: inline-block;
-  color: inherit;
-  transform-origin: 0 0;
-}
-
-/* a space between the two words that does not depend on the inline-block's own whitespace */
-.rfig__q {
-  white-space: pre;
-}
-
-.rfig__link:focus-visible {
-  outline-offset: 0.6rem;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .rfig__link:hover .rfig__label {
+  .rnav__item:hover {
     color: var(--ink);
+  }
+
+  /* the part under the pointer stays; the others step back a little */
+  .rnav__parts:has(.rnav__part:hover) .rnav__part:not(:hover) .rnav__item {
+    color: var(--muted);
   }
 }
 
-/* in the rail the row's entrance no longer applies: a filter or a fade on the nav would hold the fixed rail inside it */
-html.js .pagehead__meta > .rfig.is-railed {
-  opacity: 1;
-  filter: none;
-  transition: none;
+/* the part names are away in the rail: their places in the head keep the room */
+.rnav.is-away .rnav__word {
+  visibility: hidden;
 }
 
-/* in the rail: the number and the last word of the label, small, stacked at the left of the parts */
-.rfig.is-railed .rfig__list {
+/* three columns: the part's name, then its entries one under the other */
+.rnav__parts {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.05fr) minmax(0, 1.2fr);
+  column-gap: clamp(2rem, 3.6vw, 3.5rem);
+  row-gap: 2rem;
+}
+
+.rnav__part {
+  display: grid;
+  align-self: start; /* the part ends with its last entry: below it the pointer is in no part */
+  align-content: start;
+  justify-items: start;
+  row-gap: 0.65rem;
+}
+
+.rnav__items {
+  display: grid;
+  justify-items: start;
+}
+
+/* a project: its years, then its title (two lines at most) */
+.rnav__items--proj .rnav__item {
+  display: grid;
+  grid-template-columns: 5.6rem minmax(0, 1fr) auto;
+  align-items: baseline;
+}
+
+.rnav__items--proj .rnav__t {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+@media (max-width: 899.98px) {
+  .rnav__parts {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .rnav__part:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 599.98px) {
+  .rnav__parts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rnav__items--proj .rnav__item {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .rnav__items--proj .rnav__y {
+    grid-column: 1 / -1;
+  }
+}
+
+/* short landscape screens: the head stays one screen (title higher, less room under the contents) */
+@media (min-aspect-ratio: 1001/1000) and (max-height: 820px) {
+  .rhead .pagehead {
+    padding-top: calc(var(--nav-h) + clamp(2.5rem, 7vh, 3.75rem));
+    padding-bottom: clamp(2rem, 5.5vh, 3rem);
+  }
+
+  .rnav__item {
+    padding-block: 0.24rem;
+  }
+}
+
+/* the entrance: after the rule has started, the names one after the other, each part's entries a beat later */
+html.js .rnav__name,
+html.js .rnav__items > li {
+  transition:
+    opacity var(--t-arrive) var(--rnav-d, 0ms),
+    translate var(--t-arrive) var(--rnav-d, 0ms),
+    filter var(--t-arrive) var(--rnav-d, 0ms);
+}
+
+html.js .rnav__name {
+  --rnav-d: calc(520ms + var(--p) * 110ms);
+}
+
+html.js .rnav__items > li {
+  --rnav-d: calc(640ms + var(--p) * 110ms + var(--i) * 45ms);
+}
+
+html.js .pagehead__meta:not(.is-in) .rnav__name,
+html.js .pagehead__meta:not(.is-in) .rnav__items > li {
+  opacity: 0;
+  translate: 0 0.65rem;
+  filter: blur(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.js .pagehead__meta:not(.is-in) .rnav__name,
+  html.js .pagehead__meta:not(.is-in) .rnav__items > li {
+    translate: none;
+    filter: none;
+  }
+}
+
+/* ---------- the rail: the part names at the side of the viewport once the page has left the head ---------- */
+.rrail__list {
   --k-highlight-inset: 0 -0.55rem;
   --k-highlight-radius: var(--r-1);
   position: fixed;
   z-index: var(--z-sticky);
-  top: calc(var(--part-top) + 0.55rem);
+  top: calc(var(--part-top) + 0.4rem);
   left: max(var(--gutter), calc((100% - var(--page)) / 2));
   display: grid;
-  gap: 0.15rem;
+  gap: 0.1rem;
   width: var(--rail-w);
-}
-
-/* at the very end of the page (the footer coming out from under it) the rail steps aside */
-.rfig.is-railed .rfig__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   transition:
     opacity var(--t-fade),
     visibility 0s;
 }
 
-.rfig.is-railed .rfig__list.is-away {
+.rrail:not(.is-on) .rrail__list {
+  visibility: hidden;
+  transition: none;
+}
+
+/* at the very end of the page (the footer coming out from under it) the rail steps aside */
+.rrail .rrail__list.is-away {
   opacity: 0;
   visibility: hidden;
   transition:
@@ -209,57 +358,52 @@ html.js .pagehead__meta > .rfig.is-railed {
     visibility 0s linear 200ms;
 }
 
-.rfig.is-railed .rfig__link {
-  display: grid;
-  grid-template-columns: 2rem minmax(0, 1fr);
-  align-items: baseline;
-  column-gap: 0.7rem;
-  padding: 0.32rem 0;
+.rrail__list > li {
+  margin: 0;
 }
 
-.rfig.is-railed .rfig__top {
-  justify-content: flex-end;
-}
-
-.rfig.is-railed .rfig__num {
-  font-size: 1.3rem;
-  line-height: 1.1;
-  text-align: right;
+.rrail__link,
+.rrail__link:visited {
+  display: block;
+  padding: 0.3rem 0;
+  line-height: 1.15;
   color: var(--ink-2);
   transition: color var(--t-color);
+  -webkit-tap-highlight-color: transparent;
 }
 
-.rfig.is-railed .rfig__label {
-  line-height: 1.3;
+.rrail__word {
+  font-size: 1.0625rem;
 }
 
-.rfig.is-railed .rfig__q {
-  position: absolute;
-  top: 0;
-  right: 100%;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.rfig.is-railed .rfig__link[aria-current="true"] .rfig__num,
-.rfig.is-railed .rfig__link[aria-current="true"] .rfig__label {
+.rrail__link[aria-current="true"] {
   color: var(--ink);
 }
 
+@media (hover: hover) and (pointer: fine) {
+  .rrail__link:hover {
+    color: var(--ink);
+  }
+}
+
+.rrail__link:focus-visible {
+  outline-offset: 2px;
+}
+
 /* the gliding mark of the part being read: a short ink line at the rail's edge (the highlight's selection surface) */
-.rfig.is-railed .rfig__list > .k-highlight__surface--selection {
+.rrail__list > .k-highlight__surface--selection {
   background: linear-gradient(var(--ink), var(--ink)) 0 50% / 2px 56% no-repeat;
   border-radius: 0;
   transform: translateX(-0.45rem);
 }
 
-/* while the figures fly, the hover surface (which follows the links' new places at once) stays out of sight */
-.rfig.is-flying .rfig__list {
+/* while the names fly, the rail's surfaces stay out of sight */
+.rrail.is-flying .rrail__list {
   --k-highlight-bg: transparent;
 }
 
-.rfig.is-railed .rfig__link:focus-visible {
-  outline-offset: 2px;
+.rrail.is-flying .rrail__link {
+  color: var(--ink);
 }
 
 /* ---------- research areas ----------
@@ -517,197 +661,11 @@ html.js .pagehead__meta > .rfig.is-railed {
   }
 }
 
-/* ---------- papers: areas by years ----------
-   A table in ARIA terms; each line is a grid with the same tracks (--tracks, written by the include: the names, one
-   track per year with a narrow one before a gap in the years, the sums). */
-.rmat__scroll {
-  position: relative; /* the hidden labels (absolute) stay inside the scroller */
-  overflow-x: auto;
-  overflow-y: hidden; /* sideways only (phones): the wheel stays the page's (the stepper leaves vertical scrollers alone) */
-  overscroll-behavior-x: contain;
-}
-
-.rmat {
-  --rmat-name: 11.5rem;
-  --rmat-sum: 3.5rem;
-  --rmat-gap: 1.1rem;
-  --rmat-cell: clamp(1.75rem, 4.6vh, 2.6rem);
-  min-width: 42rem;
-}
-
-.rmat__line {
-  display: grid;
-  grid-template-columns: var(--tracks);
-  align-items: center;
-}
-
-.rmat__row {
-  position: relative;
-  padding: 3px 0;
-}
-
-/* a gap in the years: a dashed hairline in its narrow track, through all the lines */
-.rmat__gap {
-  align-self: stretch;
-  justify-self: center;
-  width: 0;
-  border-left: 1px dashed var(--line-strong);
-}
-
-.rmat__line--years .rmat__gap {
-  margin-bottom: -0.7rem;
-}
-
-.rmat__y,
-.rmat__ysum {
-  text-align: center;
-  color: var(--muted);
-  transition: color var(--t-color);
-}
-
-.rmat__line--years {
-  padding-bottom: 0.7rem;
-}
-
-.rmat__foot {
-  margin-top: 0.6rem;
-  padding-top: 0.6rem;
-  border-top: 1px solid var(--line);
-}
-
-.rmat__foot .rmat__gap {
-  visibility: hidden;
-}
-
-.rmat__ysum {
-  font-size: 0.74rem;
-}
-
-.rmat__name {
-  min-width: 0;
-  padding-right: 1rem;
-}
-
-.rmat__link,
-.rmat__link:visited {
-  display: inline-block;
-  max-width: 100%;
-  padding: 0.2rem 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: var(--fs-small);
-  line-height: 1.3;
-  white-space: nowrap;
-  vertical-align: middle;
-  color: var(--ink-2);
-  transition: color var(--t-color);
-}
-
-.rmat__c {
-  display: grid;
-  place-items: center;
-  min-width: 0;
-}
-
-/* a cell: a rounded square shaded by its count (ink over the paper); an empty year is a small dot */
-.rmat__cell {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: min(100%, var(--rmat-cell));
-  aspect-ratio: 1;
-  border-radius: var(--r-2);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink);
-  background: color-mix(in oklab, var(--ink) calc(9% + var(--v, 0) * 70%), transparent);
-  transition:
-    opacity var(--t-color),
-    box-shadow var(--t-color),
-    scale 300ms var(--ease-out);
-}
-
-.rmat__cell.is-deep {
-  color: var(--paper);
-}
-
-.rmat__cell--0 {
-  background: radial-gradient(circle, var(--faint) 0 1.5px, transparent 2px);
-}
-
-.rmat__sum {
-  text-align: right;
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  line-height: 1;
-  font-variant-numeric: tabular-nums lining-nums;
-  color: var(--ink);
-}
-
-.rmat__total {
-  font-size: 1.65rem;
-}
-
-/* with a fine pointer the counts live in the tooltip; the cells answer the pointer */
-@media (hover: hover) and (pointer: fine) {
-  .rmat__cell,
-  .rmat__cell.is-deep {
-    color: transparent;
-  }
-
-  .rmat__row {
-    cursor: pointer;
-  }
-
-  .rmat__cell:not(.rmat__cell--0):hover {
-    scale: 1.14;
-    box-shadow:
-      0 0 0 2px var(--paper),
-      0 0 0 3px var(--ink);
-  }
-
-  /* the row under the pointer stays, the others recede; its name and the year light up */
-  .rmat[data-hot-row] .rmat__row:not(.is-hot) .rmat__cell {
-    opacity: 0.35;
-  }
-
-  .rmat__row.is-hot .rmat__link,
-  .rmat__link:hover,
-  .rmat .rmat__y.is-hot,
-  .rmat .rmat__ysum.is-hot {
-    color: var(--ink);
-  }
-}
-
-.rmat__link:focus-visible {
-  outline-offset: 2px;
-}
-
-/* the cells arrive in a wave from the top left when the part arrives (research.js adds .is-in) */
-html.js .rmat:not(.is-in) .rmat__cell {
-  opacity: 0;
-  scale: 0.4;
-}
-
-html.js .rmat.is-in:not(.is-settled) .rmat__cell {
-  transition:
-    opacity 260ms var(--ease-out) calc((var(--r, 0) + var(--c, 0)) * 26ms),
-    scale var(--spring-pop) calc((var(--r, 0) + var(--c, 0)) * 26ms);
-}
-
-html.js .rmat:not(.is-in) .rmat__y,
-html.js .rmat:not(.is-in) .rmat__ysum,
-html.js .rmat:not(.is-in) .rmat__link {
-  opacity: 0;
-}
-
-html.js .rmat .rmat__y,
-html.js .rmat .rmat__ysum,
-html.js .rmat .rmat__link {
-  transition:
-    opacity 300ms var(--ease-out),
-    color var(--t-color);
+/* a group or a project reached from the head, while the page scrolls natively: a snap area of its own, so the
+   proximity snapping lands on it (research.js adds and removes the class) */
+.rgroup.is-landing,
+.rproj__row.is-landing {
+  scroll-snap-align: start;
 }
 
 /* ---------- open-source software: groups that open ---------- */
@@ -1049,11 +1007,6 @@ html.js .rmat .rmat__link {
     min-height: 0;
   }
 
-  .rmat {
-    --rmat-name: 9.25rem;
-    min-width: 46rem;
-  }
-
   .rhead {
     min-height: 100svh;
   }
@@ -1065,8 +1018,8 @@ html.js .rmat .rmat__link {
 
 /* ---------- print: everything one after the other ---------- */
 @media print {
-  .rfig.is-railed .rfig__list {
-    position: static;
+  .rrail {
+    display: none;
   }
 
   .rpart {

@@ -186,6 +186,31 @@ html[data-theme="dark"] .k-tilt__shine--light {
   opacity: 1;
 }
 
+/* data-glare: a band of light across a glossy surface; it slides against the turn and is as strong as the tilt
+   (--k-glare-p, --k-glare-o from kit-scroll.js). Hooks: --k-glare-strength (0..1), --k-glare-color. */
+.k-tilt__glare {
+  --k-glare-color: var(--surface);
+  opacity: calc(var(--k-glare-o, 0) * var(--k-glare-strength, 0.5));
+  mix-blend-mode: screen;
+}
+
+html[data-theme="dark"] .k-tilt__glare {
+  --k-glare-color: color-mix(in srgb, var(--ink) 55%, transparent);
+}
+
+.k-tilt__glint {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    106deg,
+    transparent calc(var(--k-glare-p, 50%) - 26%),
+    color-mix(in srgb, var(--k-glare-color) 45%, transparent) calc(var(--k-glare-p, 50%) - 9%),
+    var(--k-glare-color) var(--k-glare-p, 50%),
+    color-mix(in srgb, var(--k-glare-color) 45%, transparent) calc(var(--k-glare-p, 50%) + 9%),
+    transparent calc(var(--k-glare-p, 50%) + 26%)
+  );
+}
+
 /* primitives/effects/shine: a band of currentColor at 30% sweeping once, skewed -15deg */
 .k-tilt__band {
   position: absolute;
