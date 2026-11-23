@@ -461,7 +461,10 @@
     choose();
 
     /* keyboard: a card reached with Tab before the cards lie flat takes the page to the grid (also when the stepper's
-       own answer to the focus has landed on the ring) */
+       own answer to the focus has landed on the ring). Only a focus that arrives while the cards are not flat asks for
+       this: a card that still holds the focus from earlier (a detail view closed with Escape hands it back) must not
+       pull the page back to the grid when the visitor leaves for the ring. */
+    var owed = false; // a card took the focus before the cards lay flat; the page owes it the grid
     function keyFocus() {
       var el = document.activeElement;
       if (!el || !list.contains(el)) return false;
@@ -472,14 +475,23 @@
       }
     }
     function toGrid() {
-      if (!active || flat || !keyFocus()) return;
+      if (!owed) return;
+      if (!active || flat || !keyFocus()) {
+        owed = false;
+        return;
+      }
       var mine = (Site.snap.stops || []).filter(function (st) {
         return st.element === section;
       });
       if (mine.length && Site.snap.index !== mine[mine.length - 1].index) Site.snap.go(mine[mine.length - 1].index);
     }
     list.addEventListener("focusin", function () {
+      if (!active || flat) return;
+      owed = true;
       setTimeout(toGrid, 0);
+    });
+    list.addEventListener("focusout", function (e) {
+      if (!e.relatedTarget || !list.contains(e.relatedTarget)) owed = false;
     });
     section.addEventListener("kit:snap-arrive", function () {
       setTimeout(toGrid, 0);
