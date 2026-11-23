@@ -18,8 +18,10 @@
 
   var STEP = 0.08; // s between the entrance's parts (the lede, the portrait, the strip): the same beat as the first screen
   var DRAW = 1.5; // s for the axis to draw itself from the first year to today
-  var SHIMMER = 1.7; // s for the light to cross the axis
+  var SHIMMER = 1.9; // s for the light to cross the axis
   var SHIMMER_EVERY = 6.5; // s between two crossings
+  var GLINT = 15; // the light's width, in percent of the axis
+  var DRAW_SEEN = 0.86; // the share of the drawing's time after which nothing more of it can be seen (ease.soft)
   var LEAVE = 140; // ms the plate waits after the pointer has left the bars (it may be on its way to the next one)
 
   function all(scope, selector) {
@@ -31,12 +33,32 @@
   function bezier(c) {
     return "cubic-bezier(" + c.join(",") + ")";
   }
+  /** A token's cubic-bezier curve as a function of time (0..1). */
+  function bezierFn(p) {
+    var cx = 3 * p[0];
+    var bx = 3 * (p[2] - p[0]) - cx;
+    var ax = 1 - cx - bx;
+    var cy = 3 * p[1];
+    var by = 3 * (p[3] - p[1]) - cy;
+    var ay = 1 - cy - by;
+    return function (t) {
+      if (t <= 0) return 0;
+      if (t >= 1) return 1;
+      var x = t;
+      for (var i = 0; i < 8; i++) {
+        var fx = ((ax * x + bx) * x + cx) * x - t;
+        var d = (3 * ax * x + 2 * bx) * x + cx;
+        if (Math.abs(fx) < 1e-5 || !d) break;
+        x -= fx / d;
+      }
+      return ((ay * x + by) * x + cy) * x;
+    };
+  }
 
   /* ================================================================== strip */
   function initStrip(strip, about) {
     var segs = all(strip, ".strip__seg");
     if (!segs.length) return null;
-    var glints = all(strip, ".strip__glint");
     var animate = Site.animate;
     var reduce = function () {
       return Site.env.reduce;
@@ -226,21 +248,41 @@
         fill: "forwards",
       });
       var done = function () {
+        if (strip.classList.contains("is-drawn")) return;
         strip.classList.add("is-drawn");
         a.cancel();
-        scheduleShimmer(ms(0.6));
+        if (!shimmerRaf) shimmer();
       };
       a.onfinish = done;
+      // the light sets off from the first bar the moment the drawing has reached the present (its curve has all but
+      // come to rest by then; the last hundredths of the time move nothing that can be seen)
+      setTimeout(function () {
+        if (!shimmerRaf) shimmer();
+      }, ms(DRAW * DRAW_SEEN));
       // never leave the strip undrawn (a tab hidden while it plays, a timeline that does not run)
       setTimeout(function () {
         if (!strip.classList.contains("is-drawn")) done();
       }, ms(DRAW) + 1500);
     }
 
-    /* ---- the shimmer: light along the bars, now and then, only while the slide is current */
+    /* ---- the shimmer: light along the bars, now and then, only while the slide is current. One front crosses the
+       whole axis (each bar's glint is placed in axis units, so they line up); a bar lifts a little while the light is
+       on it, so the eye follows the light from the first bar to the present one. */
     var shimmerTimer = null;
-    var shimmering = [];
+    var shimmerRaf = null;
     var onScreen = false;
+    var lift = segs.map(function (seg) {
+      return {
+        l: parseFloat(seg.style.getPropertyValue("--l")) || 0,
+        w: parseFloat(seg.style.getPropertyValue("--w")) || 0,
+        fill: seg.querySelector(".strip__fill"),
+        glint: seg.querySelector(".strip__glint"),
+      };
+    });
+    var pass = bezierFn(T.ease.enter);
+    var first = lift.reduce(function (m, b) {
+      return Math.min(m, b.l);
+    }, 100);
     util.visible(strip, function (v) {
       onScreen = v;
       if (v) scheduleShimmer();
@@ -257,28 +299,41 @@
       shimmerTimer = setTimeout(shimmer, delay == null ? ms(SHIMMER_EVERY) : delay);
     }
     function shimmer() {
-      shimmerTimer = null;
+      // (called by its timer or directly: stopShimmer below clears a pending timer either way)
       if (current || document.hidden || !isCurrent()) {
         if (onScreen) scheduleShimmer();
         return;
       }
-      var easing = bezier(T.ease.inOut);
-      shimmering = glints.map(function (g) {
-        var l = parseFloat(getComputedStyle(g.closest(".strip__seg")).getPropertyValue("--l")) || 0;
-        return g.animate([{ translate: (-12 - l).toFixed(3) + "cqw 0" }, { translate: (106 - l).toFixed(3) + "cqw 0" }], {
-          duration: ms(SHIMMER),
-          easing: easing,
+      stopShimmer();
+      var start = performance.now();
+      var dur = ms(SHIMMER);
+      var from = first - GLINT * 0.3; // the light's centre, in percent of the axis: it appears on the first bar
+      var to = 100 + GLINT * 0.6;
+      function frame(now) {
+        var t = Math.min(1, (now - start) / dur);
+        var x = from + (to - from) * pass(t);
+        lift.forEach(function (b) {
+          if (b.glint) b.glint.style.translate = (x - GLINT / 2 - b.l).toFixed(2) + "cqw 0";
+          // how much of the light is on this bar: 1 inside it, falling off over half the light's width outside
+          var d = x < b.l ? b.l - x : x > b.l + b.w ? x - b.l - b.w : 0;
+          var on = Math.exp(-(d * d) / ((GLINT * GLINT) / 5));
+          b.fill.style.transform = on > 0.01 ? "translateY(" + (-0.12 * on).toFixed(3) + "rem) scaleY(" + (1 + 0.32 * on).toFixed(3) + ")" : "";
         });
-      });
+        if (t < 1) shimmerRaf = requestAnimationFrame(frame);
+        else shimmerRaf = null;
+      }
+      shimmerRaf = requestAnimationFrame(frame);
       scheduleShimmer(ms(SHIMMER + SHIMMER_EVERY));
     }
     function stopShimmer() {
       clearTimeout(shimmerTimer);
       shimmerTimer = null;
-      shimmering.forEach(function (a) {
-        a.cancel();
+      if (shimmerRaf) cancelAnimationFrame(shimmerRaf);
+      shimmerRaf = null;
+      lift.forEach(function (b) {
+        if (b.glint) b.glint.style.translate = "";
+        b.fill.style.transform = "";
       });
-      shimmering = [];
     }
     about.addEventListener("kit:snap-arrive", function () {
       if (drawn) scheduleShimmer(ms(1.2));
@@ -304,12 +359,104 @@
     return { draw: draw, hide: hide };
   }
 
+  /* ===================================================== the portrait speaks
+     While the lede is typed, the portrait moves as if the person in it were saying the words: it turns toward the
+     viewer as the first words come (the glare crossing the picture), sways while characters arrive (livelier when they
+     come fast, calmer at a breath), nods a little at each full stop, and settles still when the paragraph ends. It
+     drives the tilt kit (aim / release): the rotations are those a pointer would make, and a real pointer over the
+     portrait takes over at once (the tilt ignores aim while it is there; its springs carry the hand-over). */
+  var SAY = {
+    open: 1.15, // s: the first turn, from one side across toward the viewer
+    swayX: 2.7, // s: the slow sway, side to side
+    swayY: 1.9, // s: ... and up and down
+    chatter: 0.62, // s: the small quick movement while characters stream in
+    nod: 0.6, // s: a nod at a full stop
+    settle: 0.9, // s: back to still after the last character
+  };
+  function smooth(t) {
+    t = util.clamp(t, 0, 1);
+    return t * t * (3 - 2 * t);
+  }
+  function speak(frame, lede) {
+    var tilt = frame && Site.get(frame, "tilt");
+    if (!tilt || !tilt.aim || Site.env.reduce || Site.env.static) return null;
+    var tempo = Site.tempo || 1;
+    var t0 = performance.now();
+    var last = t0;
+    var energy = 0; // characters arriving (each adds, it fades in a third of a second)
+    var flow = 0; // the same, smoothed
+    var nods = [];
+    var endAt = -1;
+    var raf = null;
+    var over = false;
+    function now() {
+      return (performance.now() - t0) / 1000 / tempo;
+    }
+    function onChar(e) {
+      energy = Math.min(1, energy + 0.07);
+      if (e.detail && e.detail.pause === "stop") nods.push(now());
+    }
+    function onDone(e) {
+      if (endAt >= 0) return;
+      // a quiet finish (the visitor has left) settles at once, an ordinary one after the caret's first blink
+      endAt = now() + (e && e.detail && e.detail.quiet ? 0 : 0.15);
+    }
+    lede.addEventListener("kit:typing-char", onChar);
+    lede.addEventListener("kit:typing-done", onDone);
+    frame.classList.add("is-speaking");
+    function tick(ts) {
+      raf = null;
+      if (over) return;
+      var t = (ts - t0) / 1000 / tempo;
+      var dt = Math.min(0.05, Math.max(0, (ts - last) / 1000 / tempo));
+      last = ts;
+      energy *= Math.exp(-dt / 0.3);
+      flow += (energy - flow) * (1 - Math.exp(-dt / 0.18));
+      // the opening turn: a glance to one side, then across toward the viewer, the chin up a little
+      var o = t / SAY.open;
+      var nx = o < 0.32 ? -0.62 * smooth(o / 0.32) : -0.62 + 1.04 * smooth((o - 0.32) / 0.68);
+      var ny = -0.3 * smooth(o / 0.5);
+      // then the sway of speech, coming in as the turn ends
+      var s = smooth((t - SAY.open * 0.7) / 0.6);
+      var amp = 0.32 + 0.3 * flow;
+      var TAU = Math.PI * 2;
+      nx = nx * (1 - s) + s * (0.42 * Math.cos(TAU * (t - SAY.open) / SAY.swayX) * amp / 0.47 + 0.14 * flow * Math.sin(TAU * t / SAY.chatter));
+      ny = ny * (1 - s) + s * (-0.3 * Math.cos(TAU * (t - SAY.open) / (SAY.swayX * 2)) + 0.22 * amp * Math.sin(TAU * t / SAY.swayY) + 0.08 * flow * Math.sin(TAU * t / (SAY.chatter * 0.76)));
+      // a nod at each full stop: down and back
+      nods.forEach(function (n) {
+        var u = (t - n) / SAY.nod;
+        if (u > 0 && u < 1) ny += 0.75 * Math.sin(Math.PI * u) * (1 - u * 0.4);
+      });
+      // still at the end
+      var still = endAt < 0 ? 1 : 1 - smooth((t - endAt) / SAY.settle);
+      tilt.aim(nx * still, ny * still);
+      if (endAt >= 0 && t > endAt + SAY.settle) return stop();
+      raf = requestAnimationFrame(tick);
+    }
+    function stop() {
+      if (over) return;
+      over = true;
+      if (raf) cancelAnimationFrame(raf);
+      raf = null;
+      lede.removeEventListener("kit:typing-char", onChar);
+      lede.removeEventListener("kit:typing-done", onDone);
+      tilt.release();
+      // the stronger glare of the performance goes once the portrait is flat again
+      setTimeout(function () {
+        frame.classList.remove("is-speaking");
+      }, 600 * tempo);
+    }
+    raf = requestAnimationFrame(tick);
+    return { stop: stop };
+  }
+
   /* =============================================================== entrance */
   Site.ready(function () {
     var about = document.querySelector("[data-about]");
     if (!about) return;
     var lede = about.querySelector(".about__lede");
     var photo = about.querySelector(".about__photo");
+    var frame = about.querySelector(".about__frame");
     var strip = about.querySelector("[data-strip]");
     var stripCtl = null;
     try {
@@ -320,14 +467,33 @@
     }
 
     var entered = false;
-    function enter() {
+    var arrived = false;
+    var speaking = null;
+    function typing() {
+      return lede && Site.get(lede, "typing-text");
+    }
+    function say() {
+      var c = typing();
+      if (!c || !c.play || c.done || c.typing) return;
+      try {
+        speaking = speak(frame, lede);
+      } catch (e) {
+        Site.errors.push({ where: "home-about portrait", message: String(e && e.message), stack: String((e && e.stack) || "").slice(0, 600) });
+      }
+      c.play();
+    }
+    // source: "change" (the stepper is bringing the slide in), "arrive" (it is there) or "view" (no stepper)
+    function enter(source) {
       if (entered) return;
       entered = true;
+      var run = function (fn) {
+        try {
+          fn();
+        } catch (e) {
+          Site.errors.push({ where: "home-about entrance", message: String(e && e.message), stack: "" });
+        }
+      };
       var parts = [
-        function () {
-          var c = lede && Site.get(lede, "split");
-          if (c && c.play) c.play();
-        },
         function () {
           var c = photo && Site.get(photo, "reveal");
           if (c && c.play) c.play();
@@ -337,22 +503,40 @@
           else if (strip) strip.classList.add("is-drawn");
         },
       ];
-      // the lede first, the portrait a beat later, then the strip (which waits for the words to be well on their way)
-      var at = [0, STEP * 2, STEP * 5];
+      if (Site.env.static) {
+        parts.forEach(run);
+        return;
+      }
+      // the portrait first (it is there before it speaks), then the strip draws itself while the slide comes to rest;
+      // the lede is typed once the slide has arrived (or soon after the first view where nothing moves the page)
+      var at = [STEP * 2, STEP * 5];
       parts.forEach(function (fn, i) {
-        if (Site.env.static) return fn();
         setTimeout(function () {
-          try {
-            fn();
-          } catch (e) {
-            Site.errors.push({ where: "home-about entrance", message: String(e && e.message), stack: "" });
-          }
+          run(fn);
         }, ms(at[i]));
       });
+      if (source !== "change" || arrived) setTimeout(say, ms(0.45));
+      else
+        setTimeout(function () {
+          if (!arrived) say();
+        }, ms(1.6));
     }
-    // the stepper says when the slide is coming; where it does not run, the first good view of the block
-    about.addEventListener("kit:snap-change", enter);
-    about.addEventListener("kit:snap-arrive", enter);
+    // the stepper says when the slide is coming and when it is there; where it does not run, the first good view
+    about.addEventListener("kit:snap-change", function () {
+      enter("change");
+    });
+    about.addEventListener("kit:snap-arrive", function () {
+      var first = !arrived;
+      arrived = true;
+      if (!entered) enter("arrive");
+      else if (first) setTimeout(say, ms(0.1));
+    });
+    // leaving before the end: the rest of the lede at once, the portrait still (a later visit finds the block at rest)
+    about.addEventListener("kit:snap-leave", function () {
+      var c = typing();
+      if (c && c.finish) c.finish();
+      if (speaking) speaking.stop();
+    });
     if ("IntersectionObserver" in window) {
       var io = new IntersectionObserver(
         function (entries) {

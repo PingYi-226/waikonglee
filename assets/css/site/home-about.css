@@ -54,6 +54,15 @@ html.has-snap .about .sechead {
   box-shadow: var(--shadow-2);
 }
 
+/* the glare of the tilt (kit): faint under the pointer, clearer while the portrait speaks (home-about.js) */
+.about__frame {
+  --k-glare-strength: 0.42;
+}
+
+.about__frame.is-speaking {
+  --k-glare-strength: 0.8;
+}
+
 .about__frame img {
   display: block;
   width: 100%;
@@ -156,18 +165,25 @@ html.js .strip:not(.is-drawn) {
 .strip__glint {
   position: absolute;
   inset: 0 auto 0 0;
-  width: 9cqw;
-  background: linear-gradient(100deg, transparent, var(--strip-light) 50%, transparent);
+  width: 15cqw; /* GLINT in home-about.js */
+  background: linear-gradient(
+    100deg,
+    transparent,
+    color-mix(in srgb, var(--strip-light) 55%, transparent) 30%,
+    var(--strip-light) 50%,
+    color-mix(in srgb, var(--strip-light) 55%, transparent) 70%,
+    transparent
+  );
   translate: -200cqw 0;
   pointer-events: none;
 }
 
 .strip {
-  --strip-light: color-mix(in srgb, var(--surface) 85%, transparent);
+  --strip-light: var(--surface);
 }
 
 html[data-theme="dark"] .strip {
-  --strip-light: color-mix(in srgb, var(--ink) 34%, transparent);
+  --strip-light: color-mix(in srgb, var(--ink) 66%, transparent);
 }
 
 /* a bar under the pointer or the keyboard: it thickens a little, the others recede */
