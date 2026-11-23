@@ -31,7 +31,7 @@
 {%- assign rs_research = '/research/' | relative_url -%}
 {%- assign rs_pubs = '/publications/' | relative_url -%}
 
-<section class="orbit" id="research" data-orbit data-snap data-snap-points="0.4 1" data-snap-hold="1" data-snap-duration="1600" aria-labelledby="orbit-title">
+<section class="orbit" id="research" data-orbit data-snap data-snap-points="0.4 1" data-snap-hold="1" data-snap-hold-travel="160" data-snap-duration="1600" data-snap-inner-duration="2600" aria-labelledby="orbit-title">
   <div class="orbit__stage">
     <div class="orbit__scene" data-orbit-scene>
       <header class="orbit__head sechead" data-inview>
@@ -40,12 +40,12 @@
 
       <div class="orbit__banners" aria-hidden="true">
         <div class="orbit__banner orbit__banner--journals" data-orbit-banner="-1">
-          <div class="orbit__strip" data-kit="marquee" data-speed="150" data-direction="left" data-boost="0">
+          <div class="orbit__strip" data-kit="marquee" data-speed="150" data-direction="right" data-boost="0">
             {%- for v in rs_journals %}<span class="orbit__venue">{{ v }}</span>{% endfor -%}
           </div>
         </div>
         <div class="orbit__banner orbit__banner--confs" data-orbit-banner="1">
-          <div class="orbit__strip" data-kit="marquee" data-speed="150" data-direction="right" data-boost="0">
+          <div class="orbit__strip" data-kit="marquee" data-speed="150" data-direction="left" data-boost="0">
             {%- for v in rs_confs %}<span class="orbit__venue">{{ v }}</span>{% endfor -%}
           </div>
         </div>

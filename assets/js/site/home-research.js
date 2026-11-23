@@ -22,6 +22,10 @@
   var smooth = util.smooth;
   var lerp = util.lerp;
   var TAU = Math.PI * 2;
+  /** An angle brought into [-pi, pi]. */
+  function wrap(a) {
+    return a - TAU * Math.round(a / TAU);
+  }
 
   function all(scope, selector) {
     return Array.prototype.slice.call(scope.querySelectorAll(selector));
@@ -40,10 +44,22 @@
   var SPIN = 0.15; // rad/s: the ring at rest turns once in about 42 s (own: a slow carousel)
   var SPIN_LAG = 0.55; // s: time constant of the spin starting and stopping (own)
   var SWIRL = 1.5; // rad the ring turns while the cards spread out of the core (own)
-  var STAGGER = 0.07; // share of the ring-to-grid time by which each card follows the one before it (own)
+  /* ring to grid (shares of the move's time; owner, round 3: "the cards first go once round the ring, then take their
+     places"): the ring gathers speed and goes once round (TURN.end: done by this share, on ease.fill); as the turn
+     completes the cards leave it one after another in ring order (the first at LEAVE.from, each next LEAVE.step later),
+     each landing a little past its slot (ease.drawer). The first leaves when the ring is less than one card's spacing
+     from its final angle, so a leaving card never passes the one ahead of it. (own values, filmed) */
+  var TURN = { end: 0.7 };
+  var LEAVE = { from: 0.44, step: 0.045 };
   var LIFT = 0.05; // the cards grow by this much half-way between ring and grid (own)
   var SLANT = 4; // deg: the two banners lean this way and the other
   var WAVE = { rise: 14, grow: 0.025 }; // px and scale of the cards' wave on the stepper's hold
+  /* leaving the grid toward the next block (owner, round 3: the title, the banners and the cards leave with parallax):
+     while the stage unpins and travels one viewport up, each layer moves against it by a share of that travel. The
+     title hangs back (far), the banners hang back a little and run on out the way they came in, the cards rise ahead
+     of the stage, the top row first. (own values, filmed) */
+  var EXIT = { title: 0.34, banner: 0.1, run: 0.3, card: 0.16, row: 0.1 };
+  var GIVE = 0.05; // viewport: the stepper's hold gives the page this much at most (kit-snap BAND); the grid stays "at rest" there
   var EPS = 2; // px: "at a stop" (kit-snap's own tolerance)
 
   /* ------------------------------------------------------------------ time
@@ -163,6 +179,13 @@
 
     var land = curve(Site.tokens.ease.drawer); // a card travelling to its place: lands a little past it and settles
     var slide = curve(Site.tokens.ease.soft); // the banners: start at once, slow into place
+    var whirl = curve(Site.tokens.ease.fill); // the ring's full turn: gathers speed, then a long slowing into place
+    var travel = 1 - LEAVE.from - (count - 1) * LEAVE.step; // share of the time each card takes from the ring to its slot
+    var rowOf = []; // card index -> row of the grid
+    rowsUsed.forEach(function (n, r) {
+      for (var c = 0; c < n; c++) rowOf.push(r);
+    });
+    var head = section.querySelector(".orbit__head");
     var core = coreCanvas ? orbitCore(coreCanvas) : null;
     var active = false;
     var visible = false;
@@ -244,26 +267,37 @@
       if (want === 0 && (Math.abs(omega) < 0.002 || tFlat >= 1)) omega = 0; // still, or no ring left to turn
       spin += omega * dt;
       var base = spin - SWIRL * (1 - form);
-      if (tFlat <= 0 || target === null) target = home + TAU * Math.round((base - home) / TAU);
+      // the turn ends where every card lies nearest its slot, one full turn on from where it starts (fixed as it starts)
+      if (tFlat <= 0 || target === null) target = base + TAU + wrap(home - base);
+      var ring = lerp(base, target, whirl(tFlat / TURN.end)); // the ring's angle
 
-      var rest = tFlat >= 0.999; // the grid, at rest
+      // leaving the grid: px the page has gone past the pinned range (the stage travels up with it), in scene px
+      var past = Math.max(0, q - 1) * range;
+      var vh = window.innerHeight;
+      // the grid is at rest on its stop, and while the stepper's hold gives the page a little and brings it back
+      var rest = tFlat >= 0.999 && (past <= EPS || (past <= GIVE * vh && !Site.snap.moving));
+      var gone = past <= EPS ? 0 : clamp(past / vh, 0, 1); // share of the exit
+      var lift = past / scale; // the stage's travel, scene px
+
       for (var i = 0; i < count; i++) {
-        var k = land((tFlat - i * STAGGER) / (1 - (count - 1) * STAGGER));
-        var angle = lerp(base, target, k);
-        var p = ringPoint(angle, ringPos[i], 0.22 + 0.78 * form);
+        var j = ringPos[i];
+        var k = rest ? 1 : land((tFlat - LEAVE.from - j * LEAVE.step) / travel);
+        var p = ringPoint(ring, j, 0.22 + 0.78 * form);
         var depth = (Math.sin(p.a) + 1) / 2; // 1 at the front (the bottom of the ellipse)
         var ringScale = (RING.far + (1 - RING.far) * depth) * (0.5 + 0.5 * form);
         var x = lerp(p.x, slots[i].x, k);
-        var y = lerp(p.y, slots[i].y, k);
+        var y = lerp(p.y, slots[i].y, k) - lift * (EXIT.card + (rowsUsed.length - 1 - rowOf[i]) * EXIT.row);
         var s = lerp(ringScale, 1, k) * (1 + LIFT * Math.sin(Math.PI * k));
         var ry = -Math.cos(p.a) * RING.turn * (1 - k);
         var o = clamp(lerp((0.5 + 0.5 * depth) * form, 1, k), 0, 1);
         var blur = Math.max(0, ((1 - depth) * RING.blur + (1 - form) * 6) * (1 - k));
         var li = items[i];
-        // lying flat in its slot a card is placed in the plane (no 3D, whole pixels), so its text stays sharp
+        // lying flat a card is placed in the plane (no 3D; at rest whole pixels), so its text stays sharp
         li.style.transform =
-          rest
-            ? "translate(" + Math.round(slots[i].x) + "px, " + Math.round(slots[i].y) + "px)"
+          k >= 1
+            ? rest
+              ? "translate(" + Math.round(x) + "px, " + Math.round(y) + "px)"
+              : "translate(" + util.round(x, 2) + "px, " + util.round(y, 2) + "px)"
             : "perspective(1000px) translate(" + util.round(x, 1) + "px, " + util.round(y, 1) + "px) scale(" + util.round(s, 4) + ") rotateY(" + util.round(ry, 2) + "deg)";
         li.style.opacity = o < 0.002 ? "0" : util.round(o, 3);
         li.style.filter = blur > 0.05 ? "blur(" + util.round(blur, 2) + "px)" : "";
@@ -271,18 +305,24 @@
       }
       setFlat(rest);
 
-      // the banners come out from the sides as the cards flatten
-      var out = slide(map(tFlat, 0.3, 1, 0, 1));
+      // the title hangs back as the stage leaves
+      if (head) head.style.transform = lift > 0.05 ? "translateY(" + util.round(lift * EXIT.title, 2) + "px)" : "";
+
+      // the banners come out from the sides as the cards flatten; leaving, they run on the way they came in
+      var out = slide(map(tFlat, 0.5, 1, 0, 1));
+      var run = slide(gone);
       banners.forEach(function (b) {
         var side = Number(b.getAttribute("data-orbit-banner")) || -1;
-        b.style.transform = "rotate(" + -side * SLANT + "deg) translateX(" + util.round(side * (1 - out) * 105, 2) + "%)";
+        var dx = side * (1 - out) * 105 - side * run * EXIT.run * 100;
+        b.style.transform =
+          (lift > 0.05 ? "translateY(" + util.round(lift * EXIT.banner, 2) + "px) " : "") + "rotate(" + -side * SLANT + "deg) translateX(" + util.round(dx, 2) + "%)";
         b.style.opacity = util.round(map(out, 0, 0.35, 0, 1), 3);
         b.style.visibility = out <= 0 ? "hidden" : "visible";
       });
 
       if (core) {
-        var gone = smooth(map(tFlat, 0, 0.5, 0, 1));
-        core.set({ opacity: coreIn * (1 - gone), scale: (0.6 + 0.4 * coreIn) * (1 - 0.45 * gone), spin: spin });
+        var shrink = smooth(map(tFlat, 0.3, 0.75, 0, 1));
+        core.set({ opacity: coreIn * (1 - shrink), scale: (0.6 + 0.4 * coreIn) * (1 - 0.45 * shrink), spin: spin + ring - base }); // turns with the ring's turn
         core.draw(time);
       }
       return omega !== 0 || want !== 0 || (core && core.visible());
@@ -350,6 +390,7 @@
       banners.forEach(function (b) {
         b.style.transform = b.style.opacity = b.style.visibility = "";
       });
+      if (head) head.style.transform = "";
       Site.snap.refresh();
     }
     function choose() {
