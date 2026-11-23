@@ -367,6 +367,11 @@
       if (!active) return loop.stop();
       var q = progress();
       var busy = place(q, delta / 1000, time);
+      if (busy) {
+        // a spin dying away where nobody sees the stage (the page has gone on to the block above): sleep
+        var sr = stage.getBoundingClientRect();
+        if (sr.bottom <= 0 || sr.top >= window.innerHeight) busy = false;
+      }
       if (!busy && lastQ !== null && Math.abs(q - lastQ) < 1e-5) {
         if (++still > 3) loop.stop(); // nothing moves: sleep until the page scrolls again
       } else still = 0;
