@@ -1,8 +1,10 @@
 {%- comment -%}
   Home page, research block: one card per area of _data/research.yml (variable `areas`, assigned in _layouts/home.liquid).
   Without the script, or where the deck does not run (touch, portrait, narrow, reduced motion), this is a plain grid of
-  cards. home-research.js turns it into the pinned piece: the cards circle a small lattice (the ring stop), then lie flat
-  in a grid of 4 + 3 (the grid stop) while two banners of venue abbreviations are pulled out beneath them.
+  cards. home-research.js turns it into the pinned piece: the cards circle a small lattice (the ring stop), then go once
+  round and lie flat in a grid of 4 + 3 (the grid stop) while two banners of venue abbreviations are pulled out beneath
+  them, each running the way it came in. The hold on the grid is light (data-snap-hold-travel: wheel only, a gesture
+  that goes on moves on); ring <-> grid takes data-snap-inner-duration.
   A card opens the area's detail view (kit expand, from the <template> after the list); its href is the area on the
   research page, for modified clicks and no JavaScript.
   The banners read the bibliography: every entry's abbr, by pubtype (_layouts/bib_abbr.liquid), each venue once.
@@ -31,7 +33,7 @@
 {%- assign rs_research = '/research/' | relative_url -%}
 {%- assign rs_pubs = '/publications/' | relative_url -%}
 
-<section class="orbit" id="research" data-orbit data-snap data-snap-points="0.4 1" data-snap-hold="1" data-snap-duration="1600" aria-labelledby="orbit-title">
+<section class="orbit" id="research" data-orbit data-snap data-snap-points="0.4 1" data-snap-hold="1" data-snap-hold-travel="160" data-snap-duration="1600" data-snap-inner-duration="2600" aria-labelledby="orbit-title">
   <div class="orbit__stage">
     <div class="orbit__scene" data-orbit-scene>
       <header class="orbit__head sechead" data-inview>
@@ -40,12 +42,12 @@
 
       <div class="orbit__banners" aria-hidden="true">
         <div class="orbit__banner orbit__banner--journals" data-orbit-banner="-1">
-          <div class="orbit__strip" data-kit="marquee" data-speed="150" data-direction="left" data-boost="0">
+          <div class="orbit__strip" data-kit="marquee" data-speed="150" data-direction="right" data-boost="0">
             {%- for v in rs_journals %}<span class="orbit__venue">{{ v }}</span>{% endfor -%}
           </div>
         </div>
         <div class="orbit__banner orbit__banner--confs" data-orbit-banner="1">
-          <div class="orbit__strip" data-kit="marquee" data-speed="150" data-direction="right" data-boost="0">
+          <div class="orbit__strip" data-kit="marquee" data-speed="150" data-direction="left" data-boost="0">
             {%- for v in rs_confs %}<span class="orbit__venue">{{ v }}</span>{% endfor -%}
           </div>
         </div>

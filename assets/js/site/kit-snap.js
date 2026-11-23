@@ -4,6 +4,7 @@
  *   <div data-kit="snap" data-snap-mode="deck|soft">
  *     <section data-snap> ... </section>
  *     <section data-snap data-snap-points="0.4 1" data-snap-hold="1"> ... </section>   (a tall, pinned section)
+ *     (data-snap-hold-travel="px": a light hold, wheel only; data-snap-inner-duration="ms": moves between its own points)
  *   </div>
  *
  * One wheel gesture or key press is one move to the next or previous stop. The move is our own tween of the
@@ -48,6 +49,7 @@
   var REACCEL_MIN = 8; // ... and by at least this many px per event is a new gesture
   var SUSTAIN_MIN = 40; // a wheel still spinning: events this large ...
   var SUSTAIN_RATIO = 0.85; // ... and as large as this share of the stream's peak (inertia decays, a spinning wheel does not)
+  var HOLD_KEEP = 0.7; // light hold: a wheel event counts toward its travel while it is at least this share of the stream's peak (own)
   var EPS = 2; // px: "at a stop"
   var REST_MS = 160; // ms without scroll events that count as "the scroll stopped" where scrollend is missing
 
@@ -194,7 +196,7 @@
     this.band = null; // the running rubber band
     this.lastSet = null; // the last position we wrote (scrolls near it are ours)
     this.armed = new Map(); // element -> forward gestures its hold still absorbs
-    this.wheel = { last: -1e9, sign: 0, used: false, acc: 0, peak: 0, recent: [], trough: Infinity };
+    this.wheel = { last: -1e9, sign: 0, used: false, acc: 0, peak: 0, recent: [], trough: Infinity, id: 0 };
     this.native = { target: 0, t: -1e9, wheelAt: -1e9 }; // soft mode: native wheel scrolling in a tall section
     this.vel = { y: window.scrollY, t: 0, v: 0 }; // velocity of scrolls we did not make (px/ms)
     this.restTimer = 0;
@@ -284,7 +286,8 @@
       var pts = parsePoints(el.getAttribute("data-snap-points"));
       var hold = el.hasAttribute("data-snap-hold") ? (attrNum(el, "data-snap-hold") === null ? 1 : attrNum(el, "data-snap-hold")) : 0;
       var dur = attrNum(el, "data-snap-duration");
-      var base = { el: el, top: top, bottom: top + h, duration: dur };
+      var light = hold ? attrNum(el, "data-snap-hold-travel") : null;
+      var base = { el: el, top: top, bottom: top + h, duration: dur, inner: attrNum(el, "data-snap-inner-duration"), light: light > 0 ? light : 0 };
       var range = h - vh;
       if (pts && range > EPS) {
         if (el.getAttribute("data-snap-top") === "true" && pts.indexOf(0) < 0) pts.unshift(0);
@@ -298,7 +301,7 @@
       } else list.push(mk(base, top, 0, 1, hold));
     }
     function mk(b, y, point, points, hold) {
-      return { el: b.el, top: b.top, bottom: b.bottom, duration: b.duration, y: y, point: point, points: points, hold: hold, end: false };
+      return { el: b.el, top: b.top, bottom: b.bottom, duration: b.duration, inner: b.inner, light: hold ? b.light : 0, y: y, point: point, points: points, hold: hold, end: false };
     }
     list.forEach(function (s) {
       s.y = clamp(Math.round(s.y), 0, max);
@@ -311,7 +314,10 @@
     list.forEach(function (s) {
       var last = merged[merged.length - 1];
       if (last && Math.abs(last.y - s.y) <= EPS * 2) {
-        if (s.hold && !last.hold) last.hold = s.hold;
+        if (s.hold && !last.hold) {
+          last.hold = s.hold;
+          last.light = s.light;
+        }
         return;
       }
       merged.push(s);
@@ -454,9 +460,12 @@
   };
 
   /* ---------- the move */
-  P.duration = function (dist, s) {
-    var ms = s && s.duration ? s.duration : clamp(DURATION.base + (DURATION.perVh * dist) / this.vh, DURATION.min, DURATION.max);
-    if (this.mode === "soft" && !(s && s.duration)) ms *= SOFT_TIME;
+  /** The time of a move to stop s (from stop `from`, when it starts on one): data-snap-inner-duration between two
+      points of one element, else data-snap-duration, else by distance. */
+  P.duration = function (dist, s, from) {
+    var set = s && s.inner && from && from.el === s.el && from !== s ? s.inner : s && s.duration ? s.duration : 0;
+    var ms = set || clamp(DURATION.base + (DURATION.perVh * dist) / this.vh, DURATION.min, DURATION.max);
+    if (this.mode === "soft" && !set) ms *= SOFT_TIME;
     return ms * Site.tempo;
   };
   P.write = function (y) {
@@ -485,7 +494,7 @@
     }
     if (a) cancelAnimationFrame(a.raf);
     var curve = bezier(this.mode === "soft" ? this.ease.soft : this.ease.inOut);
-    var dur = this.duration(dist, stop);
+    var dur = this.duration(dist, stop, a ? null : this.stopAt(from));
     var brake = v0 * BRAKE_MS; // where the old velocity alone would carry the page
     var anim = (this.anim = { from: from, to: y, start: now(), dur: dur, v0: v0, dir: d, stop: stop, kind: kind || "move", pos: from, vel: v0, origin: a ? a.origin : from, originStop: a ? a.originStop : this.stopAt(from) });
     root.classList.add("is-snapping");
@@ -625,9 +634,17 @@
     if (this.band && this.band.dir === dir && now() - this.band.start < Site.t("transition.fade").duration * 1000) return;
     var y = this.band && this.band.kind === "hold" ? this.band.base : window.scrollY;
     var here = this.stopAt(y);
-    if (dir > 0 && here && here.hold && (this.armed.get(here.el) || 0) > 0) {
+    // a light hold (data-snap-hold-travel) holds the wheel only: keys go straight on
+    if (dir > 0 && here && here.hold && (this.armed.get(here.el) || 0) > 0 && !(here.light && source !== "wheel")) {
       this.armed.set(here.el, this.armed.get(here.el) - 1);
       this.rubber(dir, "hold");
+      if (here.light && this.band) {
+        // the rest of this wheel stream decides: going on (a further notch, a swipe still pushing) moves on at once
+        this.band.light = here.light;
+        this.band.stream = this.wheel.id;
+        this.band.travel = 0;
+        this.band.stop = here;
+      }
       emit(here.el, "snap-hold", this.detail(here.index, here.index, dir));
       return;
     }
@@ -659,6 +676,7 @@
     var fresh = t - w.last > WHEEL_PAUSE || dir !== w.sign;
     w.last = t;
     if (fresh) {
+      w.id++;
       w.sign = dir;
       w.used = false;
       w.acc = 0;
@@ -687,13 +705,28 @@
       this.gesture(dir, "wheel");
       return;
     }
+    var sustained = a >= SUSTAIN_MIN && a >= w.peak * SUSTAIN_RATIO;
+    var b = this.band;
+    if (b && b.light && b.dir === dir && b.stream === w.id && !this.anim) {
+      // a light hold: the stream that it held goes on pushing (a further notch, or a swipe that has not started to
+      // decay) for the hold's travel: the page moves on at once. A decaying tail does not count.
+      if (a >= w.peak * HOLD_KEEP) b.travel += a;
+      if (sustained || b.travel >= b.light) {
+        w.trough = Infinity;
+        w.peak = a;
+        this.armed.set(b.stop.el, 0);
+        this.stopBand(false);
+        var on = this.step(dir, b.base);
+        if (on) this.moveTo(on.y, on.stop, dir);
+      }
+      return;
+    }
     if ((this.anim && this.anim.kind !== "rest") || (this.band && this.band.dir === dir)) {
       w.trough = Infinity; // during a move (or the band) the stream is absorbed; its low point is taken after
       return;
     }
     if (mean < w.trough) w.trough = mean;
     var reaccel = mean > w.trough * REACCEL_RATIO && mean - w.trough >= REACCEL_MIN;
-    var sustained = a >= SUSTAIN_MIN && a >= w.peak * SUSTAIN_RATIO;
     if (reaccel || sustained) {
       w.trough = Infinity;
       w.peak = a;
@@ -990,6 +1023,13 @@
     },
     get moving() {
       return !!(inst && inst.anim);
+    },
+    /** The move under way, as of the frame it last wrote: { from, to (px), t (share of its time), kind, carried (it
+        started with the page's own velocity, so the position is not the curve alone) }, else null. A scene driven by
+        the scroll position can read its time here where the curve is too flat to read it back from whole pixels. */
+    get move() {
+      var a = inst && inst.anim;
+      return a ? { from: a.from, to: a.to, t: a.t ? clamp(a.t / a.dur, 0, 1) : 0, kind: a.kind, carried: !!a.v0 } : null;
     },
     go: function (target) {
       if (inst) inst.go(target);
