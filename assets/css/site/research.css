@@ -157,6 +157,7 @@ html.js .rhead .pagehead__meta > .rnav {
 .rnav__t {
   min-width: 0;
   color: inherit;
+  text-wrap: balance; /* a title that needs two lines breaks into two even ones, never one word alone */
 }
 
 .rnav__y {

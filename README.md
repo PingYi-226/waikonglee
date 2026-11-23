@@ -17,7 +17,7 @@ Edit a file (directly on github.com is fine), commit, and the site rebuilds itse
 | Role, statement and the words that take turns in it, address, citation figures, "joining" text | `_data/profile.yml` |
 | Research areas                                    | `_data/research.yml`                   |
 | Open-source code list                             | `_data/software.yml`                   |
-| Funded projects                                   | `_data/grants.yml`                     |
+| Funded projects (`short:` is the name shown in the contents at the head of the Research page) | `_data/grants.yml` |
 | CV (its Education and Experience entries also draw the strip in the home page's About block) | `_data/cv.yml` |
 | Profile links (Scholar, ORCID, GitHub, email)     | `_data/socials.yml`                    |
 | Portrait                                          | replace `assets/img/prof_pic.jpg`      |
@@ -47,8 +47,8 @@ Paste the BibTeX entry into `_bibliography/papers.bib`, below the comment block 
 }
 ```
 
-Papers are grouped by year and shown in the order they appear in the file. The charts, the filters, the table of areas by years on
-the Research page and every paper count on the site update on their own; a new `abbr` appears on the home page's banners.
+Papers are grouped by year and shown in the order they appear in the file. The charts, the filters and every paper count on the
+site update on their own; a new `abbr` appears on the home page's banners.
 Journal papers carry the year of the issue they appeared in. `pubtype` decides which filter a paper appears under.
 Write the author's own name as `Lee, Wai-Kong` so that it is emphasised.
 

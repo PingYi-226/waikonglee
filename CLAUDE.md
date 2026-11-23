@@ -28,7 +28,7 @@ design layer and motion kit. Read `README.md` first: it lists where each kind of
 - The template's `main.css` sets an explicit colour on `div, span, p, li ...` (undone for the site in `base.css`), restyles `#light-toggle` and
   `.card`, and its theme script marks `<html>` with `transition` when the theme changes (taken off on load in `_includes/site/head.liquid`).
   Its `tailwind.css` gives `.btn` a margin (reset in `base.css`), and its scripts add `table table-hover` to every `<table>` outside a few
-  classes: build tabular figures from `div`s with ARIA roles (as the papers table on the Research page does).
+  classes: build tabular figures from `div`s with ARIA roles instead.
 - Template files overridden locally are `_layouts/default.liquid` and `_layouts/bib.liquid`; after changing or adding an override run
   `bundle exec al-folio upgrade overrides accept --all` (`audit` only reports) and commit `.al-folio-overrides.yml`.
 - A gem listed in `Gemfile` must also be listed under `plugins:` in `_config.yml`, and the reverse.

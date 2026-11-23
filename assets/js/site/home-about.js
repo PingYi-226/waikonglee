@@ -374,6 +374,8 @@
     chatter: 0.62, // s: the small quick movement while characters stream in
     nod: 0.6, // s: a nod at a full stop
     settle: 0.9, // s: back to still after the last character
+    gain: 1.5, // the whole performance is this much larger than the shapes below, so it reads as a show (the tilt
+    // caps it at its own largest angle, the one a pointer at the frame's edge gives)
   };
   function smooth(t) {
     t = util.clamp(t, 0, 1);
@@ -431,7 +433,7 @@
       });
       // still at the end
       var still = endAt < 0 ? 1 : 1 - smooth((t - endAt) / SAY.settle);
-      tilt.aim(nx * still, ny * still);
+      tilt.aim(nx * still * SAY.gain, ny * still * SAY.gain);
       if (endAt >= 0 && t > endAt + SAY.settle) return stop();
       raf = requestAnimationFrame(tick);
     }
