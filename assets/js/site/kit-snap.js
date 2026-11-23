@@ -1024,6 +1024,13 @@
     get moving() {
       return !!(inst && inst.anim);
     },
+    /** The move under way, as of the frame it last wrote: { from, to (px), t (share of its time), kind, carried (it
+        started with the page's own velocity, so the position is not the curve alone) }, else null. A scene driven by
+        the scroll position can read its time here where the curve is too flat to read it back from whole pixels. */
+    get move() {
+      var a = inst && inst.anim;
+      return a ? { from: a.from, to: a.to, t: a.t ? clamp(a.t / a.dur, 0, 1) : 0, kind: a.kind, carried: !!a.v0 } : null;
+    },
     go: function (target) {
       if (inst) inst.go(target);
     },

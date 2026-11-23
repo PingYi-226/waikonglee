@@ -58,7 +58,7 @@
      while the stage unpins and travels one viewport up, each layer moves against it by a share of that travel. The
      title hangs back (far), the banners hang back a little and run on out the way they came in, the cards rise ahead
      of the stage, the top row first. (own values, filmed) */
-  var EXIT = { title: 0.34, banner: 0.1, run: 0.3, card: 0.16, row: 0.1 };
+  var EXIT = { title: 0.34, banner: 0.1, run: 0.3, card: 0.12, row: 0.1 };
   var GIVE = 0.05; // viewport: the stepper's hold gives the page this much at most (kit-snap BAND); the grid stays "at rest" there
   var EPS = 2; // px: "at a stop" (kit-snap's own tolerance)
 
@@ -251,12 +251,38 @@
       if (len - at <= EPS) return 1;
       return at / len;
     }
+    /** The share of the ring-to-grid move's time at progress q. While the stepper carries the page from one of the two
+        rests to the other, its own clock: near either end its curve moves the page less than a pixel a frame, so read
+        back from whole pixels the time would jump (filmed: the ring lurched at the start). Otherwise, and whenever the
+        page is not where that clock puts it, read back from the scroll position (any scroll, any speed, both ways). */
+    var flatEase = curve(MOVE);
+    function flatShare(q) {
+      var mv = Site.snap.move;
+      if (mv && !mv.carried && mv.kind !== "turn") {
+        var mine = (Site.snap.stops || []).filter(function (st) {
+          return st.element === section;
+        });
+        if (mine.length > 1) {
+          var ring = mine[0].y;
+          var grid = mine[mine.length - 1].y;
+          var fwd = Math.abs(mv.from - ring) <= EPS && Math.abs(mv.to - grid) <= EPS;
+          var back = Math.abs(mv.from - grid) <= EPS && Math.abs(mv.to - ring) <= EPS;
+          if ((fwd || back) && Math.abs(mv.from + (mv.to - mv.from) * flatEase(mv.t) - window.scrollY) <= EPS + 1) return fwd ? mv.t : 1 - mv.t;
+        }
+      }
+      return timeAt(way(q, RING_AT, 1));
+    }
     function place(q, dt, time) {
       // the way in: the stage comes up with the page; once it is pinned (q >= 0, where the page never rests) the
       // lattice grows, and a beat later the cards spread out of it into the ring
       var tIn = timeAt(way(q, from, RING_AT));
       var t0 = timeAt(way(0, from, RING_AT));
-      var tFlat = timeAt(way(q, RING_AT, 1)); // ring to grid
+      // px the page lies past the grid's stop (negative: inside the pinned range); within the stepper's hold, which gives
+      // the page a little and springs it back past the stop and home, the grid is at rest
+      var vh = window.innerHeight;
+      var past = (q - 1) * range;
+      var held = Math.abs(past) <= GIVE * vh && !Site.snap.moving;
+      var tFlat = held ? 1 : flatShare(q); // ring to grid
       var coreIn = q <= 0 ? 0 : smooth(map(tIn, t0, lerp(t0, 1, 0.55), 0, 1));
       var form = q <= 0 ? 0 : land(map(tIn, lerp(t0, 1, 0.15), 1, 0, 1));
 
@@ -271,13 +297,10 @@
       if (tFlat <= 0 || target === null) target = base + TAU + wrap(home - base);
       var ring = lerp(base, target, whirl(tFlat / TURN.end)); // the ring's angle
 
-      // leaving the grid: px the page has gone past the pinned range (the stage travels up with it), in scene px
-      var past = Math.max(0, q - 1) * range;
-      var vh = window.innerHeight;
-      // the grid is at rest on its stop, and while the stepper's hold gives the page a little and brings it back
-      var rest = tFlat >= 0.999 && (past <= EPS || (past <= GIVE * vh && !Site.snap.moving));
+      // leaving the grid: the stage travels up with the page past the pinned range; each layer moves against it
+      var rest = tFlat >= 0.999 && (Math.abs(past) <= EPS || held); // the grid at rest
       var gone = past <= EPS ? 0 : clamp(past / vh, 0, 1); // share of the exit
-      var lift = past / scale; // the stage's travel, scene px
+      var lift = Math.max(0, past) / scale; // the stage's travel, scene px
 
       for (var i = 0; i < count; i++) {
         var j = ringPos[i];
