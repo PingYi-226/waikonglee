@@ -302,16 +302,18 @@
   }
 
   /* The large name at the very end. Its letters roll under the pointer (the kit's own hover trigger) and also once
-     when the visitor has reached the end of the page and keeps pulling down: again after moving up a little and
-     coming back. One roll at a time, whichever trigger asked for it. */
+     each time the page arrives at its very end: again after moving up a little and coming back. One roll at a time,
+     whichever trigger asked for it. A page that is already at its end when it loads (too short to scroll, or a
+     restored position) does not roll by itself. */
   function initMark(foot) {
     var mark = foot.querySelector(".foot__mark");
     if (!mark) return;
-    var armed = true;
+    var REARM = 24; // px the page must move up from its end before the next arrival counts
     var busy = false;
-    function atEnd() {
-      return window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+    function gap() {
+      return document.documentElement.scrollHeight - (window.scrollY + window.innerHeight);
     }
+    var armed = gap() > 2;
     function roll() {
       var c = Site.get(mark, "rolling-text");
       if (!c || !c.roll || busy || c.rolling === true || Site.env.reduce) return;
@@ -323,44 +325,17 @@
       if (p && typeof p.then === "function") p.then(free, free);
       else setTimeout(free, 1400);
     }
-    function pull() {
-      if (!armed || !atEnd()) return;
-      armed = false;
-      roll();
-    }
     mark.addEventListener("kit:rolling-done", function () {
       busy = false;
     });
-    // a wheel or a finger still asking for more at the end of the page
-    window.addEventListener(
-      "wheel",
-      function (e) {
-        if (e.deltaY > 0) pull();
-      },
-      { passive: true },
-    );
-    var touchY = null;
-    window.addEventListener(
-      "touchstart",
-      function (e) {
-        touchY = e.touches.length ? e.touches[0].clientY : null;
-      },
-      { passive: true },
-    );
-    window.addEventListener(
-      "touchmove",
-      function (e) {
-        if (touchY === null || !e.touches.length) return;
-        if (touchY - e.touches[0].clientY > 24) pull();
-      },
-      { passive: true },
-    );
-    // where the page moves in steps, the stepper says when a step past the end was asked for
-    document.addEventListener("kit:snap-end", pull);
     window.addEventListener(
       "scroll",
       function () {
-        if (!armed && window.scrollY + window.innerHeight < document.documentElement.scrollHeight - 24) armed = true;
+        var g = gap();
+        if (armed && g <= 2) {
+          armed = false;
+          roll();
+        } else if (!armed && g > REARM) armed = true;
       },
       { passive: true },
     );
