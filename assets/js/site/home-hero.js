@@ -256,8 +256,9 @@
       lead = NAME_LEAD;
       name.classList.add("is-on");
     }
-    // after the intro the real name shows only when the gliding copy lands on it (playIntro's land()): never two names
-    if (lattice) lattice.reveal();
+    // after the intro the real name shows only when it takes over from the drawn copy (playIntro): never two names
+    // the lattice's origin lights with the first rank, and its ring spreads while the rest arrives
+    if (lattice) lattice.reveal(lead + RANK);
 
     var tempo = Site.tempo || 1;
     parts.forEach(function (el, i) {
@@ -308,6 +309,9 @@
        fundamental cells (same area) shears from one to the other in elementary steps and back (basis reduction). The points
        never move; only the cells change. Shown as a patch of cell lines around the target, and the target's own cell.
      - The pointer is the target: its closest lattice point is ringed and joined to it by the short error vector.
+     - Arriving with the rest of the first screen: the origin lights up, then a ring of light spreads across the plane from
+       it (a circle on the plane, so an ellipse in perspective) and each point it reaches comes on with a flare and settles,
+       like stars coming out; the cell lines at the front answer faintly. Then the ordinary state takes over.
      - A click sends a ring through the plane. Leaving the first screen, a sweep of light crosses the drawing and takes it.
      It draws only while something changes (pointer, ring, shear, wave, sweep) and sleeps otherwise. */
   var LAT = {
@@ -317,7 +321,13 @@
     shear: 2600, // ms, one elementary shear of the basis
     rest: 2400, // ms between shears
     restLong: 5200, // ms at either end (the good basis, the bad one)
-    reveal: 1800, // ms, the points spreading from the target on arrival
+    // the entrance (ms from the moment the origin starts to light)
+    flareRise: 260, // the origin comes up
+    flareFade: 650, // ... and settles back (time constant)
+    ringFrom: 180, // the ring leaves the origin
+    ringFor: 1750, // ... and has crossed the farthest point on screen
+    marksAt: 1500, // the target, its closest point and the error vector come in from here
+    marksFor: 550,
     waveSpeed: 0.42, // px/ms, a click's ring through the plane
     waveLife: 2600, // ms
     sweepFrom: 0.06, // fraction of the hero scrolled when the sweep of light sets off
@@ -424,8 +434,8 @@
     var target = { x: new Spring(Site.t("spring.glide"), 0), y: new Spring(Site.t("spring.glide"), 0) };
     var ring = { x: new Spring(Site.t("spring.pop"), 0), y: new Spring(Site.t("spring.pop"), 0), set: false };
     var waves = [];
-    var shownAt = null;
-    var shown = 0;
+    var shown = 0; // 1 once the entrance is over (or skipped)
+    var entr = null; // the entrance while it plays: { start (ms), tempo, rmax (plane units, the farthest point on screen) }
     var exitP = 0; // the hero scrolled, 0..1
     var gone = false;
     var revealed = false;
@@ -666,8 +676,11 @@
         if (!ring.x.idle(0.05) || !ring.y.idle(0.05)) moving = true;
       }
 
-      if (shownAt !== null && shown < 1) {
-        shown = util.clamp((now - shownAt) / (LAT.reveal * (Site.tempo || 1)), 0, 1);
+      if (entr) {
+        if ((now - entr.start) / entr.tempo > LAT.ringFrom + LAT.ringFor + LAT.flareFade * 1.4 && (now - entr.start) / entr.tempo > LAT.marksAt + LAT.marksFor) {
+          entr = null;
+          shown = 1;
+        }
         moving = true;
       }
       if (waves.length) {
@@ -753,7 +766,23 @@
       var SW = [1, 0];
       var SW0 = [1, 0];
 
-      var appearAll = util.smooth(util.clamp(shown * 2 - 0.55, 0, 1)); // lines and marks come in after the points
+      // the entrance: how far the ring has gone, how bright the origin is, whether the marks are in yet
+      var E = null;
+      if (entr) {
+        var age = (now - entr.start) / entr.tempo;
+        if (!entr.rmax) entr.rmax = farthest();
+        var ru = util.clamp((age - LAT.ringFrom) / LAT.ringFor, 0, 1);
+        var fr = age <= 0 ? 0 : age < LAT.flareRise ? soft(age / LAT.flareRise) : Math.exp(-(age - LAT.flareRise) / LAT.flareFade);
+        E = {
+          age: age,
+          // a little faster at first, like a ripple leaving the stone; past the last point by a few cells
+          R: (entr.rmax + s0 * 3) * (1 - Math.pow(1 - ru, 1.35)),
+          ru: ru,
+          flare: fr,
+          marks: util.smooth(util.clamp((age - LAT.marksAt) / LAT.marksFor, 0, 1)),
+        };
+      }
+      var appearAll = E ? E.marks : shown ? 1 : 0; // lines and marks come in when the ring has gone by
       var tx = target.x.x;
       var ty = target.y.x;
       project(tx, ty, Q);
@@ -858,29 +887,13 @@
         ctx.stroke();
       }
 
-      /* 3. the points: size and tone from depth, closeness to the target, the calm field and the sweep */
-      var corners = [unproject(0, 0), unproject(w, 0), unproject(0, h), unproject(w, h)];
-      var di = g1[0] * g2[1] - g1[1] * g2[0];
-      var imin = Infinity;
-      var imax = -Infinity;
-      var jmin = Infinity;
-      var jmax = -Infinity;
-      for (var ci = 0; ci < 4; ci++) {
-        var cc = corners[ci];
-        if (!cc) {
-          cc = [tx, ty + 40 * s0];
-        }
-        var cu = (cc[0] * g2[1] - cc[1] * g2[0]) / di;
-        var cv = (g1[0] * cc[1] - g1[1] * cc[0]) / di;
-        imin = Math.min(imin, cu);
-        imax = Math.max(imax, cu);
-        jmin = Math.min(jmin, cv);
-        jmax = Math.max(jmax, cv);
-      }
-      imin = Math.floor(imin) - 2;
-      jmin = Math.floor(jmin) - 2;
-      imax = Math.ceil(imax) + 2;
-      jmax = Math.ceil(jmax) + 2;
+      /* 3. the points: size and tone from depth, closeness to the target, the calm field and the sweep; during the
+         entrance only those the ring has reached, each flaring as it comes on */
+      var IR = indexRange(tx, ty);
+      var imin = IR[0];
+      var imax = IR[1];
+      var jmin = IR[2];
+      var jmax = IR[3];
 
       var ink = [];
       var lit = [];
@@ -888,23 +901,36 @@
         ink.push(null);
         lit.push(null);
       }
-      var reach = Math.max(w, h) * 0.9;
       var sig2 = 2 * (s0 * 1.9) * (s0 * 1.9);
+      var litColor = col.dark ? mix(col.accent, col.ink, 0.35) : col.accent;
+      var fall = E ? entranceFall(E.R) : 0;
       for (var i = imin; i <= imax; i++) {
         for (var j = jmin; j <= jmax; j++) {
           point(i, j, W);
           var nearD = (W[0] - tx) * (W[0] - tx) + (W[1] - ty) * (W[1] - ty);
+          var appear = 1;
+          var flare = 0;
+          if (E) {
+            // each point at its own distance from the origin, a little jittered, and its own brightness and pace
+            var h1 = hash(i, j, 12.9898, 78.233);
+            var h2 = hash(i, j, 39.3468, 11.135);
+            var origin = i === 0 && j === 0;
+            var dist = Math.sqrt(W[0] * W[0] + W[1] * W[1]) + (origin ? 0 : (h1 - 0.5) * 0.8 * s0);
+            var rel = (E.R - dist) / s0; // cells the front has gone past this point (negative: not yet reached)
+            if (origin) {
+              appear = util.clamp(E.flare * 3, 0, 1);
+              flare = E.flare;
+            } else {
+              if (rel < -0.4) continue;
+              appear = util.smooth(util.clamp((rel + 0.4) / 0.4, 0, 1));
+              flare = (rel < 0 ? appear : Math.exp(-rel / (1.1 + 1.6 * h2))) * fall * (0.55 + 0.45 * h1);
+            }
+          }
           if (waves.length) displace(W[0], W[1], now, W);
           project(W[0], W[1], P);
           var x = P[0];
           var y = P[1];
           if (x < -8 || x > w + 8 || y < -8 || y > h + 8) continue;
-          var appear = 1;
-          if (shown < 1) {
-            var far = Math.sqrt((x - tsx) * (x - tsx) + (y - tsy) * (y - tsy)) / reach;
-            appear = util.smooth(util.clamp(shown * 2.1 - far * 1.5, 0, 1));
-            if (appear <= 0) continue;
-          }
           var sw = sweepAt(x, y);
           if (sw[0] <= 0.01 && sw[1] < 0.02) continue;
           var k = P[2];
@@ -914,14 +940,22 @@
           var alpha = (0.2 + 0.42 * depthTone + 0.38 * near) * c * appear * sw[0];
           var r = (0.75 + 0.75 * k) * (1 + 0.85 * near);
           var light = sw[1] * Math.max(c, 0.25) * appear;
-          if (light > 0.04) {
+          if (flare > 0.03) {
+            // a star coming on: brighter, larger, in the accent; quieter over the words
+            var fc = flare * Math.max(c, 0.14) * sw[0];
+            addDot(lit, Math.min(0.95, alpha + fc * 0.9), x, y, r * (1 + (origin ? 3 : 1.5) * flare));
+          } else if (light > 0.04) {
             var la2 = Math.min(0.8, alpha + light * 0.6);
             addDot(lit, la2, x, y, r * (1 + 0.5 * light));
           } else if (alpha > 0.012) addDot(ink, alpha, x, y, r);
         }
       }
+      if (E) {
+        if (E.flare > 0.01) originHalo(E, litColor, now);
+        entranceLines(E, IR, litColor, scroll, sweepAt);
+      }
       fillBuckets(ink, col.ink);
-      fillBuckets(lit, col.dark ? mix(col.accent, col.ink, 0.35) : col.accent);
+      fillBuckets(lit, litColor);
 
       /* 4. the error vector from the closest point to the target, the closest point ringed */
       if (marks > 0.01) {
@@ -969,6 +1003,126 @@
       displace(X, Y, now, MV);
       return project(MV[0], MV[1], out);
     }
+    // the lattice indices (in the good basis) that can show on screen
+    function indexRange(tx, ty) {
+      var corners = [unproject(0, 0), unproject(w, 0), unproject(0, h), unproject(w, h)];
+      var di = g1[0] * g2[1] - g1[1] * g2[0];
+      var r = [Infinity, -Infinity, Infinity, -Infinity];
+      for (var ci = 0; ci < 4; ci++) {
+        var cc = corners[ci] || [tx, ty + 40 * s0];
+        var cu = (cc[0] * g2[1] - cc[1] * g2[0]) / di;
+        var cv = (g1[0] * cc[1] - g1[1] * cc[0]) / di;
+        r[0] = Math.min(r[0], cu);
+        r[1] = Math.max(r[1], cu);
+        r[2] = Math.min(r[2], cv);
+        r[3] = Math.max(r[3], cv);
+      }
+      return [Math.floor(r[0]) - 2, Math.ceil(r[1]) + 2, Math.floor(r[2]) - 2, Math.ceil(r[3]) + 2];
+    }
+
+    /* ---- the entrance: the origin lights, a ring of light spreads over the plane, the points come on as it passes */
+    function hash(i, j, a, b) {
+      var s = Math.sin(i * a + j * b) * 43758.5453;
+      return s - Math.floor(s);
+    }
+    // the farthest lattice point on screen from the origin (plane units): where the ring has to go
+    function farthest() {
+      setCamera();
+      var R = indexRange(target.x.x, target.y.x);
+      var far = s0 * 6;
+      for (var i = R[0]; i <= R[1]; i++)
+        for (var j = R[2]; j <= R[3]; j++) {
+          point(i, j, W);
+          project(W[0], W[1], P);
+          if (P[0] < -8 || P[0] > w + 8 || P[1] < -8 || P[1] > h + 8) continue;
+          far = Math.max(far, Math.sqrt(W[0] * W[0] + W[1] * W[1]));
+        }
+      return Math.min(far, s0 * 80);
+    }
+    // how strongly the points flare where the ring is: less the farther it has gone
+    function entranceFall(R) {
+      return 0.4 + 0.6 * Math.exp(-R / (s0 * 12));
+    }
+    // a soft light around the origin while it is bright
+    function originHalo(E, color, now) {
+      projectMoved(0, 0, P, now);
+      var rad = (18 + 34 * util.clamp(E.age / (LAT.flareRise + LAT.flareFade), 0, 1)) * Math.min(1.4, P[2]);
+      var a = (col.dark ? 0.34 : 0.3) * Math.pow(E.flare, 1.5) * Math.max(0.2, calm(P[0], P[1], window.scrollY));
+      if (a < 0.004) return;
+      var g = ctx.createRadialGradient(P[0], P[1], 0, P[0], P[1], rad);
+      g.addColorStop(0, css(color, a));
+      g.addColorStop(0.45, css(color, a * 0.35));
+      g.addColorStop(1, css(color, 0));
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(P[0], P[1], rad, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // the ring itself (a circle on the plane, projected) and the cell lines at its front, answering faintly
+    var RING_N = 180;
+    function entranceLines(E, IR, color, scroll, sweepAt) {
+      if (E.ru <= 0 || E.ru >= 1) return;
+      var fall = entranceFall(E.R);
+      var paths = [];
+      for (var b = 0; b <= BUCKETS; b++) paths.push(null);
+      function seg(ax, ay, bx, by, a) {
+        if (a < 0.006) return;
+        var bk = Math.max(1, Math.min(BUCKETS, Math.round(Math.sqrt(a) * BUCKETS)));
+        var p = paths[bk] || (paths[bk] = new Path2D());
+        p.moveTo(ax, ay);
+        p.lineTo(bx, by);
+      }
+      function shown(x, y) {
+        return x > -40 && x < w + 40 && y > -40 && y < h + 40;
+      }
+      var ringA = 0.5 * fall * util.smooth(util.clamp(E.ru * 10, 0, 1)) * (1 - Math.pow(E.ru, 2.5));
+      if (ringA > 0.01) {
+        project(E.R, 0, S0);
+        for (var n = 1; n <= RING_N; n++) {
+          var th = (n / RING_N) * Math.PI * 2;
+          project(E.R * Math.cos(th), E.R * Math.sin(th), S1);
+          if (S0[2] < 3.5 && S1[2] < 3.5 && (shown(S0[0], S0[1]) || shown(S1[0], S1[1]))) {
+            var mx = (S0[0] + S1[0]) / 2;
+            var my = (S0[1] + S1[1]) / 2;
+            seg(S0[0], S0[1], S1[0], S1[1], ringA * calm(mx, my, scroll) * sweepAt(mx, my)[0]);
+          }
+          S0[0] = S1[0];
+          S0[1] = S1[1];
+          S0[2] = S1[2];
+        }
+      }
+      // the cell edges near the front (the good basis: the lattice's own grid)
+      var bw = s0 * 0.9;
+      var lineA = 0.26 * fall * (1 - E.ru * 0.6);
+      for (var i = IR[0]; i <= IR[1]; i++)
+        for (var j = IR[2]; j <= IR[3]; j++) {
+          point(i, j, W);
+          for (var e = 0; e < 2; e++) {
+            var ex = W[0] + (e ? g2[0] : g1[0]);
+            var ey = W[1] + (e ? g2[1] : g1[1]);
+            var mx2 = (W[0] + ex) / 2;
+            var my2 = (W[1] + ey) / 2;
+            var off = (Math.sqrt(mx2 * mx2 + my2 * my2) - E.R) / bw;
+            if (off < -2.4 || off > 1.6) continue;
+            var g = Math.exp(-off * off * (off > 0 ? 2.2 : 0.8)); // sharp ahead of the front, a softer wake behind
+            project(W[0], W[1], S0);
+            project(ex, ey, S1);
+            if (!shown(S0[0], S0[1]) && !shown(S1[0], S1[1])) continue;
+            var sx = (S0[0] + S1[0]) / 2;
+            var sy = (S0[1] + S1[1]) / 2;
+            seg(S0[0], S0[1], S1[0], S1[1], lineA * g * calm(sx, sy, scroll) * sweepAt(sx, sy)[0]);
+          }
+        }
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = css(color, 1);
+      for (var lk = 1; lk <= BUCKETS; lk++) {
+        if (!paths[lk]) continue;
+        ctx.globalAlpha = (lk / BUCKETS) * (lk / BUCKETS);
+        ctx.stroke(paths[lk]);
+      }
+      ctx.globalAlpha = 1;
+    }
+
     function addDot(buckets, alpha, x, y, r) {
       var b = Math.max(1, Math.min(BUCKETS, Math.round(Math.sqrt(alpha) * BUCKETS)));
       var p = buckets[b] || (buckets[b] = new Path2D());
@@ -1076,7 +1230,8 @@
     });
 
     return {
-      reveal: function () {
+      // the drawing arrives: its entrance starts `delay` seconds from now (in step with the first screen's ranks)
+      reveal: function (delay) {
         if (revealed) return;
         revealed = true;
         canvas.classList.add("is-on");
@@ -1085,9 +1240,10 @@
           shown = 1;
           wake(true);
         } else {
-          shownAt = performance.now();
+          var tempo = Site.tempo || 1;
+          entr = { start: performance.now() + (delay || 0) * 1000 * tempo, tempo: tempo, rmax: 0 };
           wake(false);
-          scheduleShear(LAT.restLong);
+          scheduleShear(LAT.restLong + (delay || 0) * 1000 + LAT.ringFor);
         }
       },
       scroll: function (p) {
