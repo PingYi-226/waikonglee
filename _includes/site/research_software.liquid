@@ -2,7 +2,7 @@
   Research page, open-source software (_data/software.yml): the groups as rows that open one at a time (disclosure,
   unfold) to their repositories. Closed, a row shows the group's name, its repositories' names and their number. Each
   repository: its name (a link to GitHub), what it is, the paper it accompanies, and the clone command built from
-  `repo`, which copies on click (with a toast).
+  `repo`, which copies on click (with a toast). Each group's id is its name, slugified: the page's head links to it.
 {%- endcomment -%}
 {%- assign gh_user = site.data.socials.github_username -%}
 <section class="rsoft rpart" id="software" aria-labelledby="rsoft-title" data-snap data-rsoft>
@@ -17,7 +17,7 @@
       <ul class="rgroups" data-kit="highlight" data-items=".rgroup__head">
         {%- for g in site.data.software %}
         {%- assign gid = 'rsoft-g' | append: forloop.index %}
-        <li class="rgroup" data-rgroup>
+        <li class="rgroup" id="{{ g.group | slugify }}" data-rgroup>
           <h3 class="rgroup__h">
             <button
               type="button"

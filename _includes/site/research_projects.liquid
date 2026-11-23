@@ -1,6 +1,7 @@
 {%- comment -%}
   Research page, funded projects (_data/grants.yml, newest first): rows that open one at a time (disclosure, unfold) to
-  role, funder, amount and output.
+  role, funder, amount and output. Each row's id is the first five words of its title, slugified: the page's head links
+  to it.
 {%- endcomment -%}
 <section class="rproj rpart" id="projects" aria-labelledby="rproj-title" data-snap data-rproj>
   <div class="wrap rgrid">
@@ -11,7 +12,8 @@
       <ul class="rows rproj__rows" data-kit="highlight" data-items=".rproj__head">
         {%- for g in site.data.grants %}
         {%- assign i = forloop.index0 %}
-        <li class="rproj__row">
+        {%- assign pid = g.title | slugify | split: '-' | slice: 0, 5 | join: '-' %}
+        <li class="rproj__row" id="{{ pid }}">
           <h3 class="rproj__h">
             <button
               type="button"
