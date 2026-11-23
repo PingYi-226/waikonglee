@@ -1,7 +1,9 @@
 {%- comment -%}
   Home page, about block (one slide): the lede (the first paragraph of _pages/about.md), the portrait, and the strip of
   education and work from _data/cv.yml on one time axis (positions in percent of the axis, computed here as on the CV page).
-  Styles and script: home-about. Without the script everything is there; a bar's details show on hover or focus.
+  Styles and script: home-about. When the block is first reached the lede is typed where it stands while the portrait
+  sways as if speaking (typing-text data-keep, tilt's aim()). Without the script everything is there; a bar's details
+  show on hover or focus.
 {%- endcomment -%}
 <section class="about section" id="about" data-snap data-about aria-labelledby="about-title">
   <div class="wrap about__wrap">
@@ -10,12 +12,12 @@
     </header>
 
     <div class="about__grid">
-      <div class="about__lede" data-kit="split" data-split="words" data-effect="arrive" data-trigger="manual" data-stagger="0.018">
+      <div class="about__lede" data-kit="typing-text" data-keep data-trigger="manual" data-duration="4.4">
         {{- paras[0] | append: '</p>' -}}
       </div>
 
       <figure class="about__photo" data-kit="reveal" data-reveal="clip" data-trigger="manual">
-        <div class="about__frame" data-kit="tilt hearts" data-max="5" data-shine="true">
+        <div class="about__frame" data-kit="tilt hearts" data-max="5" data-shine="true" data-glare>
           <img
             src="{{ '/assets/img/prof_pic.jpg' | relative_url }}"
             alt="Portrait of {{ site.first_name }} {{ site.last_name }}"

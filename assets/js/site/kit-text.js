@@ -1704,7 +1704,198 @@
   const TYPE_SPEED = 100; // ms per character, typing and erasing (Animate UI typing `duration`)
   const TYPE_HOLD = 1000; // ms a typed string stays before it is erased (Animate UI `holdDelay`)
 
+  /*
+   * typing-text, data-keep: a whole block (a paragraph with its links and emphasis) typed where it stands. Nothing in
+   * the markup changes and nothing reflows: the text is laid out once, the part not yet typed is painted transparent
+   * (a CSS custom highlight over a live Range), and a caret rides after the last character. Characters come in reading
+   * order with a natural rhythm: each its own beat, a short breath after a comma, a longer one after a full stop; the
+   * whole takes about data-duration seconds (default 4). Then the caret blinks a few times and goes. Events:
+   * kit:typing-start, kit:typing-char (detail: index, total, char, pause: "comma" | "stop" | ""), kit:typing-done.
+   * Controller: play() (a promise, resolved when typed), finish() (the rest at once, quietly), typing, done.
+   * It finishes quietly by itself when it leaves the screen or the tab is hidden (never half typed on return).
+   * Without the Highlight API, under reduced motion or ?static: the text is simply there.
+   */
+  const KEEP_PAUSE = { comma: 150, stop: 360 }; // ms of breath after , ; : and after . ! ?
+  const KEEP_BLINKS = 3; // the caret blinks this many times after the last character, then goes
+  let keepHighlight = null;
+  function keepRegistry() {
+    if (keepHighlight) return keepHighlight;
+    if (typeof Highlight !== "function" || !window.CSS || !CSS.highlights) return null;
+    keepHighlight = new Highlight();
+    CSS.highlights.set("k-type-rest", keepHighlight);
+    return keepHighlight;
+  }
+  function typeInPlace(el, opts) {
+    const reg = keepRegistry();
+    // the characters, in reading order: [text node, start, end]; a run of white space is one step
+    const steps = [];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => (n.parentElement && n.parentElement.closest(".sr-only, [aria-hidden='true'], script, style") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT),
+    });
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      let at = 0;
+      graphemes(n.data).forEach((g) => {
+        const space = /^\s+$/.test(g);
+        const last = steps[steps.length - 1];
+        if (space && last && last.space && last.node === n) last.end = at + g.length;
+        else if (!(space && !steps.length)) steps.push({ node: n, start: at, end: at + g.length, ch: g, space: space });
+        at += g.length;
+      });
+    }
+    while (steps.length && steps[steps.length - 1].space) steps.pop();
+    el.classList.add("k-type", "k-type--keep");
+    const off = [];
+    let state = "idle"; // idle | typing | done
+    let resolveDone = null;
+    const donePromise = new Promise((r) => (resolveDone = r));
+    if (!reg || !steps.length || env.reduce || env.static) {
+      state = "done";
+      el.classList.add("is-typed");
+      resolveDone();
+      return { play: () => donePromise, finish: () => {}, get typing() { return false; }, get done() { return true; }, destroy: () => el.classList.remove("k-type", "k-type--keep", "is-typed") };
+    }
+
+    // what is not typed yet: from the next character to the end of the block
+    const rest = document.createRange();
+    rest.selectNodeContents(el);
+    reg.add(rest);
+    el.classList.add("is-armed");
+    const caret = span("k-type__caret");
+    caret.setAttribute("aria-hidden", "true");
+
+    // the rhythm: a beat per character (a little uneven, spaces a touch longer), breaths at punctuation
+    const pauses = steps.map((s, i) => {
+      if (i === steps.length - 1) return "";
+      const next = steps[i + 1];
+      if (!next.space) return "";
+      if (/[.!?…]$/.test(s.ch)) return "stop";
+      if (/[,;:]$/.test(s.ch)) return "comma";
+      return "";
+    });
+    const weights = steps.map((s, i) => (s.space ? 1.35 : 0.7 + 0.6 * Math.abs(Math.sin(i * 12.9898) * 43758.5453 % 1)));
+    const breath = pauses.reduce((sum, p) => sum + (p ? KEEP_PAUSE[p] : 0), 0);
+    const total = (Number(opts.duration) || 4) * 1000;
+    const wsum = weights.reduce((a, b) => a + b, 0);
+    const beat = Math.max(6, Math.min(140, (total - breath) / wsum));
+    const at = []; // when each character appears (ms from the start, before tempo)
+    let t = 0;
+    steps.forEach((s, i) => {
+      t += beat * weights[i];
+      at.push(t);
+      if (pauses[i]) t += KEEP_PAUSE[pauses[i]];
+    });
+
+    let shown = 0; // characters typed
+    let start = 0;
+    let raf = null;
+    let blinkTimer = null;
+    let box = null;
+    function placeCaret() {
+      const s = steps[Math.max(0, shown - 1)];
+      const r = document.createRange();
+      r.setStart(s.node, s.start);
+      r.setEnd(s.node, s.end);
+      const rects = r.getClientRects();
+      const c = rects.length ? rects[rects.length - 1] : r.getBoundingClientRect();
+      if (!box) box = el.getBoundingClientRect();
+      const x = (shown ? c.right : c.left) - box.left;
+      caret.style.height = (c.height * 0.78).toFixed(1) + "px";
+      caret.style.transform = "translate(" + x.toFixed(1) + "px," + (c.top - box.top + c.height * 0.12).toFixed(1) + "px)";
+    }
+    function reveal(n) {
+      shown = n;
+      if (n >= steps.length) {
+        reg.delete(rest);
+        return;
+      }
+      rest.setStart(steps[n].node, steps[n].start);
+      rest.setEnd(el, el.childNodes.length);
+      // some engines repaint a highlight only when its ranges are set again
+      reg.delete(rest);
+      reg.add(rest);
+    }
+    function frame(now) {
+      raf = null;
+      if (state !== "typing") return;
+      const elapsed = (now - start) / (S.tempo || 1);
+      let n = shown;
+      while (n < steps.length && at[n] <= elapsed) {
+        n++;
+        emit(el, "typing-char", { index: n - 1, total: steps.length, char: steps[n - 1].ch, pause: pauses[n - 1] });
+      }
+      if (n !== shown) {
+        reveal(n);
+        placeCaret();
+      }
+      if (shown >= steps.length) return end(false);
+      raf = requestAnimationFrame(frame);
+    }
+    function end(quiet) {
+      if (state === "done") return;
+      state = "done";
+      if (raf) cancelAnimationFrame(raf);
+      raf = null;
+      reveal(steps.length);
+      el.classList.remove("is-typing", "is-armed");
+      el.classList.add("is-typed");
+      off.forEach((f) => f());
+      if (quiet || !caret.isConnected) caret.remove();
+      else {
+        // the caret blinks where the text ends, a few times, and goes
+        caret.classList.add("is-resting");
+        blinkTimer = setTimeout(() => caret.remove(), KEEP_BLINKS * 1000 * (S.tempo || 1));
+      }
+      emit(el, "typing-done", { quiet: !!quiet });
+      resolveDone();
+    }
+    function play() {
+      if (state !== "idle") return donePromise;
+      state = "typing";
+      box = null;
+      el.appendChild(caret);
+      el.classList.add("is-typing");
+      placeCaret();
+      emit(el, "typing-start", { total: steps.length });
+      start = performance.now();
+      raf = requestAnimationFrame(frame);
+      return donePromise;
+    }
+    function finish() {
+      if (state === "done") return;
+      state = "typing";
+      end(true);
+    }
+    // never left half typed: off screen or in a hidden tab, the rest comes at once
+    off.push(S.util.visible(el, (v) => !v && state === "typing" && finish()));
+    const onHidden = () => document.hidden && state === "typing" && finish();
+    document.addEventListener("visibilitychange", onHidden);
+    off.push(() => document.removeEventListener("visibilitychange", onHidden));
+    off.push(S.on("reduce", (r) => r && finish()));
+    const onResize = () => (box = null);
+    window.addEventListener("resize", onResize);
+    off.push(() => window.removeEventListener("resize", onResize));
+    const stopWait = whenTriggered(el, opts.trigger || "view", opts.delay, play);
+    off.push(stopWait);
+    return {
+      play: play,
+      finish: finish,
+      get typing() {
+        return state === "typing";
+      },
+      get done() {
+        return state === "done";
+      },
+      destroy: () => {
+        finish();
+        clearTimeout(blinkTimer);
+        caret.remove();
+        el.classList.remove("k-type", "k-type--keep", "is-typed", "is-typing", "is-armed");
+      },
+    };
+  }
+
   S.register("typing-text", function (el, opts) {
+    if (opts.keep) return typeInPlace(el, opts);
     const original = el.textContent;
     const strings = Array.isArray(opts.strings) ? opts.strings.map(String) : [opts.text != null ? String(opts.text) : original.trim()];
     const segs = strings.map(graphemes);

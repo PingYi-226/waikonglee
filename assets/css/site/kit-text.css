@@ -375,6 +375,31 @@ html[data-theme="dark"] {
   }
 }
 
+/* data-keep: a block typed where it stands. The part not typed yet is painted transparent (a highlight over a live
+   range), so the layout is the final one from the first frame; the caret is laid over the text, not into it. */
+html.js [data-kit~="typing-text"][data-keep]:not(.k-type) {
+  visibility: hidden;
+}
+
+::highlight(k-type-rest) {
+  color: transparent;
+  text-decoration-color: transparent;
+}
+
+.k-type--keep {
+  position: relative;
+}
+
+.k-type--keep > .k-type__caret {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max(1.5px, 0.05em);
+  margin: 0;
+  pointer-events: none;
+}
+
+
 /* ---------- scramble ---------- */
 html.js [data-kit~="scramble"]:not([data-trigger="hover"]):not([data-trigger="manual"]):not(.is-in) {
   opacity: 0;

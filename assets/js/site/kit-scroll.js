@@ -1780,6 +1780,11 @@
   /* A port of primitives/effects/tilt (rotateX/rotateY toward the pointer, up to maxTilt, on its own spring,
    * back to flat on leave) with an optional light: data-shine follows the pointer (spring-linked to the tilt),
    * data-shine="sweep" is primitives/effects/shine's sweep on hover. Writes `transform` on the element. */
+  /* data-glare: a glossy surface. A soft band of light lies across it and slides the other way as it turns; it shows
+   * only as far as the surface is tilted (none when flat). Script entry (controller): aim(nx, ny) tilts it as a pointer
+   * at that normalised position would (-1..1 across the box), for a performance driven by a page; a real pointer over
+   * the element always wins (aim is ignored while it is there, and the springs carry the hand-over); release() lets it
+   * settle flat; `pointer` tells whether a real pointer is over it. */
   Site.register("tilt", function (el, opts) {
     var max = typeof opts.max === "number" ? opts.max : TILT_MAX;
     var persp = typeof opts.perspective === "number" ? opts.perspective : TILT_PERSPECTIVE;
@@ -1788,6 +1793,9 @@
     var ry = 0;
     var light = null;
     var sweep = null;
+    var glare = null;
+    var hovered = false;
+    var aimed = false;
     el.classList.add("k-tilt");
     if (shine) {
       light = document.createElement("span");
@@ -1795,8 +1803,15 @@
       light.setAttribute("aria-hidden", "true");
       if (shine === "sweep") light.appendChild(document.createElement("span")).className = "k-tilt__band";
       el.appendChild(light);
-      if (getComputedStyle(el).position === "static") el.style.position = "relative";
     }
+    if (opts.glare) {
+      glare = document.createElement("span");
+      glare.className = "k-tilt__shine k-tilt__glare";
+      glare.setAttribute("aria-hidden", "true");
+      glare.appendChild(document.createElement("span")).className = "k-tilt__glint";
+      el.appendChild(glare);
+    }
+    if ((light || glare) && getComputedStyle(el).position === "static") el.style.position = "relative";
     function write() {
       var flat = Math.abs(rx) < 0.01 && Math.abs(ry) < 0.01;
       el.style.transform = flat ? "" : "perspective(" + persp + "px) rotateX(" + rx.toFixed(3) + "deg) rotateY(" + ry.toFixed(3) + "deg)";
@@ -1804,6 +1819,13 @@
         // the light sits where the pointer is: rotateY = nx * max, rotateX = -ny * max
         light.style.setProperty("--k-x", ((ry / max + 1) * 50).toFixed(2) + "%");
         light.style.setProperty("--k-y", ((-rx / max + 1) * 50).toFixed(2) + "%");
+      }
+      if (glare) {
+        // the band slides against the turn (mostly with rotateY, a little with rotateX) and is as strong as the tilt
+        var gx = -ry / max;
+        var gy = rx / max;
+        glare.style.setProperty("--k-glare-p", (50 + 62 * gx - 18 * gy).toFixed(2) + "%");
+        glare.style.setProperty("--k-glare-o", Math.min(1, Math.sqrt(gx * gx + gy * gy)).toFixed(3));
       }
     }
     var fx = follower(TILT_SPRING, 0, function (v) {
@@ -1820,6 +1842,7 @@
     }
     function onEnter(e) {
       if (!enabled() || e.pointerType === "touch") return;
+      hovered = true;
       rect = el.getBoundingClientRect();
       if (shine) el.classList.add("is-lit");
       if (shine === "sweep" && light.animate) {
@@ -1835,6 +1858,7 @@
     }
     function onMove(e) {
       if (!enabled() || e.pointerType === "touch") return;
+      hovered = true;
       if (!rect) rect = el.getBoundingClientRect();
       var nx = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       var ny = ((e.clientY - rect.top) / rect.height) * 2 - 1;
@@ -1842,7 +1866,25 @@
       fx.set(-clamp(ny, -1, 1) * max);
     }
     function onLeave() {
+      hovered = false;
       rect = null;
+      fx.set(0);
+      fy.set(0);
+      el.classList.remove("is-lit");
+    }
+    // the script entry: a performance (see the comment above the registration)
+    function aim(nx, ny) {
+      if (hovered || reduced() || env.static) return false;
+      aimed = true;
+      fy.set(clamp(nx, -1, 1) * max);
+      fx.set(-clamp(ny, -1, 1) * max);
+      if (shine) el.classList.add("is-lit");
+      return true;
+    }
+    function release() {
+      if (!aimed) return;
+      aimed = false;
+      if (hovered) return;
       fx.set(0);
       fy.set(0);
       el.classList.remove("is-lit");
@@ -1862,6 +1904,11 @@
       }
     });
     return {
+      aim: aim,
+      release: release,
+      get pointer() {
+        return hovered;
+      },
       destroy: function () {
         el.removeEventListener("pointerenter", onEnter);
         el.removeEventListener("pointermove", onMove);
@@ -1871,6 +1918,7 @@
         fx.destroy();
         fy.destroy();
         if (light) light.remove();
+        if (glare) glare.remove();
         el.style.transform = "";
         el.classList.remove("k-tilt", "is-lit");
       },

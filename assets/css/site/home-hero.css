@@ -48,6 +48,12 @@ html.is-intro .nav {
   opacity: 0;
 }
 
+/* the header's name waits until the script knows where the hero's name is (home-hero.js adds hero-name-known): while
+   the page loads, never a second name in the header beside the one of the first screen */
+html.js:not(.hero-name-known) .nav__brand {
+  opacity: 0;
+}
+
 /* ---------- the lattice: a fixed layer under the first screen (drawn by home-hero.js) ----------
    It lies under the page's content (main is the stacking context, its paper is painted first) and does not scroll:
    as the next block arrives it leaves with a sweep of light, then it is hidden and no longer drawn. */
