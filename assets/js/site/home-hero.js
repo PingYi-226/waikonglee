@@ -32,7 +32,9 @@
   }
 
   /* ================================================================== intro */
-  var INTRO = { draw: 1.25, fill: 0.45, hold: 0.25, key: "wk-intro" };
+  // swap: the share of the glide at which the real name takes over from the drawn copy (a critically damped spring is
+  // fastest at about a quarter of its way)
+  var INTRO = { draw: 1.25, fill: 0.45, hold: 0.25, swap: 0.26, key: "wk-intro" };
 
   function introSeen() {
     try {
@@ -132,28 +134,51 @@
     overlay.appendChild(svg);
     document.body.appendChild(overlay);
 
-    // 1. the outline draws itself, 2. it fills, 3. a short rest
+    // 1. the outline draws itself, 2. it fills, 3. a short rest (the veil clears meanwhile: under it the first screen is
+    // still empty paper, and the real name, which takes over during the glide, lies under the veil)
     texts.forEach(function (t, i) {
       // explicit from-values: Motion cannot read these SVG properties from the element and would jump to the end
       M.animate(t, { strokeDashoffset: [dash, 0] }, { duration: INTRO.draw - i * 0.15, delay: i * 0.18, ease: "easeInOut" });
       M.animate(t, { fillOpacity: [0, 1] }, { duration: INTRO.fill, delay: INTRO.draw - 0.3, ease: T.ease.out });
       M.animate(t, { strokeOpacity: [1, 0] }, { duration: INTRO.fill, delay: INTRO.draw - 0.1, ease: T.ease.out });
     });
+    M.animate(veil, { opacity: [1, 0] }, { duration: INTRO.fill, delay: INTRO.draw - 0.1, ease: T.ease.out });
 
     return wait((INTRO.draw - 0.3 + INTRO.fill + INTRO.hold) * 1000).then(function () {
-      // 4. the name glides to its place while the veil clears
-      var glide = M.animate(group, { transform: "translate(0px, 0px)" }, Site.t("spring.glide"));
-      M.animate(veil, { opacity: 0 }, { duration: 0.6, ease: T.ease.out });
+      // 4. the name glides to its place. One spring drives the drawn copy and the real name along the same path; at the
+      // fastest moment of the glide the real name shows and the copy goes, in one frame (an SVG text and an HTML text
+      // are not drawn exactly alike: a still swap could be seen, one in full flight cannot). The real name then lands by
+      // itself, so nothing is swapped where it comes to rest. Never two names at once.
+      var p = M.motionValue(0);
+      var swapped = false;
       var landed = false;
+      function at(v) {
+        var tr = "translate(" + (dx * (1 - v)).toFixed(2) + "px, " + (dy * (1 - v)).toFixed(2) + "px)";
+        if (!swapped) group.style.transform = tr;
+        else name.style.transform = tr;
+        if (!swapped && v >= INTRO.swap) swap(tr);
+      }
+      function swap(tr) {
+        if (swapped) return;
+        swapped = true;
+        name.style.transform = tr;
+        name.classList.add("is-on");
+        overlay.remove();
+      }
+      var off = p.on("change", at);
+      var glide = M.animate(p, 1, Site.t("spring.glide", { restDelta: 0.0002, restSpeed: 0.002 }));
       function land() {
         if (landed) return;
         landed = true;
-        name.classList.add("is-on");
-        overlay.remove();
+        if (glide && glide.stop) glide.stop();
+        off();
+        swap("");
+        name.style.transform = "";
         root.classList.remove("is-intro");
         markIntroSeen();
       }
-      Promise.race([glide.finished || glide, wait(1600)]).then(land, land);
+      Promise.race([glide.finished || glide, wait(2400 * (Site.tempo || 1))]).then(land, land);
+      // the rest of the first screen may start arriving while the name is still on its way
       return wait(320).then(function () {
         return true;
       });
@@ -229,8 +254,9 @@
         }, 40 + i * 120);
       });
       lead = NAME_LEAD;
+      name.classList.add("is-on");
     }
-    if (name) name.classList.add("is-on");
+    // after the intro the real name shows only when the gliding copy lands on it (playIntro's land()): never two names
     if (lattice) lattice.reveal();
 
     var tempo = Site.tempo || 1;
