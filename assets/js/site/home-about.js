@@ -1,9 +1,11 @@
 /*
  * Home page, about block (one slide).
- *   1. entrance, once, when the slide is first reached: the lede's words arrive, the portrait a beat later, then the
- *      strip draws itself along the time axis (the stepper's kit:snap-change, or the first view where it does not run)
- *   2. the strip: a shimmer of light travels along the bars now and then while the slide is current; a bar under the
- *      pointer or the keyboard raises a plate with its details (what, where, when) while the other bars recede
+ *   1. entrance, once, when the slide is first reached (the stepper's kit:snap-change, or the first view where it does
+ *      not run): the portrait, then the strip draws itself along the time axis; once the slide is there the lede is
+ *      typed where it stands while the portrait sways as if it were saying the words (see speak())
+ *   2. the strip: the light runs along the bars the moment they are drawn, then now and then while the slide is current,
+ *      each bar lifting as it passes; a bar under the pointer or the keyboard raises a plate with its details (what,
+ *      where, when) while the other bars recede
  * Without this file the block is complete and still.
  */
 (function () {
