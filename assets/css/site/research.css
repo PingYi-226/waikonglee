@@ -364,6 +364,7 @@ html.js .pagehead__meta:not(.is-in) .rnav__items > li {
 .rrail__link:visited {
   display: block;
   padding: 0.3rem 0;
+  line-height: 1.15;
   color: var(--ink-2);
   transition: color var(--t-color);
   -webkit-tap-highlight-color: transparent;
