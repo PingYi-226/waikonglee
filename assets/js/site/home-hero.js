@@ -277,10 +277,11 @@
       new IntersectionObserver(
         function (entries) {
           root.classList.toggle("hero-name-in-view", entries[entries.length - 1].isIntersecting);
+          root.classList.add("hero-name-known");
         },
         { rootMargin: "-64px 0px 0px 0px" },
       ).observe(name);
-    }
+    } else root.classList.add("hero-name-known");
     var height = 1;
     var lastY = -1;
     function measure() {
