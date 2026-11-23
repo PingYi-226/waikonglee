@@ -3,10 +3,12 @@
  *
  * The section is a stop of the home page's stepper (kit-snap) with two points (data-snap-points="a 1"): the ring
  * (the area cards circling a small turning lattice; at rest it turns slowly by itself, like a carousel) and the grid
- * (the cards flat, 4 + 3, two banners of venue abbreviations pulled out beneath them). Everything on screen is a pure
- * function of the scroll position (the stepper's own tween is the smoothing), so it runs back in reverse and never
- * rests half-way. Flat, the cards answer the pointer (tilt, spotlight, hover-fill, press) and open their area's
- * detail view (expand); the stepper's hold on the grid stop makes them wave once.
+ * (the cards flat, 4 + 3, two banners of venue abbreviations pulled out beneath them, each running the way it came in).
+ * Ring to grid: the ring goes once round, then the cards leave it one after another into their slots. Leaving the grid
+ * for the next block, the title, the banners and the cards move as layers at different speeds. Everything on screen
+ * is a pure function of the scroll position (the stepper's own tween is the smoothing; between the two rests its clock),
+ * so it runs back in reverse and never rests half-way. Flat, the cards answer the pointer (tilt, spotlight, hover-fill,
+ * press) and open their area's detail view (expand); the stepper's hold on the grid stop makes them wave once.
  * The scene runs where the stepper runs (html.has-snap); elsewhere the block stays the plain grid of its markup.
  */
 (function () {
@@ -22,10 +24,6 @@
   var smooth = util.smooth;
   var lerp = util.lerp;
   var TAU = Math.PI * 2;
-  /** An angle brought into [-pi, pi]. */
-  function wrap(a) {
-    return a - TAU * Math.round(a / TAU);
-  }
 
   function all(scope, selector) {
     return Array.prototype.slice.call(scope.querySelectorAll(selector));
@@ -47,10 +45,12 @@
   /* ring to grid (shares of the move's time; owner, round 3: "the cards first go once round the ring, then take their
      places"): the ring gathers speed and goes once round (TURN.end: done by this share, on ease.fill); as the turn
      completes the cards leave it one after another in ring order (the first at LEAVE.from, each next LEAVE.step later),
-     each landing a little past its slot (ease.drawer). The first leaves when the ring is less than one card's spacing
-     from its final angle, so a leaving card never passes the one ahead of it. (own values, filmed) */
-  var TURN = { end: 0.7 };
-  var LEAVE = { from: 0.44, step: 0.045 };
+     each landing a little past its slot (ease.drawer). The first leaves when the ring is LEAVE.near rad from its final
+     angle (under one card's spacing, 0.9 rad), so a leaving card does not pass the one ahead of it; a longer turn
+     starts the departures later and closer together. The turn is between TURN.min and TURN.min + 1 turns (where the
+     ring stands after its slow turn at rest decides; normally about one). (own values, filmed) */
+  var TURN = { end: 0.7, min: 0.8 };
+  var LEAVE = { from: 0.44, step: 0.045, near: 0.66 };
   var LIFT = 0.05; // the cards grow by this much half-way between ring and grid (own)
   var SLANT = 4; // deg: the two banners lean this way and the other
   var WAVE = { rise: 14, grow: 0.025 }; // px and scale of the cards' wave on the stepper's hold
@@ -180,7 +180,14 @@
     var land = curve(Site.tokens.ease.drawer); // a card travelling to its place: lands a little past it and settles
     var slide = curve(Site.tokens.ease.soft); // the banners: start at once, slow into place
     var whirl = curve(Site.tokens.ease.fill); // the ring's full turn: gathers speed, then a long slowing into place
-    var travel = 1 - LEAVE.from - (count - 1) * LEAVE.step; // share of the time each card takes from the ring to its slot
+    var lastLeave = LEAVE.from + (count - 1) * LEAVE.step; // when the last card leaves the ring
+    var travel = 1 - lastLeave; // share of the time each card takes from the ring to its slot
+    var leave0 = LEAVE.from; // when the first leaves (set with the turn)
+    /** When the first card leaves a turn of `span` rad: once the ring is within LEAVE.near of its final angle. */
+    function leaveStart(span) {
+      for (var u = LEAVE.from; u < lastLeave - 0.1; u += 0.005) if ((1 - whirl(u / TURN.end)) * span <= LEAVE.near) return u;
+      return lastLeave - 0.1;
+    }
     var rowOf = []; // card index -> row of the grid
     rowsUsed.forEach(function (n, r) {
       for (var c = 0; c < n; c++) rowOf.push(r);
@@ -293,8 +300,13 @@
       if (want === 0 && (Math.abs(omega) < 0.002 || tFlat >= 1)) omega = 0; // still, or no ring left to turn
       spin += omega * dt;
       var base = spin - SWIRL * (1 - form);
-      // the turn ends where every card lies nearest its slot, one full turn on from where it starts (fixed as it starts)
-      if (tFlat <= 0 || target === null) target = base + TAU + wrap(home - base);
+      // the turn ends where every card lies nearest its slot, about one full turn on from where it starts (fixed as it starts)
+      if (tFlat <= 0 || target === null) {
+        var rest0 = (((home - base) % TAU) + TAU) % TAU;
+        if (rest0 >= TURN.min * TAU) rest0 -= TAU;
+        target = base + TAU + rest0;
+        leave0 = leaveStart(target - base);
+      }
       var ring = lerp(base, target, whirl(tFlat / TURN.end)); // the ring's angle
 
       // leaving the grid: the stage travels up with the page past the pinned range; each layer moves against it
@@ -304,7 +316,7 @@
 
       for (var i = 0; i < count; i++) {
         var j = ringPos[i];
-        var k = rest ? 1 : land((tFlat - LEAVE.from - j * LEAVE.step) / travel);
+        var k = rest ? 1 : land((tFlat - lerp(leave0, lastLeave, j / (count - 1))) / travel);
         var p = ringPoint(ring, j, 0.22 + 0.78 * form);
         var depth = (Math.sin(p.a) + 1) / 2; // 1 at the front (the bottom of the ellipse)
         var ringScale = (RING.far + (1 - RING.far) * depth) * (0.5 + 0.5 * form);

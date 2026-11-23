@@ -1,8 +1,10 @@
 {%- comment -%}
   Home page, research block: one card per area of _data/research.yml (variable `areas`, assigned in _layouts/home.liquid).
   Without the script, or where the deck does not run (touch, portrait, narrow, reduced motion), this is a plain grid of
-  cards. home-research.js turns it into the pinned piece: the cards circle a small lattice (the ring stop), then lie flat
-  in a grid of 4 + 3 (the grid stop) while two banners of venue abbreviations are pulled out beneath them.
+  cards. home-research.js turns it into the pinned piece: the cards circle a small lattice (the ring stop), then go once
+  round and lie flat in a grid of 4 + 3 (the grid stop) while two banners of venue abbreviations are pulled out beneath
+  them, each running the way it came in. The hold on the grid is light (data-snap-hold-travel: wheel only, a gesture
+  that goes on moves on); ring <-> grid takes data-snap-inner-duration.
   A card opens the area's detail view (kit expand, from the <template> after the list); its href is the area on the
   research page, for modified clicks and no JavaScript.
   The banners read the bibliography: every entry's abbr, by pubtype (_layouts/bib_abbr.liquid), each venue once.
