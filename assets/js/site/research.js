@@ -1,14 +1,14 @@
 /*
- * Research page (/research/). Five parts that the scroll stepper (kit-snap, soft mode) moves between.
- *   1. rail: the four figures of the head are links to the parts. Once the page has left the head they fly into a
- *      rail at the side of the viewport (each from its place in the row to its place in the rail: measured, then
- *      moved and scaled frame by frame, the same elements), and a gliding mark shows the part being read. Back at
- *      the head they fly home. Driven by the stepper's kit:snap-change events.
- *   2. steps: the research areas as a pinned stage, one step per area (the stepper's points). The plate changes its
+ * Research page (/research/). Four parts that the scroll stepper (kit-snap, soft mode) moves between.
+ *   1. rail: once the page has left the head, the three part names of the head's contents fly into a rail at the
+ *      side of the viewport (the rail's own words do the flying: drawn where the names are, then moved and scaled
+ *      frame by frame to the rail), and a gliding mark shows the part being read. Back at the head they fly home.
+ *      Driven by the stepper's kit:snap-change events.
+ *   2. contents: the head lists the parts and what is inside them. A part name goes to the part, an area to its step
+ *      (3. does that), a software group or a project to its part, where it opens once the page has landed there.
+ *   3. steps: the research areas as a pinned stage, one step per area (the stepper's points). The plate changes its
  *      diagram, the text changes in place (old lines out, new lines in), the mark of seven steps follows. Anchors
  *      (#pqc ...) land on their step. Without the pinned layout: the diagrams draw when they are first seen.
- *   3. papers: the cells arrive in a wave, the totals roll; a row under the pointer stays while the others recede,
- *      its name and the year light up; a click on a row opens the publication list filtered by its area.
  * Everything here is an enhancement: without this file the page is complete and static.
  */
 (function () {
@@ -77,34 +77,49 @@
     };
   }
 
+  /** Focus an element without scrolling (a part reached from a link: Tab goes on from there). */
+  function focusQuiet(el) {
+    if (!el) return;
+    if (!el.hasAttribute("tabindex") && !el.matches("a[href], button, input, select, textarea, summary")) el.setAttribute("tabindex", "-1");
+    el.focus({ preventScroll: true });
+  }
+  /** Go to a part (its first stop, with or without the stepper), push its hash, take the focus there. */
+  function goPart(t, hash) {
+    if (!t) return;
+    pushHash(hash);
+    Site.snap.go(t);
+    focusQuiet(t);
+  }
+
   /* ================================================================ 1. the rail */
   function initRail(page, parts) {
-    var nav = page.querySelector("[data-rfig]");
-    var list = nav && nav.querySelector("[data-rfig-list]");
-    if (!list) return;
-    var meta = nav.closest(".pagehead__meta");
-    var links = all(list, "[data-rfig-link]");
+    var rail = page.querySelector("[data-rrail]");
+    var nav = page.querySelector("[data-rnav]");
+    var list = rail && rail.querySelector("[data-rrail-list]");
+    if (!list || !nav) return;
+    var links = all(list, "[data-rrail-link]");
     var targets = links.map(function (a) {
       return document.getElementById(a.hash.slice(1));
     });
-    var pieces = links.map(function (a) {
-      return {
-        num: a.querySelector('[data-rfig-part="num"]'),
-        q: a.querySelector('[data-rfig-part="q"]'),
-        noun: a.querySelector('[data-rfig-part="noun"]'),
-      };
+    var railWords = links.map(function (a) {
+      return a.querySelector("[data-rnav-word]");
     });
+    var headWords = all(nav, "[data-rnav-name] [data-rnav-word]");
+    if (headWords.length !== railWords.length) return;
     var mq = window.matchMedia(RAIL_Q);
     var current = 0; // the part being read (0: the head)
-    var railed = false; // the layout: in the rail (true) or at home in the head
+    var railed = false; // the names: in the rail (true) or at home in the head
     var flight = null;
+
+    // from here on the script shows the rail (.is-on); without it the rail never shows
+    rail.hidden = false;
 
     function partOf(el) {
       for (var i = 0; i < parts.length; i++) if (parts[i] === el || parts[i].contains(el)) return i;
       return parts.length - 1; // the stepper's extra stop at the very end of the page
     }
 
-    /* the mark: the link of the part being read, while the figures rest in the rail */
+    /* the mark: the link of the part being read, while the names rest in the rail */
     function mark() {
       links.forEach(function (a, k) {
         var on = railed && !flight && current === k + 1;
@@ -117,84 +132,104 @@
       return mq.matches && current > 0;
     }
 
-    /** Fly the figures to the rail (toRail) or home: measure where they are seen now, switch the layout, then move
-     *  and scale each piece from there to its new place, frame by frame (the home places move with the page). */
+    /* at rest: the rail shown (railed) or the names at home in the head */
+    function settle() {
+      railWords.forEach(function (w) {
+        w.style.transform = "";
+      });
+      rail.classList.toggle("is-on", railed);
+      rail.classList.remove("is-flying");
+      nav.classList.toggle("is-away", railed);
+    }
+
+    /** Fly the part names to the rail (toRail) or home. The rail's own words do the flying: shown at their places,
+     *  drawn (translate + scale) where the names are seen now, then moved frame by frame to where they go; home, the
+     *  target is the name's place in the head as the page scrolls it in. At the end the head's word and the rail's
+     *  word, the same text in the same face at the same size and place, hand over. */
     function fly(toRail, instant) {
-      var els = [];
-      pieces.forEach(function (p, k) {
-        els.push({ el: p.num, kind: "num", k: k }, { el: p.noun, kind: "noun", k: k }, { el: p.q, kind: "q", k: k });
-      });
-      els.forEach(function (it) {
-        it.from = it.el.getBoundingClientRect();
-        var o = parseFloat(it.el.style.opacity);
-        it.op = isNaN(o) ? parseFloat(getComputedStyle(it.el).opacity) : o;
-      });
-      if (flight) cancelAnimationFrame(flight.raf);
-      flight = null;
-      els.forEach(function (it) {
-        it.el.style.transform = "";
-        it.el.style.opacity = "";
-      });
-      if (toRail && !railed) {
-        // the head keeps the row's room while its figures are away
-        nav.style.minHeight = nav.getBoundingClientRect().height + "px";
-        if (meta) meta.classList.add("is-in");
+      var from = null;
+      if (flight) {
+        // turned round on the way: from where they are
+        from = railWords.map(function (w) {
+          return w.getBoundingClientRect();
+        });
+        cancelAnimationFrame(flight.raf);
+        flight = null;
+      } else if (!instant) {
+        from = (railed ? railWords : headWords).map(function (w) {
+          return w.getBoundingClientRect();
+        });
       }
-      nav.classList.toggle("is-railed", toRail);
       railed = toRail;
-      if (!toRail) nav.style.minHeight = "";
       if (instant || env.static || env.reduce) {
+        settle();
         mark();
         if (env.reduce && !instant && !env.static) {
           stop(list._rFade);
-          list._rFade = Site.animate(list, { opacity: [0, 1] }, Site.t("transition.fade"));
+          list._rFade = Site.animate(list, { opacity: toRail ? [0, 1] : [1, 0] }, Site.t("transition.fade"));
+          list._rFade.then(function () {
+            list.style.opacity = "";
+          });
+          if (!toRail) {
+            // fading out: the rail stays shown until it has faded
+            rail.classList.add("is-on");
+            list._rFade.then(function () {
+              if (!railed) rail.classList.remove("is-on");
+            });
+          }
         }
         return;
       }
+      railWords.forEach(function (w) {
+        w.style.transform = "";
+      });
+      rail.classList.add("is-on", "is-flying");
+      nav.classList.add("is-away");
+      var base = railWords.map(function (w) {
+        return w.getBoundingClientRect();
+      });
+      var to = toRail
+        ? base
+        : headWords.map(function (w) {
+            return w.getBoundingClientRect();
+          });
       var sx = window.scrollX;
       var sy = window.scrollY;
-      els.forEach(function (it) {
-        it.to = it.el.getBoundingClientRect();
-        it.delay = it.k * 45 + (it.kind === "num" ? 0 : 35);
-      });
       var curve = springCurve(Site.t("spring.glide"));
-      var span = curve.ms + 3 * 45 + 35;
+      var lag = 45;
+      var span = curve.ms + (railWords.length - 1) * lag;
       var start = performance.now();
-      var f = { raf: 0, toRail: toRail };
+      var f = { raf: 0 };
       flight = f;
       mark(); // the mark waits for the landing
-      nav.classList.add("is-flying");
-      function frame(now) {
-        if (flight !== f) return;
-        var t = now - start;
+      function place(t) {
         // the home places scroll with the page; the rail's are fixed
         var dx = toRail ? 0 : window.scrollX - sx;
         var dy = toRail ? 0 : window.scrollY - sy;
-        els.forEach(function (it) {
-          var p = curve.at(t - it.delay);
-          var lx = it.to.left - dx;
-          var ly = it.to.top - dy;
-          var x = it.from.left + (lx - it.from.left) * p;
-          var y = it.from.top + (ly - it.from.top) * p;
-          var s0 = it.to.width > 0 ? it.from.width / it.to.width : 1;
-          var s = s0 + (1 - s0) * p;
-          it.el.style.transform = "translate(" + util.round(x - lx, 2) + "px, " + util.round(y - ly, 2) + "px) scale(" + util.round(s, 4) + ")";
-          if (it.kind === "q") {
-            // the qualifier ("peer-reviewed", "open-source" ...) fades on the way out and comes back last
-            var o = toRail ? it.op * (1 - util.smooth(util.clamp(t / (span * 0.3), 0, 1))) : util.smooth(util.clamp((t - span * 0.45) / (span * 0.45), 0, 1));
-            it.el.style.opacity = String(util.round(o, 3));
-          }
+        railWords.forEach(function (w, k) {
+          var p = curve.at(t - k * lag);
+          var a = from[k];
+          var b = to[k];
+          var o = base[k];
+          var bx = b.left - dx;
+          var by = b.top - dy;
+          var x = a.left + (bx - a.left) * p;
+          var y = a.top + (by - a.top) * p;
+          var s = o.width > 0 ? (a.width + (b.width - a.width) * p) / o.width : 1;
+          w.style.transform = "translate(" + util.round(x - o.left, 2) + "px, " + util.round(y - o.top, 2) + "px) scale(" + util.round(s, 4) + ")";
         });
+      }
+      place(0); // drawn where the names are before the first frame paints
+      function frame(now) {
+        if (flight !== f) return;
+        var t = now - start;
         if (t < span) {
+          place(t);
           f.raf = requestAnimationFrame(frame);
           return;
         }
-        els.forEach(function (it) {
-          it.el.style.transform = "";
-          it.el.style.opacity = "";
-        });
         flight = null;
-        nav.classList.remove("is-flying");
+        settle();
         mark();
       }
       f.raf = requestAnimationFrame(frame);
@@ -217,7 +252,7 @@
       var was = current;
       current = partOf(e.target);
       list.classList.toggle("is-away", !!d.end);
-      // the page opened somewhere: put the figures there without a flight
+      // the page opened somewhere: put the names there without a flight
       if (d.initial) sync(true);
       else if (was !== current) sync(false);
       else mark();
@@ -225,29 +260,164 @@
     onMq(mq, function () {
       sync(true);
     });
-    Site.on("resize", function () {
-      if (!railed) nav.style.minHeight = "";
-    });
 
     // a click goes to the part (its first step), with or without the stepper
     list.addEventListener("click", function (e) {
-      var a = e.target.closest("[data-rfig-link]");
+      var a = e.target.closest("[data-rrail-link]");
       if (!a || !plainClick(e)) return;
       var t = targets[links.indexOf(a)];
       if (!t) return;
       e.preventDefault();
-      pushHash(a.hash);
-      Site.snap.go(t);
-      if (!t.hasAttribute("tabindex")) t.setAttribute("tabindex", "-1");
-      t.focus({ preventScroll: true });
-    });
-    // focus on a link in the rail must not send the page back to the head (the stepper follows focus to its part)
-    list.addEventListener("focusin", function (e) {
-      if (railed) e.stopPropagation();
+      goPart(t, a.hash);
     });
   }
 
-  /* ================================================================ 2. the research areas */
+  /* ================================================================ 2. the contents in the head */
+  function initContents(page) {
+    var nav = page.querySelector("[data-rnav]");
+    if (!nav) return;
+
+    function byHash(hash) {
+      var id = (hash || "").slice(1);
+      try {
+        id = decodeURIComponent(id);
+      } catch (err) {
+        /* keep it */
+      }
+      return id ? document.getElementById(id) : null;
+    }
+    /** A software group or a project row named by a hash, with its section and its disclosure. */
+    function rowOf(hash) {
+      var row = byHash(hash);
+      if (!row || !row.matches(".rgroup, .rproj__row") || !page.contains(row)) return null;
+      var btn = row.querySelector("[aria-controls]");
+      var sec = row.closest("[data-snap]");
+      if (!btn || !sec) return null;
+      return { row: row, btn: btn, sec: sec };
+    }
+    function openRow(r) {
+      var c = Site.get(r.btn, "disclosure");
+      if (c && !c.isOpen) c.open();
+    }
+    function inView(el) {
+      var b = el.getBoundingClientRect();
+      return b.top < window.innerHeight * 0.6 && b.bottom > window.innerHeight * 0.4;
+    }
+    /** fn once the stepper has landed on sec; not if the page went somewhere else on the way. */
+    var waiting = null;
+    function whenLanded(sec, fn) {
+      if (waiting) waiting.cancel();
+      var timer = 0;
+      var w = {
+        cancel: function () {
+          clearTimeout(timer);
+          page.removeEventListener("kit:snap-arrive", onArrive);
+          page.removeEventListener("kit:snap-change", onChange);
+          if (waiting === w) waiting = null;
+        },
+      };
+      function done() {
+        w.cancel();
+        fn();
+      }
+      function onArrive(e) {
+        if (e.target === sec) done();
+      }
+      function onChange(e) {
+        if (e.target !== sec) w.cancel();
+      }
+      page.addEventListener("kit:snap-arrive", onArrive);
+      page.addEventListener("kit:snap-change", onChange);
+      // a move that sends no arrival (it was already there, or it was cut short): look where the page is
+      timer = setTimeout(function () {
+        if (inView(sec)) done();
+        else w.cancel();
+      }, 2400);
+      waiting = w;
+    }
+
+    /** Go to a group of software or a project and open it (push: the hash goes into the history). */
+    function goRow(r, push) {
+      if (push) pushHash("#" + r.row.id);
+      if (Site.snap.active) {
+        var st = Site.snap.stops.filter(function (s) {
+          return s.element === r.sec && !s.end;
+        })[0];
+        var there = st && Site.snap.index === st.index && !Site.snap.moving && Math.abs(window.scrollY - st.y) < 3;
+        Site.snap.go(r.sec);
+        if (there) openRow(r);
+        else
+          whenLanded(r.sec, function () {
+            openRow(r);
+          });
+      } else {
+        // scrolling natively: open it and glide to its row; rows above it that close on the way are taken into account
+        var shift = 0;
+        var rows = all(r.row.parentNode, ":scope > li");
+        for (var i = 0; i < rows.length && rows[i] !== r.row; i++) {
+          var b = rows[i].querySelector("[aria-controls]");
+          var c = b && Site.get(b, "disclosure");
+          var p = b && document.getElementById(b.getAttribute("aria-controls"));
+          if (c && c.isOpen && p) shift += p.offsetHeight;
+        }
+        var navH = parseFloat(getComputedStyle(page).getPropertyValue("--part-top")) || 0;
+        var top = r.row.getBoundingClientRect().top + window.scrollY - shift;
+        var y = Math.max(0, top - Math.min(navH || 96, window.innerHeight * 0.2));
+        openRow(r);
+        window.scrollTo({ top: y, behavior: env.reduce || env.static ? "instant" : "smooth" });
+      }
+      focusQuiet(r.btn);
+    }
+
+    nav.addEventListener("click", function (e) {
+      var a = e.target.closest("a[href^='#']");
+      if (!a || !plainClick(e)) return;
+      // an area: the research areas' own handler (capture phase) has gone to its step; the focus follows
+      if (a.hasAttribute("data-rnav-to") && a.getAttribute("data-rnav-to") === "area") {
+        if (e.defaultPrevented) focusQuiet(byHash(a.getAttribute("href")));
+        return;
+      }
+      if (e.defaultPrevented) return;
+      var r = rowOf(a.getAttribute("href"));
+      if (r) {
+        e.preventDefault();
+        goRow(r, true);
+        return;
+      }
+      if (a.hasAttribute("data-rnav-name")) {
+        var t = byHash(a.getAttribute("href"));
+        if (!t) return;
+        e.preventDefault();
+        goPart(t, a.hash);
+      }
+    });
+
+    // Back / Forward to a group or a project, or a hash set by a script: there, open
+    window.addEventListener("hashchange", function () {
+      var r = rowOf(window.location.hash);
+      if (r) goRow(r, false);
+    });
+    // a page opened on one: once the stepper has landed (after load), open it
+    function landOnRow() {
+      var r = rowOf(window.location.hash);
+      if (!r) return;
+      if (Site.snap.active) goRow(r, false);
+      else openRow(r);
+    }
+    var again = function () {
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(landOnRow);
+        });
+      });
+    };
+    if (rowOf(window.location.hash)) {
+      if (document.readyState === "complete") again();
+      else window.addEventListener("load", again);
+    }
+  }
+
+  /* ================================================================ 3. the research areas */
   function initSteps(page, sec) {
     var areas = all(sec, "[data-rarea]");
     if (!areas.length) return;
@@ -612,101 +782,13 @@
     }
   }
 
-  /* ================================================================ 3. the papers */
-  function initPapers(sec) {
-    var table = sec.querySelector("[data-rmat]");
-    if (!table) return;
-    var rows = all(table, "[data-rmat-row]");
-    var heads = all(table, ".rmat__line--years [data-col]");
-    var feet = all(table, ".rmat__foot [data-col]");
-    var nums = all(table, "[data-rmat-num]");
-
-    function arrive() {
-      if (table.classList.contains("is-in")) return;
-      table.classList.add("is-in");
-      var cols = heads.length;
-      var wave = env.reduce || env.static ? 0 : (rows.length + cols) * 26 + 400;
-      setTimeout(function () {
-        table.classList.add("is-settled");
-      }, wave + 200);
-      // the totals roll once the cells are there: the rows one after the other, then the sum
-      nums.forEach(function (el, n) {
-        setTimeout(
-          function () {
-            var c = Site.get(el, "sliding-number");
-            if (c && c.play) c.play();
-          },
-          env.reduce || env.static ? 0 : 260 + n * 70,
-        );
-      });
-    }
-    if (env.static || !("IntersectionObserver" in window)) arrive();
-    else {
-      var io = new IntersectionObserver(
-        function (entries) {
-          if (!entries[entries.length - 1].isIntersecting) return;
-          io.disconnect();
-          arrive();
-        },
-        { threshold: 0.3 },
-      );
-      io.observe(table);
-    }
-
-    /* the row and the year under the pointer */
-    var hotRow = null;
-    var hotCol = -1;
-    function light(row, col) {
-      if (row !== hotRow) {
-        if (hotRow) hotRow.classList.remove("is-hot");
-        hotRow = row;
-        if (row) {
-          row.classList.add("is-hot");
-          table.setAttribute("data-hot-row", "");
-        } else table.removeAttribute("data-hot-row");
-      }
-      if (col !== hotCol) {
-        hotCol = col;
-        heads.concat(feet).forEach(function (el) {
-          el.classList.toggle("is-hot", +el.getAttribute("data-col") === col);
-        });
-      }
-    }
-    if (env.hover) {
-      table.addEventListener("pointerover", function (e) {
-        var row = e.target.closest("[data-rmat-row]");
-        var cell = e.target.closest(".rmat__c");
-        light(row, cell && row ? +cell.getAttribute("data-col") : -1);
-      });
-      table.addEventListener("pointerleave", function () {
-        light(null, -1);
-      });
-    }
-    table.addEventListener("focusin", function (e) {
-      var row = e.target.closest("[data-rmat-row]");
-      if (row && e.target.matches(":focus-visible")) light(row, -1);
-    });
-    table.addEventListener("focusout", function () {
-      light(null, -1);
-    });
-    // a row takes you to the publication list filtered by its area
-    table.addEventListener("click", function (e) {
-      if (!plainClick(e)) return;
-      var row = e.target.closest("[data-rmat-row]");
-      if (!row || e.target.closest("a")) return;
-      var a = row.querySelector("[data-rmat-link]");
-      if (a) a.click();
-    });
-  }
-
   Site.ready(function () {
     var page = document.querySelector("[data-rpage]");
     if (!page) return;
     var parts = all(page, ":scope > [data-snap]");
     initRail(page, parts);
+    initContents(page);
     var steps = page.querySelector("[data-rsteps]");
     if (steps) initSteps(page, steps);
-    var papers = page.querySelector("[data-rpapers]");
-    if (papers) initPapers(papers);
   });
 })();

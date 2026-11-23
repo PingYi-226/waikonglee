@@ -11,8 +11,8 @@ site_js: [research, diagrams]
 ---
 
 {%- comment -%}
-  The research page: five parts that the scroll stepper (kit-snap, soft mode) moves between: the head, the research
-  areas (pinned: one step per area), the papers (areas by years), the open-source software and the funded projects.
+  The research page: four parts that the scroll stepper (kit-snap, soft mode) moves between: the head (the page's
+  contents), the research areas (pinned: one step per area), the open-source software and the funded projects.
   Everything it shows comes from _data/research.yml (areas), _data/software.yml (repositories), _data/grants.yml
   (funded projects) and the bibliography (paper counts); the markup is in _includes/site/research_*.liquid, the looks
   in assets/css/site/research.css, the behaviour in assets/js/site/research.js.
@@ -21,7 +21,6 @@ site_js: [research, diagrams]
 <div class="rpage" data-kit="snap" data-snap-mode="soft" data-rpage>
 {%- include site/research_head.liquid -%}
 {%- include site/research_areas.liquid -%}
-{%- include site/research_papers.liquid -%}
 {%- include site/research_software.liquid -%}
 {%- include site/research_projects.liquid -%}
 </div>

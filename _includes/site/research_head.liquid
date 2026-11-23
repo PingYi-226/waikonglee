@@ -1,40 +1,43 @@
 {%- comment -%}
   Research page, the head (the first part of the page): the title and lede from the page's front matter, and under the
-  rule the four figures of the page (areas, papers, repositories, projects). Each figure is a link to its part. Once the
-  page has left the head, research.js flies the figures into a rail at the side of the viewport, where they stay as the
-  page's navigation (the number and the last word of the label); back at the head they fly home. One set of links.
-  Counts come from the data files (_data/research.yml, _data/software.yml, _data/grants.yml) and the bibliography.
+  rule the page's contents: its three parts, each by its name and by what is inside it. Every entry is a link that lands
+  there: a research area on its step (#pqc ...), a software group on the software part with that group open, a project
+  on the projects part with that row open (research.js; without it, plain anchors).
+  Then the rail (nav.rrail): the three part names again, at the side of the viewport. It is shown only once the page has
+  left the head (research.js), where the names fly from the head into it; back at the head they fly home.
+  Data: _data/research.yml (areas: key, short), _data/software.yml (groups), _data/grants.yml (projects: short, else
+  title; period). The anchors of groups and projects are made the same way in research_software / research_projects.
 {%- endcomment -%}
-{%- assign repo_count = 0 -%}
-{%- for g in site.data.software -%}{%- assign repo_count = repo_count | plus: g.items.size -%}{%- endfor -%}
-{%- capture paper_count -%}{% bibliography_count %}{%- endcapture -%}
-{%- assign paper_count = paper_count | strip -%}
 {%- capture head_meta -%}
-<nav class="rfig" aria-label="Parts of this page" data-rfig>
-  <ol class="rfig__list" data-kit="highlight" data-mode="both" data-items=".rfig__link" data-rfig-list>
-    <li class="rfig__item">
-      <a class="rfig__link" href="#areas" data-rfig-link>
-        <span class="rfig__top"><span class="rfig__num stat__value" data-rfig-part="num"><span data-kit="sliding-number" data-value="{{ site.data.research.size }}" data-delay="700">{{ site.data.research.size }}</span></span><span class="rfig__go" aria-hidden="true">{% include site/icon.liquid name="arrow-down" size=15 %}</span></span>
-        <span class="rfig__label stat__label"><span class="rfig__q" data-rfig-part="q">research </span><span class="rfig__noun" data-rfig-part="noun">areas</span></span>
-      </a>
+<nav class="rnav" aria-label="On this page" data-rnav>
+  <ol class="rnav__parts" data-kit="highlight" data-items=".rnav__name, .rnav__item">
+    <li class="rnav__part" style="--p: 0" data-rnav-part>
+      <a class="rnav__name" id="rnav-areas" href="#areas" data-kit="press" data-rnav-name><span class="rnav__word" data-rnav-word>Research areas</span><span class="rnav__go" aria-hidden="true">{% include site/icon.liquid name="arrow-down" size=16 %}</span></a>
+      <ul class="rnav__items" aria-labelledby="rnav-areas">
+        {%- for a in site.data.research %}
+        <li style="--i: {{ forloop.index0 }}"><a class="rnav__item" href="#{{ a.key }}" data-kit="press" data-rnav-to="area"><span class="rnav__t">{{ a.short | default: a.title }}</span><span class="rnav__go" aria-hidden="true">{% include site/icon.liquid name="arrow-down" size=14 %}</span></a></li>
+        {%- endfor %}
+      </ul>
     </li>
-    <li class="rfig__item">
-      <a class="rfig__link" href="#papers" data-rfig-link>
-        <span class="rfig__top"><span class="rfig__num stat__value" data-rfig-part="num"><span data-kit="sliding-number" data-value="{{ paper_count }}" data-delay="760">{{ paper_count }}</span></span><span class="rfig__go" aria-hidden="true">{% include site/icon.liquid name="arrow-down" size=15 %}</span></span>
-        <span class="rfig__label stat__label"><span class="rfig__q" data-rfig-part="q">peer-reviewed </span><span class="rfig__noun" data-rfig-part="noun">papers</span></span>
-      </a>
+    <li class="rnav__part" style="--p: 1" data-rnav-part>
+      <a class="rnav__name" id="rnav-software" href="#software" data-kit="press" data-rnav-name><span class="rnav__word" data-rnav-word>Open-source software</span><span class="rnav__go" aria-hidden="true">{% include site/icon.liquid name="arrow-down" size=16 %}</span></a>
+      <ul class="rnav__items" aria-labelledby="rnav-software">
+        {%- for g in site.data.software %}
+        <li style="--i: {{ forloop.index0 }}"><a class="rnav__item" href="#{{ g.group | slugify }}" data-kit="press" data-rnav-to="row"><span class="rnav__t">{{ g.group }}</span><span class="rnav__go" aria-hidden="true">{% include site/icon.liquid name="arrow-down" size=14 %}</span></a></li>
+        {%- endfor %}
+      </ul>
     </li>
-    <li class="rfig__item">
-      <a class="rfig__link" href="#software" data-rfig-link>
-        <span class="rfig__top"><span class="rfig__num stat__value" data-rfig-part="num"><span data-kit="sliding-number" data-value="{{ repo_count }}" data-delay="820">{{ repo_count }}</span></span><span class="rfig__go" aria-hidden="true">{% include site/icon.liquid name="arrow-down" size=15 %}</span></span>
-        <span class="rfig__label stat__label"><span class="rfig__q" data-rfig-part="q">open-source </span><span class="rfig__noun" data-rfig-part="noun">repositories</span></span>
-      </a>
-    </li>
-    <li class="rfig__item">
-      <a class="rfig__link" href="#projects" data-rfig-link>
-        <span class="rfig__top"><span class="rfig__num stat__value" data-rfig-part="num"><span data-kit="sliding-number" data-value="{{ site.data.grants.size }}" data-delay="880">{{ site.data.grants.size }}</span></span><span class="rfig__go" aria-hidden="true">{% include site/icon.liquid name="arrow-down" size=15 %}</span></span>
-        <span class="rfig__label stat__label"><span class="rfig__q" data-rfig-part="q">funded </span><span class="rfig__noun" data-rfig-part="noun">projects</span></span>
-      </a>
+    <li class="rnav__part" style="--p: 2" data-rnav-part>
+      <a class="rnav__name" id="rnav-projects" href="#projects" data-kit="press" data-rnav-name><span class="rnav__word" data-rnav-word>Funded projects</span><span class="rnav__go" aria-hidden="true">{% include site/icon.liquid name="arrow-down" size=16 %}</span></a>
+      <ul class="rnav__items rnav__items--proj" aria-labelledby="rnav-projects">
+        {%- for g in site.data.grants %}
+        {%- assign ends = g.period | split: '–' %}
+        {%- assign y0 = ends.first | strip | split: ' ' | last %}
+        {%- assign y1 = ends.last | strip | split: ' ' | last %}
+        {%- assign pid = g.title | slugify | split: '-' | slice: 0, 5 | join: '-' %}
+        <li style="--i: {{ forloop.index0 }}"><a class="rnav__item" href="#{{ pid }}" data-kit="press" data-rnav-to="row"><span class="rnav__y t-data">{{ y0 }}–{{ y1 }}</span><span class="rnav__t">{{ g.short | default: g.title }}</span><span class="rnav__go" aria-hidden="true">{% include site/icon.liquid name="arrow-down" size=14 %}</span></a></li>
+        {%- endfor %}
+      </ul>
     </li>
   </ol>
 </nav>
@@ -42,3 +45,10 @@
 <section class="rhead rpart" data-snap data-rhead>
   {% include site/pagehead.liquid meta=head_meta %}
 </section>
+<nav class="rrail" aria-label="Parts of this page" hidden data-rrail>
+  <ol class="rrail__list" data-kit="highlight" data-mode="both" data-items=".rrail__link" data-rrail-list>
+    <li><a class="rrail__link" href="#areas" data-rrail-link><span class="rrail__word" data-rnav-word>Research areas</span></a></li>
+    <li><a class="rrail__link" href="#software" data-rrail-link><span class="rrail__word" data-rnav-word>Open-source software</span></a></li>
+    <li><a class="rrail__link" href="#projects" data-rrail-link><span class="rrail__word" data-rnav-word>Funded projects</span></a></li>
+  </ol>
+</nav>
